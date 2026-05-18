@@ -23,14 +23,15 @@ export default function Hero() {
             </div>
 
             {/* Heading */}
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-6xl font-black leading-[1.2] tracking-[-0.02em] text-slate-900">
-              <span className="block">Create Professional</span>
-              <span className="block mt-2 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 bg-clip-text text-transparent">
-                Employee ID Cards
-              </span>
-              <span className="block mt-2">In Seconds</span>
-            </h1>
+           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold leading-[1.05] tracking-[-0.04em]">
+  <span className="text-slate-900">
+    Smart Employee
+  </span>
 
+  <span className="block mt-2 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 bg-clip-text text-transparent">
+    ID Card Generator
+  </span>
+</h1>
             {/* Description */}
             <p className="mt-6 text-base sm:text-lg text-slate-500 leading-relaxed max-w-lg">
               50+ premium templates, real-time editing, and instant bulk generation

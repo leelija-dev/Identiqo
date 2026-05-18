@@ -62,7 +62,7 @@ export default function NavbarMinimal() {
               href="/"
               className="text-lg sm:text-xl md:text-2xl lg:text-2xl font-black tracking-tight text-slate-900 transition-all duration-300 hover:scale-105 hover:text-indigo-600"
             >
-              CardStudio
+              IDENTIQO
             </Link>
 
             {/* Desktop Menu - Hidden on mobile/tablet */}

@@ -31,12 +31,10 @@ export default function Footer() {
         {/* Top Section - Logo & Social */}
         <div className="flex flex-col md:flex-row justify-between items-center mb-12 pb-8 border-b border-slate-800">
           <div className="flex items-center gap-3 mb-6 md:mb-0">
-            <div className="w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center shadow-lg">
-              <span className="text-white font-bold text-xl">C</span>
-            </div>
+           
             <div>
               <h2 className="text-2xl font-bold bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
-                CardStudio
+                IDENTIQO
               </h2>
               <p className="text-xs text-slate-400">Create professional ID cards</p>
             </div>
@@ -170,8 +168,8 @@ export default function Footer() {
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="text-center md:text-left">
               <p className="text-slate-400 text-sm">
-                © 2026 CardStudio. All rights reserved. Made with{" "}
-                <FaHeart className="inline-block w-3 h-3 text-red-500 animate-pulse" /> by CardStudio Team
+                © 2026 IDENTIQO. All rights reserved. Made with{" "}
+                <FaHeart className="inline-block w-3 h-3 text-red-500 animate-pulse" /> by IDENTIQO Team
               </p>
             </div>
             

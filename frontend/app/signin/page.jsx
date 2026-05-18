@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { 
   FiMail, FiLock, FiEye, FiEyeOff, FiArrowRight, 
   FiGithub, FiTwitter, FiFacebook, FiApple, FiBriefcase,
-  FiTrendingUp, FiUsers, FiShield
+  FiTrendingUp, FiUsers, FiShield, FiAlertCircle
 } from "react-icons/fi";
 import { FaGoogle, FaMicrosoft } from "react-icons/fa";
 
@@ -18,16 +18,35 @@ export default function Login() {
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
+  const [errors, setErrors] = useState({});
   const router = useRouter();
+
+  // Validation function
+  const validateForm = () => {
+    const newErrors = {};
+    
+    // Email validation
+    if (!email) {
+      newErrors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = "Please enter a valid email address";
+    }
+    
+    // Password validation
+    if (!password) {
+      newErrors.password = "Password is required";
+    } else if (password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+    }
+    
+    return newErrors;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email || !email.includes("@")) {
-      alert("Please enter a valid email address");
-      return;
-    }
-    if (!password || password.length < 6) {
-      alert("Please enter your password (min 6 characters)");
+    const newErrors = validateForm();
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
     
@@ -167,7 +186,10 @@ export default function Login() {
             {/* Tabs */}
             <div className="flex gap-4 mb-8 border-b border-slate-200">
               <button
-                onClick={() => setActiveTab("login")}
+                onClick={() => {
+                  setActiveTab("login");
+                  setErrors({});
+                }}
                 className={`pb-3 px-2 text-base font-semibold transition-all duration-300 ${
                   activeTab === "login"
                     ? "text-indigo-600 border-b-2 border-indigo-600"
@@ -177,7 +199,10 @@ export default function Login() {
                 Sign In
               </button>
               <button
-                onClick={() => setActiveTab("signup")}
+                onClick={() => {
+                  setActiveTab("signup");
+                  setErrors({});
+                }}
                 className={`pb-3 px-2 text-base font-semibold transition-all duration-300 ${
                   activeTab === "signup"
                     ? "text-indigo-600 border-b-2 border-indigo-600"
@@ -229,11 +254,23 @@ export default function Login() {
                       <input
                         type="email"
                         value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        onChange={(e) => {
+                          setEmail(e.target.value);
+                          if (errors.email) setErrors({...errors, email: ""});
+                        }}
                         placeholder="hello@cardstudio.com"
-                        className="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl focus:border-indigo-400 focus:outline-none focus:ring-4 focus:ring-indigo-100 transition-all"
+                        className={`w-full pl-12 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-4 transition-all ${
+                          errors.email 
+                            ? "border-red-300 focus:border-red-400 focus:ring-red-100" 
+                            : "border-slate-200 focus:border-indigo-400 focus:ring-indigo-100"
+                        }`}
                       />
                     </div>
+                    {errors.email && (
+                      <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                        <FiAlertCircle className="w-3 h-3" /> {errors.email}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -245,9 +282,16 @@ export default function Login() {
                       <input
                         type={showPassword ? "text" : "password"}
                         value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                        onChange={(e) => {
+                          setPassword(e.target.value);
+                          if (errors.password) setErrors({...errors, password: ""});
+                        }}
                         placeholder="Enter your password"
-                        className="w-full pl-12 pr-12 py-3 border border-slate-200 rounded-xl focus:border-indigo-400 focus:outline-none focus:ring-4 focus:ring-indigo-100 transition-all"
+                        className={`w-full pl-12 pr-12 py-3 border rounded-xl focus:outline-none focus:ring-4 transition-all ${
+                          errors.password 
+                            ? "border-red-300 focus:border-red-400 focus:ring-red-100" 
+                            : "border-slate-200 focus:border-indigo-400 focus:ring-indigo-100"
+                        }`}
                       />
                       <button
                         type="button"
@@ -257,6 +301,11 @@ export default function Login() {
                         {showPassword ? <FiEyeOff className="w-5 h-5" /> : <FiEye className="w-5 h-5" />}
                       </button>
                     </div>
+                    {errors.password && (
+                      <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                        <FiAlertCircle className="w-3 h-3" /> {errors.password}
+                      </p>
+                    )}
                   </div>
 
                   <div className="flex items-center justify-between">
@@ -284,7 +333,7 @@ export default function Login() {
                 </form>
               </>
             ) : (
-              // Sign Up Form
+              // Sign Up Form - Now redirects to /signup page
               <div className="text-center py-12">
                 <div className="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <FiBriefcase className="w-8 h-8 text-indigo-600" />
@@ -293,11 +342,24 @@ export default function Login() {
                 <p className="text-slate-500 mb-6">Get started with CardStudio today</p>
                 <Link
                   href="/signup"
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition-all"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl hover:shadow-lg hover:scale-[1.02] transition-all duration-300"
                 >
                   Create Account <FiArrowRight className="w-4 h-4" />
                 </Link>
               </div>
+            )}
+
+            {/* Sign Up Link at bottom (when on login tab) */}
+            {activeTab === "login" && (
+              <p className="text-center text-sm text-slate-600 mt-6">
+                Don't have an account?{" "}
+                <button
+                  onClick={() => setActiveTab("signup")}
+                  className="text-indigo-600 font-semibold hover:text-indigo-700"
+                >
+                  Create account
+                </button>
+              </p>
             )}
 
             {/* Security Notice */}
