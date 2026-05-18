@@ -69,13 +69,15 @@ export default function Features() {
             </span>
           </div>
 
-          {/* Heading */}
-          <h1 className="text-5xl sm:text-6xl md:text-7xl font-black tracking-tight text-slate-900 mb-6">
-            Everything you need to
-            <span className="block bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 bg-clip-text text-transparent mt-2">
-              create perfect ID cards
-            </span>
-          </h1>
+<h1 className="text-5xl sm:text-6xl md:text-7xl font-bold tracking-[-0.06em] leading-[1.05] mb-6">
+  <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 bg-clip-text text-transparent">
+    Advanced Features
+  </span>
+
+  <span className="block mt-2 bg-gradient-to-r from-slate-500 to-slate-300 bg-clip-text text-transparent">
+    Simple Experience
+  </span>
+</h1>
 
           {/* Description */}
           <p className="text-lg sm:text-xl text-slate-500 max-w-3xl mx-auto leading-relaxed">
