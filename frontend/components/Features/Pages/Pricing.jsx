@@ -16,7 +16,7 @@ export default function Pricing() {
   const [isYearly, setIsYearly] = useState(true);
   const [hoveredCard, setHoveredCard] = useState(null);
   const [animatePrice, setAnimatePrice] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const [mounted, setMounted] = useState(false); 
   const [particles, setParticles] = useState([]);
 
   useEffect(() => {
