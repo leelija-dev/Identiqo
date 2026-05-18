@@ -5,6 +5,7 @@ import  Testimonial from "@/components/Features/Pages/Testimonial";
 import FAQ from "@/components/Features/Pages/Faq";
 export default function Page() {
   return (
+    // .
     <>
       <Hero />
       <Features />
