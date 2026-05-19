@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import AdminUser
-from django.contrib.auth.hashers import make_password
+from django.contrib.auth.hashers import make_password, check_password
 
 
 class AdminUserSerializer(serializers.ModelSerializer):
@@ -35,3 +35,8 @@ class AdminRegistrationSerializer(serializers.ModelSerializer):
         validated_data.pop('confirm_password')
         validated_data['password'] = make_password(validated_data['password'])
         return super().create(validated_data)
+
+
+class AdminLoginSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True)
