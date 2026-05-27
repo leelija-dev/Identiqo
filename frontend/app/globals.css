@@ -38,16 +38,24 @@
   transform: rotateY(180deg);
 }
 
-/* Hide back face in preview cards */
+/* Grid previews: show front only, fit design canvas */
+.scaled-template-landscape .flip-card,
+.scaled-template-portrait .flip-card {
+  width: 100%;
+  height: 100%;
+}
+
 .scaled-template-landscape .card-back,
 .scaled-template-portrait .card-back,
-.face.back {
+.scaled-template-landscape .face.back,
+.scaled-template-portrait .face.back {
   display: none !important;
 }
 
 .scaled-template-landscape .card-front,
 .scaled-template-portrait .card-front,
-.face.front {
+.scaled-template-landscape .face.front,
+.scaled-template-portrait .face.front {
   position: absolute !important;
   width: 100% !important;
   height: 100% !important;

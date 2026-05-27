@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { allTemplates, templatesByOrientation } from '../../templatesdata';
+import CardPreview from '@/components/Common/CardPreview';
 
 export default function TemplatesPage() {
   // State Management
@@ -278,33 +279,14 @@ export default function TemplatesPage() {
                   <div
                     key={template.id}
                     onClick={() => openModal(template)}
-                    className="cursor-pointer transition-transform duration-300 hover:-translate-y-2 flex flex-col items-center"
+                    className="flex cursor-pointer flex-col items-center overflow-visible transition-transform duration-300 hover:-translate-y-2"
                   >
                     {/* Card Preview */}
-                    <div className={`flex justify-center items-center rounded-[18px] overflow-hidden bg-transparent transition-all duration-300 hover:shadow-2xl hover:shadow-black/10
-                      ${orientation === 'landscape' 
-                        ? 'w-full max-w-[320px] aspect-[550/348]' 
-                        : 'w-full'
-                      }`}
-                    >
-                      <div 
-                        className={orientation === 'landscape' 
-                          ? 'w-[550px] h-[348px] scale-[0.76] origin-center relative rounded-[20px] overflow-hidden -m-10'
-                          : 'scale-[0.65] origin-top w-[350px] h-[550px] relative rounded-3xl overflow-hidden'
-                        }
-                        dangerouslySetInnerHTML={{ __html: template.htmlContent }}
-                      />
-                    </div>
-                    
-                    {/* Card Info */}
-                    <div className="mt-5 text-center">
-                      <h3 className="text-slate-800 text-[0.9rem] font-semibold mb-1">
-                        {template.name}
-                      </h3>
-                      <p className="text-indigo-600 text-[0.7rem] font-medium uppercase tracking-[0.5px]">
-                        {template.orientation} • {template.category}
-                      </p>
-                    </div>
+                    <CardPreview
+                      html={template.htmlContent}
+                      orientation={orientation}
+                      className="transition-all duration-300 hover:shadow-2xl hover:shadow-black/10"
+                    />
                   </div>
                 ))
               )}

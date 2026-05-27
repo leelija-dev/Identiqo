@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import CardPreview from '@/components/Common/CardPreview';
 
 export default function GalleryPage() {
   const [currentCategory, setCurrentCategory] = useState('wishlist');
@@ -14,12 +15,10 @@ export default function GalleryPage() {
   const [totalItems, setTotalItems] = useState(0);
   const [isClient, setIsClient] = useState(false);
 
-  // Set isClient to true after mount (client-side only)
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-  // Load items when category changes
   useEffect(() => {
     if (isClient) {
       loadCategoryData();
@@ -33,7 +32,16 @@ export default function GalleryPage() {
     if (typeof window === 'undefined') return;
     const key = getStorageKey(currentCategory);
     const data = localStorage.getItem(key);
-    setGalleryItems(data ? JSON.parse(data) : []);
+    if (!data) {
+      setGalleryItems([]);
+      return;
+    }
+    try {
+      const parsed = JSON.parse(data);
+      setGalleryItems(Array.isArray(parsed) ? parsed : []);
+    } catch {
+      setGalleryItems([]);
+    }
   };
 
   const saveCategoryData = (items) => {
@@ -44,11 +52,21 @@ export default function GalleryPage() {
     updateStorageInfo();
   };
 
+  const safeJsonArrayLength = (raw) => {
+    if (!raw) return 0;
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed.length : 0;
+    } catch {
+      return 0;
+    }
+  };
+
   const updateStorageInfo = () => {
     if (typeof window === 'undefined') return;
-    const wishlist = JSON.parse(localStorage.getItem('cardstudio_wishlist') || '[]').length;
-    const drafts = JSON.parse(localStorage.getItem('cardstudio_drafts') || '[]').length;
-    const downloads = JSON.parse(localStorage.getItem('cardstudio_downloads') || '[]').length;
+    const wishlist = safeJsonArrayLength(localStorage.getItem('cardstudio_wishlist'));
+    const drafts = safeJsonArrayLength(localStorage.getItem('cardstudio_drafts'));
+    const downloads = safeJsonArrayLength(localStorage.getItem('cardstudio_downloads'));
     setTotalItems(wishlist + drafts + downloads);
   };
 
@@ -99,16 +117,28 @@ export default function GalleryPage() {
 
   const moveToWishlist = () => {
     if (typeof window === 'undefined' || !selectedItem) return;
-    const wishlist = JSON.parse(localStorage.getItem('cardstudio_wishlist') || '[]');
-    
+    let wishlist = [];
+    try {
+      wishlist = JSON.parse(localStorage.getItem('cardstudio_wishlist') || '[]');
+      if (!Array.isArray(wishlist)) wishlist = [];
+    } catch {
+      wishlist = [];
+    }
+
     if (!wishlist.some(i => i.id === selectedItem.id)) {
       wishlist.push(selectedItem);
       localStorage.setItem('cardstudio_wishlist', JSON.stringify(wishlist));
-      
+
       if (currentCategory === 'drafts' || currentCategory === 'downloads') {
         const key = getStorageKey(currentCategory);
-        const items = JSON.parse(localStorage.getItem(key) || '[]');
-        localStorage.setItem(key, JSON.stringify(items.filter(i => i.id !== selectedItem.id)));
+        try {
+          const items = JSON.parse(localStorage.getItem(key) || '[]');
+          if (Array.isArray(items)) {
+            localStorage.setItem(key, JSON.stringify(items.filter(i => i.id !== selectedItem.id)));
+          }
+        } catch {
+          /* ignore */
+        }
       }
       
       showToastMessage('✅ Moved to Wishlist');
@@ -160,9 +190,6 @@ export default function GalleryPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 font-['Inter']">
-     
-
-      {/* Main Content */}
       <div className="flex min-h-[calc(100vh-72px)]">
         {/* Sidebar */}
         <aside className="w-[260px] bg-white border-r border-slate-200 flex flex-col flex-shrink-0 overflow-y-auto">
@@ -207,7 +234,6 @@ export default function GalleryPage() {
             <p className="text-slate-500 text-sm mt-1">{categoryDescriptions[currentCategory]}</p>
           </div>
 
-          {/* Gallery Grid */}
           {!isClient ? (
             <div className="text-center py-16 text-slate-400">Loading...</div>
           ) : galleryItems.length === 0 ? (
@@ -223,9 +249,8 @@ export default function GalleryPage() {
                   <div
                     key={item.id}
                     onClick={(e) => handleCardClick(e, item)}
-                    className="cursor-pointer transition-transform duration-300 hover:-translate-y-2 flex flex-col items-center relative group"
+                    className="group relative flex cursor-pointer flex-col items-center overflow-visible transition-transform duration-300 hover:-translate-y-2"
                   >
-                    {/* Action Buttons */}
                     <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                       <button
                         data-action="edit"
@@ -244,29 +269,11 @@ export default function GalleryPage() {
                         🗑️
                       </button>
                     </div>
-
-                    {/* Card Preview */}
-                    <div className={`w-full flex justify-center items-center rounded-[18px] overflow-hidden bg-transparent transition-all duration-300 group-hover:shadow-2xl group-hover:shadow-black/10
-                      ${orientation === 'landscape' 
-                        ? 'aspect-[550/348]' 
-                        : 'aspect-[290/550] max-w-[290px] mx-auto'
-                      }`}
-                    >
-                      <div 
-                        className={orientation === 'landscape' 
-                          ? 'w-[550px] h-[348px] scale-[0.76] origin-center relative rounded-[20px] overflow-hidden -m-10'
-                          : 'scale-[0.85] origin-top -m-5 w-[290px] h-[550px] relative rounded-3xl overflow-hidden'
-                        }
-                        dangerouslySetInnerHTML={{ __html: item.fullHTML }}
-                      />
-                    </div>
-
-                    {/* Card Info */}
-                    <div className="mt-5 text-center">
-                      <p className="text-slate-500 text-sm">
-                        {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'Saved'}
-                      </p>
-                    </div>
+                    <CardPreview
+                      html={item.fullHTML}
+                      orientation={orientation}
+                      className="mx-auto transition-all duration-300 group-hover:shadow-2xl group-hover:shadow-black/10"
+                    />
                   </div>
                 );
               })}
@@ -275,19 +282,25 @@ export default function GalleryPage() {
         </div>
       </div>
 
-      {/* Preview Modal */}
+      {/* Preview Modal - Transparent background (like template page) */}
       {showModal && selectedItem && (
         <div 
           className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center z-[2000]"
           onClick={(e) => e.target === e.currentTarget && closeModal()}
         >
           <div className="flex gap-8 items-center flex-wrap justify-center p-6">
-            {/* Modal Card */}
-            <div className={`rounded-[20px] overflow-hidden shadow-2xl shadow-black/50
-              ${selectedItem.orientation === 'portrait' ? 'w-[350px] h-[550px]' : 'w-[550px] h-[348px]'}
-            `}>
+            {/* Modal Card Container - NO white background, just the card */}
+            <div 
+              className={`relative rounded-[20px] overflow-hidden shadow-2xl shadow-black/50
+                ${(selectedItem.orientation || getOrientationFromHTML(selectedItem.fullHTML)) === 'portrait' 
+                  ? 'w-[350px] h-[550px]' 
+                  : 'w-[550px] h-[348px]'
+                }`}
+            >
+              {/* Card HTML rendered directly without extra background */}
               <div 
-                dangerouslySetInnerHTML={{ __html: selectedItem.fullHTML }}
+                className="w-full h-full"
+                dangerouslySetInnerHTML={{ __html: selectedItem.fullHTML || '' }}
                 onClick={(e) => {
                   e.stopPropagation();
                   const flipCard = e.currentTarget.querySelector('.flip-card');
@@ -296,7 +309,7 @@ export default function GalleryPage() {
               />
             </div>
 
-            {/* Modal Buttons */}
+            {/* Modal Buttons (same) */}
             <div className="flex flex-col gap-4 min-w-[200px]">
               <button onClick={() => handleModalAction('customize')} className="px-6 py-3.5 rounded-full font-semibold bg-indigo-500 text-white hover:-translate-y-0.5 hover:shadow-lg transition-all">
                 ✏️ Customize
