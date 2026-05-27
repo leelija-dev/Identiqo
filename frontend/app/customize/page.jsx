@@ -7,24 +7,24 @@ const FIELD_LABELS = {
   employee_name: "👤 Employee Name",
   company_name: "🏢 Company Name",
   designation: "💼 Designation",
-  backside_company_name: "🏢 Back Company Name",
   phone: "📞 Phone",
   email: "📧 Email",
   website: "🌐 Website",
   address: "📍 Address",
   employee_id: "🆔 Employee ID",
-  generic_text: "📝 Text",
+  tagline: "💬 Tagline",
   department: "🏢 Department",
   job_title: "💼 Job Title",
-  tagline: "💬 Tagline",
-  name: "👤 Name",
-  id_number: "🆔 ID Number",
   expiry: "📅 Expiry",
   access: "🔑 Access Level",
   clearance: "🛡️ Clearance",
   joined: "📅 Join Date",
   signature: "✍️ Signature",
+  name: "👤 Name",
+  id_number: "🆔 ID Number",
 };
+
+const TEXT_CLASSES = Object.keys(FIELD_LABELS);
 
 function toTitleCase(str) {
   return str.replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim().replace(/\b\w/g, c => c.toUpperCase());
@@ -67,6 +67,19 @@ export default function CustomizePage() {
   const [barcodeValue, setBarcodeValue] = useState('');
   const [qrValue, setQrValue] = useState('');
 
+  // Feature detection state
+  const [hasProfile, setHasProfile] = useState(false);
+  const [hasSignature, setHasSignature] = useState(false);
+  const [hasLogo, setHasLogo] = useState(false);
+  const [hasBarcode, setHasBarcode] = useState(false);
+  const [hasQR, setHasQR] = useState(false);
+
+  // Color Theme state (for visiting cards)
+  const [selectedTheme, setSelectedTheme] = useState('Default');
+  const [customPrimary, setCustomPrimary] = useState('#ff7e5f');
+  const [customSecondary, setCustomSecondary] = useState('#6a11cb');
+  const [customAccent, setCustomAccent] = useState('#2575fc');
+
   const showToastMessage = useCallback((msg) => {
     setToastMessage(msg);
     setShowToast(true);
@@ -94,11 +107,16 @@ export default function CustomizePage() {
     const card = getCurrentCardElement();
     if (!card) return;
 
-    const rawTextElements = card.querySelectorAll('.editable-text, [data-editable="true"]');
-    const textElements = [...new Set(Array.from(rawTextElements))];
+    const selector = TEXT_CLASSES.map(cls => `.${cls}`).join(', ');
+    const textElements = card.querySelectorAll(selector);
 
     const items = [];
+    const seen = new Set();
+
     textElements.forEach((element, index) => {
+      if (seen.has(element)) return;
+      seen.add(element);
+
       const text = element.innerText?.trim() || '';
       if (!text) return;
 
@@ -112,26 +130,17 @@ export default function CustomizePage() {
       if (!element.dataset.originalFontStyle) element.dataset.originalFontStyle = computed.fontStyle;
       if (!element.dataset.originalTextDecoration) element.dataset.originalTextDecoration = computed.textDecoration || 'none';
 
-      const fieldKey = element.dataset.field || '';
+      const classList = (element.className || '').toString().split(/\s+/);
+      const matchedClass = TEXT_CLASSES.find(cls => classList.includes(cls));
       
       let label;
-      if (fieldKey && FIELD_LABELS[fieldKey]) {
-        label = FIELD_LABELS[fieldKey];
-      } else if (fieldKey && fieldKey !== 'generic_text') {
-        label = toTitleCase(fieldKey);
+      if (matchedClass && FIELD_LABELS[matchedClass]) {
+        label = FIELD_LABELS[matchedClass];
+      } else if (matchedClass) {
+        label = toTitleCase(matchedClass);
       } else {
-        const className = (element.className || '').toString();
-        const classTokens = className.split(/\s+/).filter(Boolean);
-        const meaningfulClass = classTokens.find(c => 
-          c !== 'editable-text' && !/^fa[srb]?$/.test(c)
-        );
-        
-        if (meaningfulClass) {
-          label = toTitleCase(meaningfulClass);
-        } else {
-          const shortText = text.length > 26 ? `${text.slice(0, 26)}...` : text;
-          label = shortText || `Text ${index + 1}`;
-        }
+        const shortText = text.length > 26 ? `${text.slice(0, 26)}...` : text;
+        label = shortText || `Text ${index + 1}`;
       }
 
       const isBackField = !!element.closest('.card-back, .face.back, [class*="back"]');
@@ -147,7 +156,7 @@ export default function CustomizePage() {
         element,
         originalText: text,
         originalColor: color,
-        fieldKey
+        className: matchedClass || ''
       });
     });
 
@@ -167,10 +176,14 @@ export default function CustomizePage() {
       const currentBgImage = computed.backgroundImage || 'none';
       const startsAsGradient = currentBgImage.includes('gradient(');
       const startsAsImage = currentBgImage !== 'none' && !startsAsGradient;
+      
+      const isBack = !!element.closest('.card-back, .face.back, [class*="back"]');
+      const label = isBack ? `Background ${index + 1} (Back)` : `Background ${index + 1} (Front)`;
 
       blocks.push({
         index,
         element,
+        label,
         currentColor,
         currentBgImage,
         mode: startsAsGradient ? 'gradient' : (startsAsImage ? 'image' : 'solid'),
@@ -183,10 +196,24 @@ export default function CustomizePage() {
     setBackgroundBlocks(blocks);
   }, [getCurrentCardElement]);
 
+  const detectFeatures = useCallback(() => {
+    const card = getCurrentCardElement();
+    if (!card) return;
+
+    setHasProfile(!!card.querySelector('.profile-image, .profile-img, .profile-photo, [class*="profile"]'));
+    setHasSignature(!!card.querySelector('.sign-placeholder, .sign-img, .signature-placeholder, [class*="sign"]'));
+    setHasLogo(!!card.querySelector('.logo'));
+    setHasBarcode(!!card.querySelector('.barcode, .barcode-section'));
+    setHasQR(!!card.querySelector('.qr-placeholder'));
+  }, [getCurrentCardElement]);
+
   const buildSidebar = useCallback(() => {
     buildTextList();
-    buildBackgroundBlocks();
-  }, [buildTextList, buildBackgroundBlocks]);
+    if (currentTemplate?.category === 'employee') {
+      buildBackgroundBlocks();
+    }
+    detectFeatures();
+  }, [buildTextList, buildBackgroundBlocks, detectFeatures, currentTemplate]);
 
   useEffect(() => {
     const saved = localStorage.getItem('selectedTemplateForCustomize');
@@ -200,6 +227,18 @@ export default function CustomizePage() {
           if (previewCanvasRef.current && template.fullHTML) {
             previewCanvasRef.current.innerHTML = template.fullHTML;
             setOriginalHTML(template.fullHTML);
+
+            // Apply theme colors for visiting cards
+            if (template.category === 'visiting' && template.themeColors) {
+              const tc = template.themeColors;
+              previewCanvasRef.current.style.setProperty('--primary', tc.primary);
+              previewCanvasRef.current.style.setProperty('--secondary', tc.secondary);
+              previewCanvasRef.current.style.setProperty('--accent', tc.accent);
+              setCustomPrimary(tc.primary);
+              setCustomSecondary(tc.secondary);
+              setCustomAccent(tc.accent);
+              setSelectedTheme('Default');
+            }
 
             const card = getCurrentCardElement();
             if (card) {
@@ -359,6 +398,16 @@ export default function CustomizePage() {
     input.click();
   };
 
+  // Apply theme to visiting card
+  const applyTheme = (themeName, primary, secondary, accent) => {
+    setSelectedTheme(themeName);
+    if (previewCanvasRef.current) {
+      previewCanvasRef.current.style.setProperty('--primary', primary);
+      previewCanvasRef.current.style.setProperty('--secondary', secondary);
+      previewCanvasRef.current.style.setProperty('--accent', accent);
+    }
+  };
+
   const showTextPopupHandler = (field, event) => {
     if (event) event.stopPropagation();
     setCurrentEditingElement(field.element);
@@ -448,7 +497,7 @@ export default function CustomizePage() {
           });
         } else if (type === 'signature') {
           setUploadedSignatureImage(imageData);
-          const containers = previewCanvasRef.current?.querySelectorAll('.signature-placeholder, .sign-placeholder, [class*="sign"]');
+          const containers = previewCanvasRef.current?.querySelectorAll('.sign-placeholder, .sign-img, .signature-placeholder, [class*="sign"]');
           containers?.forEach(el => {
             el.innerHTML = ''; el.style.backgroundImage = `url(${imageData})`; el.style.backgroundSize = 'contain'; el.style.backgroundRepeat = 'no-repeat'; el.style.backgroundPosition = 'center';
           });
@@ -476,39 +525,33 @@ export default function CustomizePage() {
       showToastMessage('Please enter text or number for barcode');
       return;
     }
-
     const card = getCurrentCardElement();
     if (!card) return;
-
     const barcodeElements = card.querySelectorAll('.barcode, .barcode-section');
     if (!barcodeElements.length) {
       showToastMessage('No barcode placeholder found on this template');
       return;
     }
-
     import('jsbarcode').then((JsBarcode) => {
       barcodeElements.forEach((container) => {
         container.innerHTML = '';
         const canvas = document.createElement('canvas');
-        // Prevent stretching: scale proportionally
         canvas.style.width = '100%';
         canvas.style.height = 'auto';
         canvas.style.display = 'block';
         container.appendChild(canvas);
-
         JsBarcode.default(canvas, barcodeValue, {
           format: 'CODE128',
           lineColor: '#000000',
           width: 2,
           height: 40,
-          displayValue: false,   // no text under barcode
+          displayValue: false,
           margin: 5,
           background: '#ffffff',
         });
       });
       showToastMessage('Barcode generated successfully');
     }).catch(() => {
-      // Fallback to simple canvas
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       canvas.width = 300;
@@ -539,28 +582,21 @@ export default function CustomizePage() {
       showToastMessage('No QR placeholder found');
       return;
     }
-
     import('qrcode').then((QRCode) => {
       qrElements.forEach((placeholder) => {
         placeholder.innerHTML = '';
         const canvas = document.createElement('canvas');
         canvas.style.width = '100%';
         canvas.style.height = '100%';
-        canvas.style.objectFit = 'contain';
         placeholder.appendChild(canvas);
-
         QRCode.toCanvas(canvas, qrValue, {
           width: 150,
           margin: 1,
-          color: {
-            dark: '#000000',
-            light: '#ffffff',
-          },
+          color: { dark: '#000000', light: '#ffffff' },
         });
       });
       showToastMessage('QR code applied');
     }).catch(() => {
-      // Fallback to QuickChart if library fails
       const qrUrl = `https://quickchart.io/qr?text=${encodeURIComponent(qrValue)}&size=150`;
       qrElements.forEach(placeholder => {
         placeholder.innerHTML = `<img src="${qrUrl}" style="width:100%;height:100%;object-fit:contain;" />`;
@@ -572,23 +608,18 @@ export default function CustomizePage() {
   const downloadCard = async () => {
     const card = getCurrentCardElement();
     if (!card) { showToastMessage('No card to download'); return; }
-
     try {
       const html2canvas = (await import('html2canvas')).default;
       const flipInner = card.querySelector('.flip-card-inner');
       if (flipInner) flipInner.style.transform = 'none';
-
       const canvas = await html2canvas(card, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
-
       if (flipInner) {
         flipInner.style.transform = flipInner.dataset.flipped === 'true' ? 'rotateY(180deg)' : 'rotateY(0deg)';
       }
-
       const link = document.createElement('a');
       link.download = `card-${Date.now()}.png`;
       link.href = canvas.toDataURL('image/png');
       link.click();
-
       const downloads = JSON.parse(localStorage.getItem('cardstudio_downloads') || '[]');
       downloads.unshift({
         id: Date.now(),
@@ -598,7 +629,6 @@ export default function CustomizePage() {
         createdAt: new Date().toISOString()
       });
       localStorage.setItem('cardstudio_downloads', JSON.stringify(downloads));
-
       showToastMessage('✅ Card downloaded & saved!');
     } catch (e) {
       showToastMessage('Download failed');
@@ -625,14 +655,23 @@ export default function CustomizePage() {
       setUploadedProfileImage(null);
       setUploadedSignatureImage(null);
       setUploadedLogoImage(null);
+      // Re-apply theme for visiting cards
+      if (currentTemplate?.category === 'visiting' && currentTemplate?.themeColors) {
+        const tc = currentTemplate.themeColors;
+        previewCanvasRef.current.style.setProperty('--primary', tc.primary);
+        previewCanvasRef.current.style.setProperty('--secondary', tc.secondary);
+        previewCanvasRef.current.style.setProperty('--accent', tc.accent);
+        setSelectedTheme('Default');
+      }
       setTimeout(() => buildSidebar(), 200);
       showToastMessage('Reset to original template');
     }
   };
 
+  const showImageSection = hasProfile || hasSignature || hasLogo || hasBarcode || hasQR;
+
   return (
     <div className="h-screen flex flex-col bg-[#f5f7fb] font-['Inter'] overflow-hidden">
-
 
       <div className="flex flex-1 overflow-hidden">
         <div className="flex-1 bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center overflow-y-auto p-10 relative">
@@ -657,11 +696,14 @@ export default function CustomizePage() {
             <h2 className="text-lg font-semibold text-slate-800 flex items-center gap-2.5">
               Customize Card
               <span className="text-[10px] font-bold bg-indigo-50 text-indigo-600 px-2 py-1 rounded-full uppercase">{currentOrientation}</span>
+              <span className="text-[10px] font-bold bg-amber-50 text-amber-600 px-2 py-1 rounded-full uppercase">{currentTemplate?.category || ''}</span>
             </h2>
             <p className="text-xs text-slate-500 mt-1.5">{currentTemplate?.name || 'Select a template'}</p>
           </div>
 
           <div className="flex-1 overflow-y-auto px-4 py-4 min-h-0">
+            
+            {/* TEXT FIELDS */}
             <div className="mb-3.5 p-3.5 border border-slate-100 rounded-2xl bg-white shadow-sm">
               {textFields.length === 0 ? (
                 <p className="text-center py-5 text-slate-400 text-xs">No editable text found</p>
@@ -697,96 +739,194 @@ export default function CustomizePage() {
               )}
             </div>
 
-            <div className="mb-3.5 p-3.5 border border-slate-100 rounded-2xl bg-white shadow-sm">
-              {backgroundBlocks.length === 0 ? (
-                <p className="text-center py-5 text-slate-400 text-xs">No editable backgrounds found</p>
-              ) : (
-                backgroundBlocks.map((block) => (
-                  <div key={block.index} className="mb-3">
-                    <div className="flex bg-slate-100 p-1 rounded-[10px] gap-0.5 mb-2">
-                      {['solid', 'gradient', 'image'].map(mode => (
-                        <button
-                          key={mode}
-                          onClick={() => setBackgroundMode(block.index, mode)}
-                          className={`flex-1 border-none bg-transparent px-2 py-1.5 text-[11px] rounded-lg cursor-pointer transition-all font-semibold ${block.mode === mode ? 'bg-white text-indigo-600 font-bold shadow-sm' : 'text-slate-500'}`}
-                        >
-                          {mode === 'solid' ? 'Solid' : mode === 'gradient' ? 'Gradient' : 'Image'}
-                        </button>
-                      ))}
-                    </div>
-
-                    {block.mode === 'solid' && (
-                      <div className="flex gap-2 items-center">
-                        <input type="color" value={block.currentColor} onChange={(e) => setSolidColor(block.index, e.target.value)} className="w-10 h-8 border-none rounded cursor-pointer" />
-                        <input type="text" value={block.currentColor} onChange={(e) => setSolidColor(block.index, e.target.value)} placeholder="#ffffff" className="flex-1 px-1.5 py-1.5 border border-slate-200 rounded text-xs" />
+            {/* BACKGROUND COLORS - Employee cards only */}
+            {currentTemplate?.category === 'employee' && (
+              <div className="mb-3.5 p-3.5 border border-slate-100 rounded-2xl bg-white shadow-sm">
+                {backgroundBlocks.length === 0 ? (
+                  <p className="text-center py-5 text-slate-400 text-xs">No editable backgrounds found</p>
+                ) : (
+                  backgroundBlocks.map((block) => (
+                    <div key={block.index} className="mb-3">
+                      <span className="text-[10px] text-slate-400 mb-1 block">{block.label}</span>
+                      <div className="flex bg-slate-100 p-1 rounded-[10px] gap-0.5 mb-2">
+                        {['solid', 'gradient', 'image'].map(mode => (
+                          <button
+                            key={mode}
+                            onClick={() => setBackgroundMode(block.index, mode)}
+                            className={`flex-1 border-none bg-transparent px-2 py-1.5 text-[11px] rounded-lg cursor-pointer transition-all font-semibold ${block.mode === mode ? 'bg-white text-indigo-600 font-bold shadow-sm' : 'text-slate-500'}`}
+                          >
+                            {mode === 'solid' ? 'Solid' : mode === 'gradient' ? 'Gradient' : 'Image'}
+                          </button>
+                        ))}
                       </div>
-                    )}
 
-                    {block.mode === 'gradient' && (
-                      <div className="flex gap-2 items-center">
-                        <input type="color" value={block.gradColor1} onChange={(e) => setGradient(block.index, e.target.value, block.gradColor2, block.gradDirection)} className="w-10 h-8 border-none rounded cursor-pointer" />
-                        <input type="color" value={block.gradColor2} onChange={(e) => setGradient(block.index, block.gradColor1, e.target.value, block.gradDirection)} className="w-10 h-8 border-none rounded cursor-pointer" />
-                        <select value={block.gradDirection} onChange={(e) => setGradient(block.index, block.gradColor1, block.gradColor2, e.target.value)} className="flex-1 px-1.5 py-1.5 border border-slate-200 rounded text-xs">
-                          <option value="to right">Left → Right</option>
-                          <option value="to left">Right → Left</option>
-                          <option value="to bottom">Top → Bottom</option>
-                          <option value="to top">Bottom → Top</option>
-                          <option value="135deg">Diagonal</option>
-                        </select>
+                      {block.mode === 'solid' && (
+                        <div className="flex gap-2 items-center">
+                          <input type="color" value={block.currentColor} onChange={(e) => setSolidColor(block.index, e.target.value)} className="w-10 h-8 border-none rounded cursor-pointer" />
+                          <input type="text" value={block.currentColor} onChange={(e) => setSolidColor(block.index, e.target.value)} placeholder="#ffffff" className="flex-1 px-1.5 py-1.5 border border-slate-200 rounded text-xs" />
+                        </div>
+                      )}
+
+                      {block.mode === 'gradient' && (
+                        <div className="flex gap-2 items-center">
+                          <input type="color" value={block.gradColor1} onChange={(e) => setGradient(block.index, e.target.value, block.gradColor2, block.gradDirection)} className="w-10 h-8 border-none rounded cursor-pointer" />
+                          <input type="color" value={block.gradColor2} onChange={(e) => setGradient(block.index, block.gradColor1, e.target.value, block.gradDirection)} className="w-10 h-8 border-none rounded cursor-pointer" />
+                          <select value={block.gradDirection} onChange={(e) => setGradient(block.index, block.gradColor1, block.gradColor2, e.target.value)} className="flex-1 px-1.5 py-1.5 border border-slate-200 rounded text-xs">
+                            <option value="to right">Left → Right</option>
+                            <option value="to left">Right → Left</option>
+                            <option value="to bottom">Top → Bottom</option>
+                            <option value="to top">Bottom → Top</option>
+                            <option value="135deg">Diagonal</option>
+                          </select>
+                        </div>
+                      )}
+
+                      {block.mode === 'image' && (
+                        <div className="flex gap-2">
+                          <button onClick={() => uploadBackgroundImage(block.index)} className="flex-1 bg-slate-50 text-slate-600 border border-slate-100 px-2 py-2 rounded-lg text-xs font-semibold hover:bg-slate-100">Upload Image</button>
+                          <button onClick={() => setBackgroundMode(block.index, 'solid')} className="flex-1 bg-slate-50 text-slate-600 border border-slate-100 px-2 py-2 rounded-lg text-xs font-semibold hover:bg-slate-100">Remove</button>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+
+            {/* COLOR THEME - Visiting cards only */}
+            {currentTemplate?.category === 'visiting' && (
+              <div className="mb-3.5 p-3.5 border border-slate-100 rounded-2xl bg-white shadow-sm">
+                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-3">🎨 Color Theme</div>
+                
+                <div className="grid grid-cols-3 gap-2 mb-3">
+                  {[
+                    { name: 'Default', primary: currentTemplate?.themeColors?.primary || '#ff7e5f', secondary: currentTemplate?.themeColors?.secondary || '#6a11cb', accent: currentTemplate?.themeColors?.accent || '#2575fc' },
+                    { name: 'Sunset', primary: '#ff6b35', secondary: '#f7931e', accent: '#ff2d55' },
+                    { name: 'Ocean', primary: '#0077b6', secondary: '#00b4d8', accent: '#90e0ef' },
+                    { name: 'Forest', primary: '#2d6a4f', secondary: '#52b788', accent: '#95d5b2' },
+                    { name: 'Midnight', primary: '#6c63ff', secondary: '#3f37c9', accent: '#4895ef' },
+                    { name: 'Rose Gold', primary: '#e8a87c', secondary: '#d45d79', accent: '#f0c0a0' },
+                  ].map((theme) => (
+                    <button
+                      key={theme.name}
+                      onClick={() => applyTheme(theme.name, theme.primary, theme.secondary, theme.accent)}
+                      className={`p-2 rounded-xl border-2 transition-all ${selectedTheme === theme.name ? 'border-indigo-500 shadow-md' : 'border-slate-200 hover:border-slate-300'}`}
+                    >
+                      <div className="flex gap-1 mb-1 justify-center">
+                        <div className="w-4 h-4 rounded-full" style={{ background: theme.primary }}></div>
+                        <div className="w-4 h-4 rounded-full" style={{ background: theme.secondary }}></div>
                       </div>
-                    )}
+                      <span className="text-[9px] font-semibold text-slate-600">{theme.name}</span>
+                    </button>
+                  ))}
+                </div>
 
-                    {block.mode === 'image' && (
-                      <div className="flex gap-2">
-                        <button onClick={() => uploadBackgroundImage(block.index)} className="flex-1 bg-slate-50 text-slate-600 border border-slate-100 px-2 py-2 rounded-lg text-xs font-semibold hover:bg-slate-100">Upload Image</button>
-                        <button onClick={() => setBackgroundMode(block.index, 'solid')} className="flex-1 bg-slate-50 text-slate-600 border border-slate-100 px-2 py-2 rounded-lg text-xs font-semibold hover:bg-slate-100">Remove</button>
-                      </div>
-                    )}
-                  </div>
-                ))
-              )}
-            </div>
-
-            <div className="mb-3.5 p-3.5 border border-slate-100 rounded-2xl bg-white shadow-sm">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <div onClick={() => uploadImage('profile')} className="bg-slate-50 border border-dashed border-slate-300 rounded-xl p-3.5 text-center cursor-pointer hover:border-indigo-500 hover:bg-indigo-50 transition-all">
-                    <div className="min-h-[80px] flex items-center justify-center text-xs text-slate-400">
-                      {uploadedProfileImage ? <img src={uploadedProfileImage} className="w-full h-full object-cover rounded-lg" alt="Profile" /> : '📷 Profile'}
+                <div className="border-t border-slate-100 pt-3">
+                  <span className="text-[10px] text-slate-400 mb-2 block">Custom Colors</span>
+                  <div className="flex gap-3">
+                    <div className="flex-1">
+                      <label className="text-[9px] text-slate-400 block mb-1">Primary</label>
+                      <input
+                        type="color"
+                        value={customPrimary}
+                        onChange={(e) => {
+                          setCustomPrimary(e.target.value);
+                          setSelectedTheme('Custom');
+                          if (previewCanvasRef.current) {
+                            previewCanvasRef.current.style.setProperty('--primary', e.target.value);
+                          }
+                        }}
+                        className="w-full h-8 border border-slate-200 rounded cursor-pointer"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <label className="text-[9px] text-slate-400 block mb-1">Secondary</label>
+                      <input
+                        type="color"
+                        value={customSecondary}
+                        onChange={(e) => {
+                          setCustomSecondary(e.target.value);
+                          setSelectedTheme('Custom');
+                          if (previewCanvasRef.current) {
+                            previewCanvasRef.current.style.setProperty('--secondary', e.target.value);
+                          }
+                        }}
+                        className="w-full h-8 border border-slate-200 rounded cursor-pointer"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <label className="text-[9px] text-slate-400 block mb-1">Accent</label>
+                      <input
+                        type="color"
+                        value={customAccent}
+                        onChange={(e) => {
+                          setCustomAccent(e.target.value);
+                          setSelectedTheme('Custom');
+                          if (previewCanvasRef.current) {
+                            previewCanvasRef.current.style.setProperty('--accent', e.target.value);
+                          }
+                        }}
+                        className="w-full h-8 border border-slate-200 rounded cursor-pointer"
+                      />
                     </div>
                   </div>
-                  {uploadedProfileImage && <button onClick={() => removeImage('profile')} className="mt-2 text-xs text-red-500 hover:text-red-700 w-full text-center">✕ Remove</button>}
-                </div>
-
-                <div>
-                  <div onClick={() => uploadImage('signature')} className="bg-slate-50 border border-dashed border-slate-300 rounded-xl p-3.5 text-center cursor-pointer hover:border-indigo-500 hover:bg-indigo-50 transition-all">
-                    <div className="min-h-[80px] flex items-center justify-center text-xs text-slate-400">
-                      {uploadedSignatureImage ? <img src={uploadedSignatureImage} className="w-full h-full object-contain rounded-lg" alt="Signature" /> : '✍️ Signature'}
-                    </div>
-                  </div>
-                  {uploadedSignatureImage && <button onClick={() => removeImage('signature')} className="mt-2 text-xs text-red-500 hover:text-red-700 w-full text-center">✕ Remove</button>}
-                </div>
-
-                <div>
-                  <div onClick={() => uploadImage('logo')} className="bg-slate-50 border border-dashed border-slate-300 rounded-xl p-3.5 text-center cursor-pointer hover:border-indigo-500 hover:bg-indigo-50 transition-all">
-                    <div className="min-h-[80px] flex items-center justify-center text-xs text-slate-400">
-                      {uploadedLogoImage ? <img src={uploadedLogoImage} className="w-full h-full object-contain rounded-lg" alt="Logo" /> : '🏢 Logo'}
-                    </div>
-                  </div>
-                  {uploadedLogoImage && <button onClick={() => removeImage('logo')} className="mt-2 text-xs text-red-500 hover:text-red-700 w-full text-center">✕ Remove</button>}
-                </div>
-
-                <div>
-                  <input type="text" value={barcodeValue} onChange={(e) => setBarcodeValue(e.target.value)} placeholder="Barcode text..." className="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs mb-1" />
-                  <button onClick={applyBarcode} className="w-full px-3 py-1.5 bg-indigo-500 text-white rounded-lg text-xs font-semibold hover:bg-indigo-600">Generate Barcode</button>
-                </div>
-
-                <div>
-                  <input type="text" value={qrValue} onChange={(e) => setQrValue(e.target.value)} placeholder="QR URL or text..." className="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs mb-1" />
-                  <button onClick={applyQRCode} className="w-full px-3 py-1.5 bg-indigo-500 text-white rounded-lg text-xs font-semibold hover:bg-indigo-600">Generate QR</button>
                 </div>
               </div>
-            </div>
+            )}
+
+            {/* IMAGES & DIGITAL ID - Conditional rendering */}
+            {showImageSection && (
+              <div className="mb-3.5 p-3.5 border border-slate-100 rounded-2xl bg-white shadow-sm">
+                <div className="grid grid-cols-2 gap-4">
+                  {hasProfile && (
+                    <div>
+                      <div onClick={() => uploadImage('profile')} className="bg-slate-50 border border-dashed border-slate-300 rounded-xl p-3.5 text-center cursor-pointer hover:border-indigo-500 hover:bg-indigo-50 transition-all">
+                        <div className="min-h-[80px] flex items-center justify-center text-xs text-slate-400">
+                          {uploadedProfileImage ? <img src={uploadedProfileImage} className="w-full h-full object-cover rounded-lg" alt="Profile" /> : '📷 Profile'}
+                        </div>
+                      </div>
+                      {uploadedProfileImage && <button onClick={() => removeImage('profile')} className="mt-2 text-xs text-red-500 hover:text-red-700 w-full text-center">✕ Remove</button>}
+                    </div>
+                  )}
+
+                  {hasSignature && (
+                    <div>
+                      <div onClick={() => uploadImage('signature')} className="bg-slate-50 border border-dashed border-slate-300 rounded-xl p-3.5 text-center cursor-pointer hover:border-indigo-500 hover:bg-indigo-50 transition-all">
+                        <div className="min-h-[80px] flex items-center justify-center text-xs text-slate-400">
+                          {uploadedSignatureImage ? <img src={uploadedSignatureImage} className="w-full h-full object-contain rounded-lg" alt="Signature" /> : '✍️ Signature'}
+                        </div>
+                      </div>
+                      {uploadedSignatureImage && <button onClick={() => removeImage('signature')} className="mt-2 text-xs text-red-500 hover:text-red-700 w-full text-center">✕ Remove</button>}
+                    </div>
+                  )}
+
+                  {hasLogo && (
+                    <div>
+                      <div onClick={() => uploadImage('logo')} className="bg-slate-50 border border-dashed border-slate-300 rounded-xl p-3.5 text-center cursor-pointer hover:border-indigo-500 hover:bg-indigo-50 transition-all">
+                        <div className="min-h-[80px] flex items-center justify-center text-xs text-slate-400">
+                          {uploadedLogoImage ? <img src={uploadedLogoImage} className="w-full h-full object-contain rounded-lg" alt="Logo" /> : '🏢 Logo'}
+                        </div>
+                      </div>
+                      {uploadedLogoImage && <button onClick={() => removeImage('logo')} className="mt-2 text-xs text-red-500 hover:text-red-700 w-full text-center">✕ Remove</button>}
+                    </div>
+                  )}
+
+                  {hasBarcode && (
+                    <div>
+                      <input type="text" value={barcodeValue} onChange={(e) => setBarcodeValue(e.target.value)} placeholder="Barcode text..." className="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs mb-1" />
+                      <button onClick={applyBarcode} className="w-full px-3 py-1.5 bg-indigo-500 text-white rounded-lg text-xs font-semibold hover:bg-indigo-600">Generate Barcode</button>
+                    </div>
+                  )}
+
+                  {hasQR && (
+                    <div>
+                      <input type="text" value={qrValue} onChange={(e) => setQrValue(e.target.value)} placeholder="QR URL or text..." className="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs mb-1" />
+                      <button onClick={applyQRCode} className="w-full px-3 py-1.5 bg-indigo-500 text-white rounded-lg text-xs font-semibold hover:bg-indigo-600">Generate QR</button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="px-4 py-3.5 border-t border-slate-100 flex gap-2.5">
@@ -796,6 +936,7 @@ export default function CustomizePage() {
         </div>
       </div>
 
+      {/* Text Style Popup */}
       {showTextPopup && (
         <>
           <div className="fixed inset-0 z-[9998]" onClick={hideTextPopup} />
@@ -835,6 +976,7 @@ export default function CustomizePage() {
         </>
       )}
 
+      {/* Toast */}
       <div className={`fixed bottom-8 right-8 bg-green-500 text-white px-6 py-3 rounded-full font-semibold transition-all duration-300 z-[1100] pointer-events-none ${showToast ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-[100px]'}`}>
         {toastMessage}
       </div>

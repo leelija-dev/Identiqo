@@ -5,7 +5,7 @@ import { useState } from "react";
 import { 
   FiZap, FiGrid, FiUpload, FiLock, FiPrinter, FiGlobe, 
   FiSmartphone, FiShield, FiCloud, FiUsers, FiStar, FiTrendingUp,
-  FiDownload, FiEye, FiEdit
+  FiDownload, FiEye, FiEdit, FiArrowRight, FiCheck
 } from "react-icons/fi";
 import { 
   MdQrCodeScanner, MdSpeed, MdSecurity, MdCloudUpload 
@@ -161,9 +161,7 @@ export default function Features() {
                       </div>
                     </div>
                     <div className={`w-10 h-10 rounded-full bg-gradient-to-r ${feature.color} flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:translate-x-1`}>
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
+                      <FiArrowRight className="w-5 h-5" />
                     </div>
                   </div>
                 </div>
@@ -193,9 +191,7 @@ export default function Features() {
               <div className="space-y-5">
                 <div className="flex items-start gap-3">
                   <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center mt-0.5">
-                    <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
+                    <FiCheck className="w-4 h-4 text-green-600" />
                   </div>
                   <div>
                     <h4 className="text-slate-800 font-semibold">No design skills needed</h4>
@@ -204,9 +200,7 @@ export default function Features() {
                 </div>
                 <div className="flex items-start gap-3">
                   <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center mt-0.5">
-                    <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
+                    <FiCheck className="w-4 h-4 text-green-600" />
                   </div>
                   <div>
                     <h4 className="text-slate-800 font-semibold">Export in multiple formats</h4>
@@ -215,9 +209,7 @@ export default function Features() {
                 </div>
                 <div className="flex items-start gap-3">
                   <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center mt-0.5">
-                    <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
+                    <FiCheck className="w-4 h-4 text-green-600" />
                   </div>
                   <div>
                     <h4 className="text-slate-800 font-semibold">24/7 Customer Support</h4>

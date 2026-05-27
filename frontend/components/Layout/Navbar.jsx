@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { FiLogIn } from "react-icons/fi";
+import { HiBars3, HiXMark } from "react-icons/hi2";
 import Container from "../Common/Container";
 
 export default function NavbarMinimal() {
@@ -120,19 +121,11 @@ export default function NavbarMinimal() {
                 onClick={() => setIsOpen(!isOpen)}
                 className="rounded-lg p-1.5 transition-all duration-300 hover:bg-slate-100 active:scale-95"
               >
-                <svg
-                  className="w-4 h-4 transition-transform duration-300"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d={isOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"}
-                  />
-                </svg>
+                {isOpen ? (
+                  <HiXMark className="w-4 h-4 transition-transform duration-300" />
+                ) : (
+                  <HiBars3 className="w-4 h-4 transition-transform duration-300" />
+                )}
               </button>
             </div>
 
@@ -141,19 +134,11 @@ export default function NavbarMinimal() {
               onClick={() => setIsOpen(!isOpen)}
               className="md:hidden rounded-lg p-1.5 transition-all duration-300 hover:bg-slate-100 active:scale-95"
             >
-              <svg
-                className="w-4 h-4 sm:w-5 sm:h-5 transition-transform duration-300"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d={isOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"}
-                />
-              </svg>
+              {isOpen ? (
+                <HiXMark className="w-4 h-4 sm:w-5 sm:h-5 transition-transform duration-300" />
+              ) : (
+                <HiBars3 className="w-4 h-4 sm:w-5 sm:h-5 transition-transform duration-300" />
+              )}
             </button>
           </div>
         </Container>
@@ -191,19 +176,7 @@ export default function NavbarMinimal() {
                 onClick={() => setIsOpen(false)}
                 className="p-2 rounded-lg hover:bg-slate-100 transition"
               >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
+                <HiXMark className="w-5 h-5" />
               </button>
             </div>
 
