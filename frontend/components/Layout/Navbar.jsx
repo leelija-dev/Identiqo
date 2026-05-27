@@ -109,13 +109,13 @@ export default function NavbarMinimal() {
 
             {/* Tablet Menu Button - Shows on md to lg */}
             <div className="hidden md:flex lg:hidden items-center gap-2">
-              <Link
+              {/* <Link
                 href="/signin"
                 className="rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-1.5 text-xs font-semibold text-white shadow-md transition-all duration-300 hover:scale-105 hover:shadow-lg flex items-center gap-1.5"
               >
                 <FiLogIn className="w-3 h-3" />
                 Sign In
-              </Link>
+              </Link> */}
               <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="rounded-lg p-1.5 transition-all duration-300 hover:bg-slate-100 active:scale-95"

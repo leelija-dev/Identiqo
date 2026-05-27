@@ -11,10 +11,10 @@ export default function Hero() {
     trust: false
   });
 
-  useEffect(() => {
+  useEffect(() => { 
     // Animate text elements sequentially
     const timers = [
-      setTimeout(() => setAnimatedText(prev => ({ ...prev, badge: true })), 200),
+      setTimeout(() => setAnimatedText(prev =>   ({ ...prev, badge: true })), 200),
       setTimeout(() => setAnimatedText(prev => ({ ...prev, heading: true })), 400),
       setTimeout(() => setAnimatedText(prev => ({ ...prev, description: true })), 600),
       setTimeout(() => setAnimatedText(prev => ({ ...prev, buttons: true })), 800),

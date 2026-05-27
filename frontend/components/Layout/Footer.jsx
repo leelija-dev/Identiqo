@@ -6,9 +6,9 @@ import Link from "next/link";
 import Container from "../Common/Container";
 import { 
   FaFacebookF, FaTwitter, FaInstagram, FaLinkedinIn, FaGithub, 
-  FaYoutube, FaHeart, FaArrowUp, FaApple, FaGooglePlay 
+   FaHeart, FaArrowUp, FaApple, FaGooglePlay 
 } from "react-icons/fa";
-import { FiMail, FiMapPin, FiPhone, FiSend, FiChevronRight } from "react-icons/fi";
+import {  FiSend, FiChevronRight } from "react-icons/fi";
 
 export default function Footer() {
   const [email, setEmail] = useState("");

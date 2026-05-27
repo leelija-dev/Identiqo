@@ -3,20 +3,20 @@
 import Container from "@/components/common/Container";
 import { useState } from "react";
 import { 
-  FiZap, FiGrid, FiUpload, FiLock, FiPrinter, FiGlobe, 
-  FiSmartphone, FiShield, FiCloud, FiUsers, FiStar, FiTrendingUp,
-  FiDownload, FiEye, FiEdit
+  FiZap, FiGrid, FiUpload, FiLock,  FiGlobe, 
+  FiSmartphone, FiShield, FiCloud, FiUsers,  FiTrendingUp,
+
 } from "react-icons/fi";
 import { 
-  MdQrCodeScanner, MdSpeed, MdSecurity, MdCloudUpload 
+  MdQrCodeScanner
 } from "react-icons/md";
 import { 
-  BsPrinterFill, BsShieldLockFill, BsGrid3X3GapFill 
+  BsPrinterFill
 } from "react-icons/bs";
 import { 
-  FaMagic, FaRocket, FaPalette, FaRegGem, FaLayerGroup, FaCrown 
+  FaMagic, FaRocket, FaPalette 
 } from "react-icons/fa";
-import { TbTemplate, TbBrandGoogleAnalytics } from "react-icons/tb";
+import { TbTemplate } from "react-icons/tb";
 
 export default function Features() {
   const [activeFilter, setActiveFilter] = useState("all");

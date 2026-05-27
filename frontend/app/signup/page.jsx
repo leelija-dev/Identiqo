@@ -6,8 +6,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { 
   FiMail, FiLock, FiEye, FiEyeOff, FiArrowRight, FiUser, 
-  FiBriefcase, FiCheck, FiTrendingUp, FiUsers, FiShield,
-  FiGithub, FiTwitter, FiFacebook, FiApple
+   FiCheck, FiTrendingUp, FiUsers, FiShield,
+  
 } from "react-icons/fi";
 import { FaGoogle, FaMicrosoft } from "react-icons/fa";
 

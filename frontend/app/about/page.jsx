@@ -5,7 +5,7 @@ import Link from "next/link";
 import {
   FiHeart,
   FiUsers,
-  FiAward,
+
   FiGlobe,
   FiMail,
   FiMapPin,

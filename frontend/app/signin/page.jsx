@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { 
   FiMail, FiLock, FiEye, FiEyeOff, FiArrowRight, 
-  FiGithub, FiTwitter, FiFacebook, FiApple, FiBriefcase,
+   FiBriefcase,
   FiTrendingUp, FiUsers, FiShield, FiAlertCircle
 } from "react-icons/fi";
 import { FaGoogle, FaMicrosoft } from "react-icons/fa";
