@@ -1,12 +1,14 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { templatesByOrientation } from '../../templatesdata';
 import CardPreview from '@/components/Common/CardPreview';
 import { FiMenu, FiX, FiDownload } from 'react-icons/fi';
 
 export default function TemplatesPage() {
   // State Management
+  const router = useRouter();
   const [orientation, setOrientation] = useState('landscape');
   const [category, setCategory] = useState('all');
   const [industryFilter, setIndustryFilter] = useState('all');
@@ -115,7 +117,7 @@ export default function TemplatesPage() {
       localStorage.setItem('selectedTemplateForCustomize', JSON.stringify(templateData));
       showToastMessage('Loading customization...');
       setTimeout(() => {
-        window.location.href = '/customize';
+        router.push('/customize');
       }, 300);
     }
   };

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, startTransition } from 'react';
 import { CardEditorStage, withFullSizeCapture } from '@/components/Common/CardPreview';
-import { normalizeTemplateHtml } from '@/templatesdata';
+import { allTemplates, normalizeTemplateHtml } from '@/templatesdata';
 import { 
   FiUser, FiBriefcase, FiPhone, FiMail, FiGlobe, FiMapPin, FiHash, FiMessageSquare, 
   FiCalendar, FiLock, FiShield, FiCheckCircle, FiEdit2, FiRefreshCw, FiImage, 
@@ -79,6 +79,7 @@ export default function CustomizePage() {
   const [currentTemplate, setCurrentTemplate] = useState(null);
   const [currentOrientation, setCurrentOrientation] = useState('landscape');
   const [originalHTML, setOriginalHTML] = useState(null);
+  const [pendingTemplateHtml, setPendingTemplateHtml] = useState('');
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -251,7 +252,28 @@ export default function CustomizePage() {
   const cloneFaceForPreview = useCallback((face) => {
     if (!face) return '';
     const clone = face.cloneNode(true);
-    clone.style.cssText = 'position:relative; width:100%; height:100%; display:block; transform:none; backface-visibility:visible;';
+    clone.style.cssText = 'position:relative !important; width:100%; height:100%; display:block !important; transform:none !important; backface-visibility:visible !important; -webkit-backface-visibility:visible !important; opacity:1 !important; visibility:visible !important; overflow:hidden;';
+
+    const sourceCanvases = face.querySelectorAll('canvas');
+    const cloneCanvases = clone.querySelectorAll('canvas');
+    sourceCanvases.forEach((sourceCanvas, index) => {
+      const cloneCanvas = cloneCanvases[index];
+      if (!cloneCanvas) return;
+
+      try {
+        const image = document.createElement('img');
+        image.src = sourceCanvas.toDataURL('image/png');
+        image.alt = 'Generated code';
+        image.style.cssText = sourceCanvas.getAttribute('style') || '';
+        if (!image.style.width) image.style.width = '100%';
+        if (!image.style.height) image.style.height = 'auto';
+        image.style.display = 'block';
+        cloneCanvas.replaceWith(image);
+      } catch {
+        // Keep the cloned canvas if the browser blocks serialization.
+      }
+    });
+
     const stage = previewCanvasRef.current;
     if (stage) {
       ['--primary', '--secondary', '--accent', '--card-bg'].forEach(name => {
@@ -262,16 +284,18 @@ export default function CustomizePage() {
     return clone.outerHTML;
   }, []);
 
+  const buildSidePreviewHtml = useCallback(() => ({
+    front: cloneFaceForPreview(getFrontFace()),
+    back: cloneFaceForPreview(getBackFace())
+  }), [cloneFaceForPreview, getFrontFace, getBackFace]);
+
   const refreshSidePreviewHtml = useCallback(() => {
     requestAnimationFrame(() => {
       if (isMountedRef.current) {
-        setSidePreviewHtml({
-          front: cloneFaceForPreview(getFrontFace()),
-          back: cloneFaceForPreview(getBackFace())
-        });
+        setSidePreviewHtml(buildSidePreviewHtml());
       }
     });
-  }, [cloneFaceForPreview, getFrontFace, getBackFace]);
+  }, [buildSidePreviewHtml]);
 
   const triggerUpdate = useCallback(() => refreshSidePreviewHtml(), [refreshSidePreviewHtml]);
 
@@ -294,7 +318,6 @@ export default function CustomizePage() {
   // Load template
   useEffect(() => {
     isMountedRef.current = true;
-    setIsLoading(true);
     // Timeout now 10 seconds
     loadTimeoutRef.current = setTimeout(() => {
       if (isMountedRef.current && isLoading) {
@@ -303,21 +326,30 @@ export default function CustomizePage() {
       }
     }, 10000);
 
-    const saved = localStorage.getItem('selectedTemplateForCustomize');
-    if (!saved) {
-      showToastMessage('No template selected. Go back and choose one.');
-      setIsLoading(false);
-      return;
-    }
-
     try {
-      const template = JSON.parse(saved);
+      const saved = localStorage.getItem('selectedTemplateForCustomize');
+      const template = saved
+        ? JSON.parse(saved)
+        : (allTemplates[0] ? { ...allTemplates[0], sourcePage: 'default' } : null);
+
+      if (!template) {
+        showToastMessage('No template available. Please open Templates first.');
+        setIsLoading(false);
+        return;
+      }
       // Use pre‑normalized HTML if available, otherwise fallback
       const rawHTML = template.fullHTML || template.htmlContent || '';
       const normalizedHTML = normalizeTemplateHtml(rawHTML);
       
       setCurrentTemplate(template);
       setCurrentOrientation(template.orientation || 'landscape');
+      setPendingTemplateHtml(normalizedHTML);
+      setOriginalHTML(normalizedHTML);
+      if (!previewCanvasRef.current) {
+        setIsLoading(false);
+        if (loadTimeoutRef.current) clearTimeout(loadTimeoutRef.current);
+        return;
+      }
 
       // Inject HTML immediately
       if (previewCanvasRef.current && normalizedHTML) {
@@ -351,6 +383,7 @@ export default function CustomizePage() {
           refreshSidePreviewHtml();
         });
       } else {
+        showToastMessage('Template preview is unavailable.');
         setIsLoading(false);
       }
     } catch (e) {
@@ -364,6 +397,35 @@ export default function CustomizePage() {
       if (loadTimeoutRef.current) clearTimeout(loadTimeoutRef.current);
     };
   }, []);
+
+  useEffect(() => {
+    if (isLoading || !previewCanvasRef.current || !pendingTemplateHtml) return;
+
+    previewCanvasRef.current.innerHTML = pendingTemplateHtml;
+
+    if (currentTemplate?.category === 'visiting') {
+      const defaults = { primary: '#ff7e5f', secondary: '#6a11cb', accent: '#2575fc', cardBg: '#ffffff' };
+      ['primary', 'secondary', 'accent', 'cardBg'].forEach(key => {
+        const value = currentTemplate.themeColors?.[key] || defaults[key];
+        previewCanvasRef.current.style.setProperty(`--${key === 'cardBg' ? 'card-bg' : key}`, value);
+      });
+      setCustomPrimary(currentTemplate.themeColors?.primary || defaults.primary);
+      setCustomSecondary(currentTemplate.themeColors?.secondary || defaults.secondary);
+      setCustomAccent(currentTemplate.themeColors?.accent || defaults.accent);
+      setCustomCardBg('#ffffff');
+    }
+
+    requestAnimationFrame(() => {
+      const card = getCurrentCardElement();
+      const flipInner = card?.querySelector('.flip-card-inner');
+      if (flipInner) flipInner.style.transform = 'rotateY(0deg)';
+
+      startTransition(() => {
+        buildSidebar();
+        refreshSidePreviewHtml();
+      });
+    });
+  }, [isLoading, pendingTemplateHtml, currentTemplate, displayMode, buildSidebar, refreshSidePreviewHtml, getCurrentCardElement]);
 
   // Sidebar width
   useEffect(() => {
@@ -785,7 +847,12 @@ export default function CustomizePage() {
   const toggleSidebar = () => setIsSidebarOpen(prev => !prev);
   const toggleDisplayMode = () => {
     const next = displayMode === 'flip' ? 'both' : 'flip';
-    if (next === 'both') refreshSidePreviewHtml();
+    if (next === 'both') {
+      if (previewCanvasRef.current?.innerHTML) {
+        setPendingTemplateHtml(previewCanvasRef.current.innerHTML);
+      }
+      setSidePreviewHtml(buildSidePreviewHtml());
+    }
     setDisplayMode(next);
   };
 

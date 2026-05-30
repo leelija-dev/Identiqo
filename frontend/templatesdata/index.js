@@ -6,7 +6,7 @@ export function normalizeTemplateHtml(html = '') {
   if (!html) return '';
   
   // More robust SVG normalization
-  return String(html).replace(
+  const normalized = String(html).replace(
     /data:image\/svg\+xml,([^"'\s>]+)/gi,
     (match, svgPart) => {
       try {
@@ -27,6 +27,7 @@ export function normalizeTemplateHtml(html = '') {
       }
     }
   );
+  return normalized;
 }
 
 const normalizeTemplate = (template) => ({

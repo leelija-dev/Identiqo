@@ -1,5 +1,5 @@
 "use client";
-import Container from "@/components/common/Container";
+import Container from "@/components/Common/Container";
 import { useState, useRef, useEffect } from "react";
 import { 
   FiZap, FiGrid, FiUpload, FiLock, FiGlobe, 

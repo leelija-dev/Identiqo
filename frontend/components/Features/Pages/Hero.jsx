@@ -1,5 +1,6 @@
 "use client";
-import Container from "@/components/common/Container";
+import Link from "next/link";
+import Container from "@/components/Common/Container";
 import { useState, useEffect } from "react";
 
 export default function Hero() {
@@ -83,19 +84,17 @@ export default function Hero() {
                 : 'opacity-0 scale-90'
             }`}>
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-2.5 mt-6 sm:mt-7 md:mt-8">
-                <button className="group relative px-5 sm:px-4 md:px-8 py-3 sm:py-2 md:py-3.5 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold text-sm sm:text-xs md:text-base shadow-lg shadow-indigo-300/40 hover:shadow-xl hover:scale-105 transition-all duration-300 overflow-hidden w-full sm:w-auto">
+                <Link href="/customize" className="group relative px-5 sm:px-4 md:px-8 py-3 sm:py-2 md:py-3.5 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold text-sm sm:text-xs md:text-base shadow-lg shadow-indigo-300/40 hover:shadow-xl hover:scale-105 transition-all duration-300 overflow-hidden w-full sm:w-auto inline-flex items-center justify-center">
                   <span className="relative z-10 flex items-center justify-center gap-1">
-                    Customize your card 
+                    Customize your card
                     <span className="sm:hidden md:inline">→</span>
                     <span className="hidden sm:inline md:hidden">→</span>
                   </span>
                   <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                </button>
-                <a href="/templates" className="w-full sm:w-auto">
-                  <button className="w-full sm:w-auto px-5 sm:px-4 md:px-8 py-3 sm:py-2 md:py-3.5 rounded-full border-2 border-slate-200 bg-white text-slate-700 font-bold text-sm sm:text-xs md:text-base hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50/30 transition-all duration-300">
-                    View Templates
-                  </button>
-                </a>
+                </Link>
+                <Link href="/templates" className="w-full sm:w-auto px-5 sm:px-4 md:px-8 py-3 sm:py-2 md:py-3.5 rounded-full border-2 border-slate-200 bg-white text-slate-700 font-bold text-sm sm:text-xs md:text-base hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50/30 transition-all duration-300 inline-flex items-center justify-center">
+                  View Templates
+                </Link>
               </div>
             </div>
 
