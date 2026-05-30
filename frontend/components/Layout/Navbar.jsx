@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { FiLogIn } from "react-icons/fi";
+import { HiBars3, HiXMark } from "react-icons/hi2";
 import Container from "../Common/Container";
 
 export default function NavbarMinimal() {
@@ -52,7 +53,6 @@ export default function NavbarMinimal() {
   const navLinks = [
     { name: "Home", href: "/" },
     { name: "Templates", href: "/templates" },
-
     { name: "Gallery", href: "/gallery" },
     { name: "Blog", href: "/blog" },
     { name: "About", href: "/about" },
@@ -109,30 +109,15 @@ export default function NavbarMinimal() {
 
             {/* Tablet Menu Button - Shows on md to lg */}
             <div className="hidden md:flex lg:hidden items-center gap-2">
-              {/* <Link
-                href="/signin"
-                className="rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-1.5 text-xs font-semibold text-white shadow-md transition-all duration-300 hover:scale-105 hover:shadow-lg flex items-center gap-1.5"
-              >
-                <FiLogIn className="w-3 h-3" />
-                Sign In
-              </Link> */}
               <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="rounded-lg p-1.5 transition-all duration-300 hover:bg-slate-100 active:scale-95"
               >
-                <svg
-                  className="w-4 h-4 transition-transform duration-300"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d={isOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"}
-                  />
-                </svg>
+                {isOpen ? (
+                  <HiXMark className="w-4 h-4 transition-transform duration-300" />
+                ) : (
+                  <HiBars3 className="w-4 h-4 transition-transform duration-300" />
+                )}
               </button>
             </div>
 
@@ -141,25 +126,17 @@ export default function NavbarMinimal() {
               onClick={() => setIsOpen(!isOpen)}
               className="md:hidden rounded-lg p-1.5 transition-all duration-300 hover:bg-slate-100 active:scale-95"
             >
-              <svg
-                className="w-4 h-4 sm:w-5 sm:h-5 transition-transform duration-300"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d={isOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"}
-                />
-              </svg>
+              {isOpen ? (
+                <HiXMark className="w-4 h-4 sm:w-5 sm:h-5 transition-transform duration-300" />
+              ) : (
+                <HiBars3 className="w-4 h-4 sm:w-5 sm:h-5 transition-transform duration-300" />
+              )}
             </button>
           </div>
         </Container>
       </nav>
 
-      {/* Mobile Menu Overlay - Slides from left */}
+      {/* Mobile Menu Overlay - Slides from RIGHT side */}
       <div
         className={`fixed inset-0 z-40 lg:hidden transition-all duration-500 ${
           isOpen ? "opacity-100 visible" : "opacity-0 invisible"
@@ -171,17 +148,17 @@ export default function NavbarMinimal() {
           onClick={() => setIsOpen(false)}
         />
         
-        {/* Sidebar Menu */}
+        {/* Sidebar Menu - RIGHT SIDE */}
         <div
-          className={`absolute top-0 left-0 bottom-0 w-80 bg-white shadow-2xl transition-all duration-500 ease-out ${
-            isOpen ? "translate-x-0" : "-translate-x-full"
+          className={`absolute top-0 right-0 bottom-0 w-80 bg-white shadow-2xl transition-all duration-500 ease-out ${
+            isOpen ? "translate-x-0" : "translate-x-full"
           }`}
         >
           <div className="flex flex-col h-full">
             {/* Menu Header */}
             <div className="flex items-center justify-between p-4 border-b border-slate-100">
               <Link
-                href="/"
+                href="/" 
                 onClick={() => setIsOpen(false)}
                 className="text-xl font-black tracking-tight text-slate-900"
               >
@@ -191,19 +168,7 @@ export default function NavbarMinimal() {
                 onClick={() => setIsOpen(false)}
                 className="p-2 rounded-lg hover:bg-slate-100 transition"
               >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
+                <HiXMark className="w-5 h-5" />
               </button>
             </div>
 
