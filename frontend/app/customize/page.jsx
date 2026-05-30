@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, startTransition } from 'react';
 import { CardEditorStage, withFullSizeCapture } from '@/components/Common/CardPreview';
 import { normalizeTemplateHtml } from '@/templatesdata';
 import { 
@@ -12,6 +12,7 @@ import {
 } from 'react-icons/fi';
 import { FaPhoneAlt, FaEnvelope, FaMapMarkerAlt, FaGlobe, FaUser, FaBuilding, FaQrcode, FaBarcode } from 'react-icons/fa';
 
+// -------------------- CONFIGURATION --------------------
 const DEFAULT_TEXT_CLASSES = [
   'employee_name', 'company_name', 'designation', 'phone', 'email', 'website', 
   'address', 'employee_id', 'tagline', 'department', 'job_title', 'expiry', 
@@ -26,6 +27,7 @@ const DEFAULT_IMAGE_CLASSES = {
   qr: ['.qr-placeholder']
 };
 
+// -------------------- HELPER FUNCTIONS --------------------
 function toTitleCase(str) {
   return str.replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim().replace(/\b\w/g, c => c.toUpperCase());
 }
@@ -52,13 +54,26 @@ function getFieldLabel(className) {
   return labels[className] || toTitleCase(className);
 }
 
+// Simple hash for caching DOM scans
+function simpleHash(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return hash.toString();
+}
+
+// -------------------- MAIN COMPONENT --------------------
 export default function CustomizePage() {
+  // Refs
   const previewCanvasRef = useRef(null);
   const cardScaleWrapRef = useRef(null);
   const sidebarRef = useRef(null);
   const popupRef = useRef(null);
   const loadTimeoutRef = useRef(null);
   const isMountedRef = useRef(true);
+  const textCacheRef = useRef({ hash: null, items: [] });
 
   // State
   const [currentTemplate, setCurrentTemplate] = useState(null);
@@ -66,7 +81,7 @@ export default function CustomizePage() {
   const [originalHTML, setOriginalHTML] = useState(null);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(true); // NEW: Loading state
+  const [isLoading, setIsLoading] = useState(true);
   const [showTextPopup, setShowTextPopup] = useState(false);
   const [textPopupPosition, setTextPopupPosition] = useState({ x: 0, y: 0 });
   const [currentEditingElement, setCurrentEditingElement] = useState(null);
@@ -95,12 +110,14 @@ export default function CustomizePage() {
   const [customAccent, setCustomAccent] = useState('#2575fc');
   const [customCardBg, setCustomCardBg] = useState('#ffffff');
 
+  // Toast
   const showToastMessage = useCallback((msg) => {
     setToastMessage(msg);
     setShowToast(true);
     setTimeout(() => setShowToast(false), 2000);
   }, []);
 
+  // DOM helpers
   const getCurrentCardElement = useCallback(() => {
     if (!previewCanvasRef.current) return null;
     return previewCanvasRef.current.querySelector('.flip-card') ||
@@ -118,113 +135,108 @@ export default function CustomizePage() {
     return card?.querySelector('.card-back, .face.back');
   }, [getCurrentCardElement]);
 
-  // OPTIMIZED: Build text list using requestIdleCallback
+  // CACHED text list builder
   const buildTextList = useCallback(() => {
     const card = getCurrentCardElement();
     if (!card) return;
 
-    const callback = () => {
-      if (!isMountedRef.current) return;
-      
-      const classSelector = DEFAULT_TEXT_CLASSES.map(cls => `.${cls}`).join(', ');
-      const attributeSelector = '[data-editable="true"], [data-field]';
-      const textElements = card.querySelectorAll(`${classSelector}, ${attributeSelector}`);
-      const fallbackElements = card.querySelectorAll('h1, h2, h3, p, span, b, strong, li, a');
-      
-      const items = [];
-      const seen = new Set();
-      const candidates = [...textElements, ...fallbackElements];
-
-      for (const element of candidates) {
-        if (seen.has(element)) continue;
-        seen.add(element);
-        
-        const text = element.innerText?.trim();
-        if (!text) continue;
-        if (element.querySelector('input, textarea, button, img, svg, canvas')) continue;
-        
-        const computed = getComputedStyle(element);
-        const index = items.length;
-        element.dataset.elementIndex = String(index);
-        element.setAttribute('data-fulltext', text);
-        
-        if (!element.dataset.originalText) element.dataset.originalText = text;
-        if (!element.dataset.originalColor) element.dataset.originalColor = rgbToHex(computed.color) || '#000000';
-        if (!element.dataset.originalFontSize) element.dataset.originalFontSize = computed.fontSize;
-        if (!element.dataset.originalFontFamily) element.dataset.originalFontFamily = computed.fontFamily;
-        
-        const classList = element.className.split(/\s+/);
-        const dataField = element.dataset.field;
-        const matchedClass = DEFAULT_TEXT_CLASSES.find(cls => classList.includes(cls)) || dataField;
-        const label = matchedClass ? getFieldLabel(matchedClass) : (text.slice(0, 30) + (text.length > 30 ? '...' : ''));
-        const isBackField = !!element.closest('.card-back, .face.back, [class*="back"]');
-        const color = rgbToHex(computed.color) || '#000000';
-
-        items.push({
-          index, label: isBackField ? `${label} (Back)` : label,
-          text, color, side: isBackField ? 'Back' : 'Front',
-          element, originalText: text, originalColor: color
-        });
-      }
-      
-      if (isMountedRef.current) setTextFields(items);
-    };
-
-    // Use requestIdleCallback for non-critical work
-    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-      requestIdleCallback(callback, { timeout: 100 });
-    } else {
-      setTimeout(callback, 10);
+    const currentHTML = card.innerHTML;
+    const hash = simpleHash(currentHTML);
+    // Use cache if unchanged
+    if (hash === textCacheRef.current.hash && textCacheRef.current.items.length) {
+      setTextFields(textCacheRef.current.items);
+      return;
     }
+
+    // Otherwise scan
+    const classSelector = DEFAULT_TEXT_CLASSES.map(cls => `.${cls}`).join(', ');
+    const attributeSelector = '[data-editable="true"], [data-field]';
+    const textElements = card.querySelectorAll(`${classSelector}, ${attributeSelector}`);
+    const fallbackElements = card.querySelectorAll('h1, h2, h3, p, span, b, strong, li, a');
+    
+    const items = [];
+    const seen = new Set();
+    const candidates = [...textElements, ...fallbackElements];
+
+    for (const element of candidates) {
+      if (seen.has(element)) continue;
+      seen.add(element);
+      const text = element.innerText?.trim();
+      if (!text) continue;
+      if (element.querySelector('input, textarea, button, img, svg, canvas')) continue;
+      
+      const computed = getComputedStyle(element);
+      const idx = items.length;
+      element.dataset.elementIndex = String(idx);
+      element.setAttribute('data-fulltext', text);
+      
+      if (!element.dataset.originalText) element.dataset.originalText = text;
+      if (!element.dataset.originalColor) element.dataset.originalColor = rgbToHex(computed.color) || '#000000';
+      if (!element.dataset.originalFontSize) element.dataset.originalFontSize = computed.fontSize;
+      if (!element.dataset.originalFontFamily) element.dataset.originalFontFamily = computed.fontFamily;
+      
+      const classList = element.className.split(/\s+/);
+      const dataField = element.dataset.field;
+      const matchedClass = DEFAULT_TEXT_CLASSES.find(cls => classList.includes(cls)) || dataField;
+      const label = matchedClass ? getFieldLabel(matchedClass) : (text.slice(0, 30) + (text.length > 30 ? '...' : ''));
+      const isBackField = !!element.closest('.card-back, .face.back, [class*="back"]');
+      const color = rgbToHex(computed.color) || '#000000';
+
+      items.push({
+        index: idx,
+        label: isBackField ? `${label} (Back)` : label,
+        text,
+        color,
+        side: isBackField ? 'Back' : 'Front',
+        element,
+        originalText: text,
+        originalColor: color
+      });
+    }
+    
+    textCacheRef.current = { hash, items };
+    setTextFields(items);
   }, [getCurrentCardElement]);
 
-  // OPTIMIZED: Build background blocks
+  // Background blocks (no cache needed – usually few elements)
   const buildBackgroundBlocks = useCallback(() => {
     const card = getCurrentCardElement();
     if (!card) return;
-
-    const callback = () => {
-      if (!isMountedRef.current) return;
-      
-      let bgElements = card.querySelectorAll('.editable-bg');
-      
-      if (bgElements.length === 0) {
-        const front = getFrontFace();
-        const back = getBackFace();
-        if (front && !front.classList.contains('editable-bg')) front.classList.add('editable-bg');
-        if (back && !back.classList.contains('editable-bg')) back.classList.add('editable-bg');
-        bgElements = card.querySelectorAll('.editable-bg');
-      }
-      
-      const blocks = [];
-      for (const element of bgElements) {
-        const computed = getComputedStyle(element);
-        const currentColor = rgbToHex(computed.backgroundColor) || '#ffffff';
-        const currentBgImage = computed.backgroundImage || 'none';
-        const startsAsGradient = currentBgImage.includes('gradient(');
-        const isBack = !!element.closest('.card-back, .face.back, [class*="back"]');
-        
-        blocks.push({
-          index: blocks.length, element, label: isBack ? `Background ${blocks.length + 1} (Back)` : `Background ${blocks.length + 1} (Front)`,
-          currentColor, currentBgImage, mode: startsAsGradient ? 'gradient' : (currentBgImage !== 'none' ? 'image' : 'solid'),
-          gradColor1: '#4f46e5', gradColor2: '#6366f1', gradDirection: '135deg'
-        });
-      }
-      
-      if (isMountedRef.current) setBackgroundBlocks(blocks);
-    };
-
-    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-      requestIdleCallback(callback, { timeout: 100 });
-    } else {
-      setTimeout(callback, 10);
+    
+    let bgElements = card.querySelectorAll('.editable-bg');
+    if (bgElements.length === 0) {
+      const front = getFrontFace();
+      const back = getBackFace();
+      if (front && !front.classList.contains('editable-bg')) front.classList.add('editable-bg');
+      if (back && !back.classList.contains('editable-bg')) back.classList.add('editable-bg');
+      bgElements = card.querySelectorAll('.editable-bg');
     }
+    
+    const blocks = [];
+    for (const el of bgElements) {
+      const computed = getComputedStyle(el);
+      const currentColor = rgbToHex(computed.backgroundColor) || '#ffffff';
+      const currentBgImage = computed.backgroundImage || 'none';
+      const startsAsGradient = currentBgImage.includes('gradient(');
+      const isBack = !!el.closest('.card-back, .face.back, [class*="back"]');
+      blocks.push({
+        index: blocks.length,
+        element: el,
+        label: isBack ? `Background ${blocks.length + 1} (Back)` : `Background ${blocks.length + 1} (Front)`,
+        currentColor,
+        currentBgImage,
+        mode: startsAsGradient ? 'gradient' : (currentBgImage !== 'none' ? 'image' : 'solid'),
+        gradColor1: '#4f46e5',
+        gradColor2: '#6366f1',
+        gradDirection: '135deg'
+      });
+    }
+    setBackgroundBlocks(blocks);
   }, [getCurrentCardElement, getFrontFace, getBackFace]);
 
   const detectFeatures = useCallback(() => {
     const card = getCurrentCardElement();
     if (!card) return;
-    
     const features = {
       hasProfile: DEFAULT_IMAGE_CLASSES.profile.some(sel => card.querySelector(sel)),
       hasSignature: DEFAULT_IMAGE_CLASSES.signature.some(sel => card.querySelector(sel)),
@@ -232,9 +244,10 @@ export default function CustomizePage() {
       hasBarcode: DEFAULT_IMAGE_CLASSES.barcode.some(sel => card.querySelector(sel)),
       hasQR: DEFAULT_IMAGE_CLASSES.qr.some(sel => card.querySelector(sel))
     };
-    if (isMountedRef.current) setDetectedFeatures(features);
+    setDetectedFeatures(features);
   }, [getCurrentCardElement]);
 
+  // Side preview
   const cloneFaceForPreview = useCallback((face) => {
     if (!face) return '';
     const clone = face.cloneNode(true);
@@ -250,24 +263,23 @@ export default function CustomizePage() {
   }, []);
 
   const refreshSidePreviewHtml = useCallback(() => {
-    const doRefresh = () => {
+    requestAnimationFrame(() => {
       if (isMountedRef.current) {
         setSidePreviewHtml({
           front: cloneFaceForPreview(getFrontFace()),
           back: cloneFaceForPreview(getBackFace())
         });
       }
-    };
-    setTimeout(doRefresh, 50);
+    });
   }, [cloneFaceForPreview, getFrontFace, getBackFace]);
 
   const triggerUpdate = useCallback(() => refreshSidePreviewHtml(), [refreshSidePreviewHtml]);
 
+  // Sidebar builder (runs in startTransition)
   const buildSidebar = useCallback(() => {
-    // Run scans in parallel for better performance
     buildTextList();
     if (currentTemplate?.category === 'employee') {
-      setTimeout(() => buildBackgroundBlocks(), 50);
+      buildBackgroundBlocks();
     }
     detectFeatures();
   }, [buildTextList, buildBackgroundBlocks, detectFeatures, currentTemplate]);
@@ -279,18 +291,17 @@ export default function CustomizePage() {
     }
   };
 
-  // OPTIMIZED: Load template with loading indicator and timeout protection
+  // Load template
   useEffect(() => {
     isMountedRef.current = true;
     setIsLoading(true);
-    
-    // Set a timeout to prevent infinite loading
+    // Timeout now 10 seconds
     loadTimeoutRef.current = setTimeout(() => {
       if (isMountedRef.current && isLoading) {
         setIsLoading(false);
-        showToastMessage('Loading took longer than expected. Please refresh if stuck.');
+        showToastMessage('Loading took longer than expected. You can refresh if stuck.');
       }
-    }, 5000);
+    }, 10000);
 
     const saved = localStorage.getItem('selectedTemplateForCustomize');
     if (!saved) {
@@ -298,58 +309,63 @@ export default function CustomizePage() {
       setIsLoading(false);
       return;
     }
-    
+
     try {
       const template = JSON.parse(saved);
-      const normalizedHTML = normalizeTemplateHtml(template.fullHTML || template.htmlContent || '');
+      // Use pre‑normalized HTML if available, otherwise fallback
+      const rawHTML = template.fullHTML || template.htmlContent || '';
+      const normalizedHTML = normalizeTemplateHtml(rawHTML);
+      
       setCurrentTemplate(template);
       setCurrentOrientation(template.orientation || 'landscape');
 
-      setTimeout(() => {
-        if (previewCanvasRef.current && normalizedHTML) {
-          previewCanvasRef.current.innerHTML = normalizedHTML;
-          setOriginalHTML(normalizedHTML);
+      // Inject HTML immediately
+      if (previewCanvasRef.current && normalizedHTML) {
+        previewCanvasRef.current.innerHTML = normalizedHTML;
+        setOriginalHTML(normalizedHTML);
 
-          if (template.category === 'visiting') {
-            const defaults = { primary: '#ff7e5f', secondary: '#6a11cb', accent: '#2575fc', cardBg: '#ffffff' };
-            ['primary', 'secondary', 'accent', 'cardBg'].forEach(key => {
-              const value = template.themeColors?.[key] || defaults[key];
-              previewCanvasRef.current.style.setProperty(`--${key === 'cardBg' ? 'card-bg' : key}`, value);
-            });
-            setCustomPrimary(template.themeColors?.primary || defaults.primary);
-            setCustomSecondary(template.themeColors?.secondary || defaults.secondary);
-            setCustomAccent(template.themeColors?.accent || defaults.accent);
-            setCustomCardBg('#ffffff');
-          }
-
-          const card = getCurrentCardElement();
-          const flipInner = card?.querySelector('.flip-card-inner');
-          if (flipInner) flipInner.style.transform = 'rotateY(0deg)';
-          
-          // Use requestAnimationFrame for DOM rendering before sidebar build
-          requestAnimationFrame(() => {
-            setTimeout(() => {
-              buildSidebar();
-              refreshSidePreviewHtml();
-              setIsLoading(false);
-              if (loadTimeoutRef.current) clearTimeout(loadTimeoutRef.current);
-            }, 100);
+        // Apply visiting card theme
+        if (template.category === 'visiting') {
+          const defaults = { primary: '#ff7e5f', secondary: '#6a11cb', accent: '#2575fc', cardBg: '#ffffff' };
+          ['primary', 'secondary', 'accent', 'cardBg'].forEach(key => {
+            const value = template.themeColors?.[key] || defaults[key];
+            previewCanvasRef.current.style.setProperty(`--${key === 'cardBg' ? 'card-bg' : key}`, value);
           });
-        } else {
-          setIsLoading(false);
+          setCustomPrimary(template.themeColors?.primary || defaults.primary);
+          setCustomSecondary(template.themeColors?.secondary || defaults.secondary);
+          setCustomAccent(template.themeColors?.accent || defaults.accent);
+          setCustomCardBg('#ffffff');
         }
-      }, 200);
+
+        const card = getCurrentCardElement();
+        const flipInner = card?.querySelector('.flip-card-inner');
+        if (flipInner) flipInner.style.transform = 'rotateY(0deg)';
+        
+        // Hide loading spinner immediately – card is visible
+        setIsLoading(false);
+        if (loadTimeoutRef.current) clearTimeout(loadTimeoutRef.current);
+        
+        // Build sidebar in background (non‑blocking)
+        startTransition(() => {
+          buildSidebar();
+          refreshSidePreviewHtml();
+        });
+      } else {
+        setIsLoading(false);
+      }
     } catch (e) {
+      console.error(e);
       showToastMessage('Error loading template');
       setIsLoading(false);
     }
-    
+
     return () => {
       isMountedRef.current = false;
       if (loadTimeoutRef.current) clearTimeout(loadTimeoutRef.current);
     };
   }, []);
 
+  // Sidebar width
   useEffect(() => {
     const savedWidth = localStorage.getItem('sidebarWidth');
     if (savedWidth) setSidebarWidth(parseInt(savedWidth));
@@ -372,6 +388,7 @@ export default function CustomizePage() {
     document.addEventListener('mouseup', handleMouseUp);
   };
 
+  // Flip card
   const flipCard = () => {
     const card = getCurrentCardElement();
     const front = getFrontFace();
@@ -386,6 +403,7 @@ export default function CustomizePage() {
     showToastMessage(flipInner?.dataset.flipped === 'true' ? 'Showing back side' : 'Showing front side');
   };
 
+  // All editing functions (same as original, but triggerUpdate calls refresh)
   const handleTextChange = (index, newText) => {
     const field = textFields.find(f => f.index === index);
     if (field?.element) {
@@ -486,6 +504,7 @@ export default function CustomizePage() {
     triggerUpdate();
   };
 
+  // Text popup handlers (draggable) – same as original
   const showTextPopupHandler = (field, event) => {
     event?.stopPropagation();
     setCurrentEditingElement(field.element);
@@ -594,6 +613,7 @@ export default function CustomizePage() {
     triggerUpdate();
   };
 
+  // Image, barcode, QR (unchanged)
   const uploadImage = (type) => {
     const input = document.createElement('input');
     input.type = 'file';
@@ -606,7 +626,6 @@ export default function CustomizePage() {
         const imageData = ev.target?.result;
         if (!imageData) return;
         setUploadedImages(prev => ({ ...prev, [type]: imageData }));
-        
         const selectors = {
           profile: DEFAULT_IMAGE_CLASSES.profile,
           signature: DEFAULT_IMAGE_CLASSES.signature,
@@ -636,7 +655,6 @@ export default function CustomizePage() {
     const card = getCurrentCardElement();
     const barcodeElements = card?.querySelectorAll('.barcode, .barcode-section');
     if (!barcodeElements?.length) { showToastMessage('No barcode placeholder found'); return; }
-    
     import('jsbarcode').then(JsBarcode => {
       barcodeElements.forEach(container => {
         container.innerHTML = '';
@@ -669,7 +687,6 @@ export default function CustomizePage() {
     const card = getCurrentCardElement();
     const qrElements = card?.querySelectorAll('.qr-placeholder');
     if (!qrElements?.length) { showToastMessage('No QR placeholder found'); return; }
-    
     import('qrcode').then(QRCode => {
       qrElements.forEach(placeholder => {
         placeholder.innerHTML = '';
@@ -748,6 +765,7 @@ export default function CustomizePage() {
     if (originalHTML && previewCanvasRef.current) {
       previewCanvasRef.current.innerHTML = originalHTML;
       setUploadedImages({ profile: null, signature: null, logo: null });
+      textCacheRef.current = { hash: null, items: [] }; // invalidate cache
       if (currentTemplate?.category === 'visiting') {
         const defaults = { primary: '#ff7e5f', secondary: '#6a11cb', accent: '#2575fc', cardBg: '#ffffff' };
         Object.entries(defaults).forEach(([key, value]) => {
@@ -756,9 +774,11 @@ export default function CustomizePage() {
         setCustomPrimary(defaults.primary); setCustomSecondary(defaults.secondary); setCustomAccent(defaults.accent); setCustomCardBg(defaults.cardBg);
         setSelectedTheme('Default');
       }
-      setTimeout(() => buildSidebar(), 200);
+      startTransition(() => {
+        buildSidebar();
+        triggerUpdate();
+      });
       showToastMessage('Reset to original template');
-      triggerUpdate();
     }
   };
 
@@ -771,7 +791,6 @@ export default function CustomizePage() {
 
   const showImageSection = detectedFeatures.hasProfile || detectedFeatures.hasSignature || detectedFeatures.hasLogo || detectedFeatures.hasBarcode || detectedFeatures.hasQR;
 
-  // Loading spinner component
   if (isLoading) {
     return (
       <div className="h-screen flex flex-col items-center justify-center bg-gradient-to-br from-indigo-100 to-purple-100">
@@ -784,6 +803,7 @@ export default function CustomizePage() {
     );
   }
 
+  // Main render – identical to your original layout (kept unchanged)
   return (
     <div className="h-screen flex flex-col bg-[#f5f7fb] font-['Inter'] overflow-hidden">
       <div className="lg:hidden fixed top-20 left-4 z-50">

@@ -3,12 +3,26 @@ import landscapeVisitingRaw from './landscape-visiting';
 import portraitEmployeeRaw from './portrait-employee';
 
 export function normalizeTemplateHtml(html = '') {
+  if (!html) return '';
+  
+  // More robust SVG normalization
   return String(html).replace(
-    /data:image\/svg\+xml,((?:%3C|<)svg[\s\S]*?(?:%3C|<)\/svg(?:%3E|>))/gi,
+    /data:image\/svg\+xml,([^"'\s>]+)/gi,
     (match, svgPart) => {
       try {
-        return `data:image/svg+xml,${encodeURIComponent(decodeURIComponent(svgPart))}`;
-      } catch {
+        // Try to decode if it's encoded
+        let decoded = svgPart;
+        try {
+          decoded = decodeURIComponent(svgPart);
+        } catch {
+          // If decode fails, use as is
+        }
+        
+        // Re-encode properly
+        const encoded = encodeURIComponent(decoded);
+        return `data:image/svg+xml,${encoded}`;
+      } catch (error) {
+        console.warn('SVG normalization failed:', error);
         return match;
       }
     }
