@@ -2,28 +2,30 @@ import landscapeEmployeeRaw from './landscape-employee';
 import landscapeVisitingRaw from './landscape-visiting';
 import portraitEmployeeRaw from './portrait-employee';
 
+/**
+ * Safely normalize SVG data URLs – prevents malformed URI errors.
+ */
 export function normalizeTemplateHtml(html = '') {
   if (!html) return '';
   
-  // More robust SVG normalization
+  // Only try to fix SVG data URLs if they exist
   return String(html).replace(
     /data:image\/svg\+xml,([^"'\s>]+)/gi,
     (match, svgPart) => {
       try {
-        // Try to decode if it's encoded
+        // Try to decode – if it fails, the original is already corrupted
         let decoded = svgPart;
         try {
           decoded = decodeURIComponent(svgPart);
         } catch {
-          // If decode fails, use as is
+          // Not a valid URI component, leave as is
         }
-        
-        // Re-encode properly
+        // Re‑encode properly
         const encoded = encodeURIComponent(decoded);
         return `data:image/svg+xml,${encoded}`;
       } catch (error) {
-        console.warn('SVG normalization failed:', error);
-        return match;
+        console.warn('Failed to normalize SVG:', error);
+        return match; // keep original
       }
     }
   );
@@ -38,20 +40,17 @@ const landscapeEmployee = landscapeEmployeeRaw.map(normalizeTemplate);
 const landscapeVisiting = landscapeVisitingRaw.map(normalizeTemplate);
 const portraitEmployee = portraitEmployeeRaw.map(normalizeTemplate);
 
-// Combine all templates into a flat array for easy searching
 export const allTemplates = [
   ...landscapeEmployee,
   ...landscapeVisiting,
   ...portraitEmployee,
 ];
 
-// Export them grouped by orientation
 export const templatesByOrientation = {
   landscape: [...landscapeEmployee, ...landscapeVisiting],
   portrait: [...portraitEmployee],
 };
 
-// Export individual categories if needed
 export {
   landscapeEmployee,
   landscapeVisiting,

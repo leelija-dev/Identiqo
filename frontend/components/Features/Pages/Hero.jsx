@@ -33,10 +33,10 @@ export default function Hero() {
       <Container className="relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* LEFT CONTENT - Text with Animations */}
-          <div className="text-left">
+          <div className="text-left"> 
             {/* Badge - Fade Down */}
             <div className={`transition-all duration-700 ease-out ${
-              animatedText.badge 
+              animatedText.badge  
                 ? 'opacity-100 translate-y-0' 
                 : 'opacity-0 -translate-y-8'
             }`}>

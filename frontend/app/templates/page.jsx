@@ -2,11 +2,11 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { templatesByOrientation } from '../../templatesdata';
+import { normalizeTemplateHtml } from '../../templatesdata';
 import CardPreview from '@/components/Common/CardPreview';
 import { FiMenu, FiX, FiDownload } from 'react-icons/fi';
 
 export default function TemplatesPage() {
-  // State Management
   const [orientation, setOrientation] = useState('landscape');
   const [category, setCategory] = useState('all');
   const [industryFilter, setIndustryFilter] = useState('all');
@@ -107,16 +107,18 @@ export default function TemplatesPage() {
 
   const goToCustomize = () => {
     if (selectedTemplate) {
+      // Pre‑normalize the HTML to avoid processing on the customize page
+      const preprocessedHTML = normalizeTemplateHtml(selectedTemplate.htmlContent);
       const templateData = {
         ...selectedTemplate,
-        fullHTML: selectedTemplate.htmlContent,
+        fullHTML: preprocessedHTML,
         sourcePage: 'template'
       };
       localStorage.setItem('selectedTemplateForCustomize', JSON.stringify(templateData));
       showToastMessage('Loading customization...');
       setTimeout(() => {
         window.location.href = '/customize';
-      }, 300);
+      }, 50);
     }
   };
 
@@ -185,34 +187,25 @@ export default function TemplatesPage() {
         const frontCanvas = await captureFace(front);
         const backCanvas = await captureFace(back);
 
-        // Combine both sides into a single canvas
         const combinedCanvas = document.createElement('canvas');
-        const combinedCtx = combinedCanvas.getContext('2d');
-        
-        // Set combined canvas dimensions (stack vertically)
         combinedCanvas.width = frontCanvas.width;
         combinedCanvas.height = frontCanvas.height + backCanvas.height;
-        
-        // Draw front on top
-        combinedCtx.drawImage(frontCanvas, 0, 0);
-        
-        // Draw back below front
-        combinedCtx.drawImage(backCanvas, 0, frontCanvas.height);
-        
-        // Download combined image
+        const ctx = combinedCanvas.getContext('2d');
+        ctx.drawImage(frontCanvas, 0, 0);
+        ctx.drawImage(backCanvas, 0, frontCanvas.height);
+
         const link = document.createElement('a');
         link.download = `${safeName}-both-sides-${timestamp}.png`;
         link.href = combinedCanvas.toDataURL('image/png');
         link.click();
 
-        showToastMessage('Template downloaded (front + back as single file)');
+        showToastMessage('Template downloaded (front + back)');
       } else {
         const canvas = await html2canvas(parserStage, {
           scale: 2,
           useCORS: true,
           backgroundColor: '#ffffff',
         });
-
         const link = document.createElement('a');
         link.download = `${safeName}-${timestamp}.png`;
         link.href = canvas.toDataURL('image/png');
@@ -256,7 +249,6 @@ export default function TemplatesPage() {
     portrait: 'Browse our portrait collection (350×550px) | Fully editable'
   };
 
-  // Skeleton Card
   const SkeletonCard = ({ orientation }) => (
     <div className={`bg-slate-800 rounded-2xl overflow-hidden relative animate-pulse ${
       orientation === 'landscape' ? 'aspect-[550/348]' : 'aspect-[350/550] max-w-[280px] mx-auto'
@@ -278,65 +270,40 @@ export default function TemplatesPage() {
 
   return (
     <div className="min-h-screen bg-[#f5f7fb] font-['Inter'] overflow-x-hidden">
-      {/* Mobile Sidebar Toggle */}
       <div className="md:hidden fixed top-20 left-4 z-50">
-        <button
-          onClick={toggleSidebar}
-          className="bg-indigo-500 text-white p-3 rounded-full shadow-lg hover:bg-indigo-600 transition-colors"
-        >
+        <button onClick={toggleSidebar} className="bg-indigo-500 text-white p-3 rounded-full shadow-lg hover:bg-indigo-600 transition-colors">
           <FiMenu size={20} />
         </button>
       </div>
 
       <div className="flex min-h-[calc(100vh-70px)]">
-        {/* Sidebar - Responsive Drawer */}
-        <aside 
-          className={`fixed md:relative top-0 left-0 h-full w-[280px] max-w-[85vw] bg-white border-r border-slate-200 py-6 overflow-y-auto z-40 transition-transform duration-300 ease-in-out md:translate-x-0 ${
-            isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-          }`}
-        >
+        <aside className={`fixed md:relative top-0 left-0 h-full w-[280px] max-w-[85vw] bg-white border-r border-slate-200 py-6 overflow-y-auto z-40 transition-transform duration-300 ease-in-out md:translate-x-0 ${
+          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}>
           <div className="md:hidden absolute right-3 top-3">
-            <button onClick={toggleSidebar} className="p-2 bg-slate-100 rounded-full">
-              <FiX size={20} />
-            </button>
+            <button onClick={toggleSidebar} className="p-2 bg-slate-100 rounded-full"><FiX size={20} /></button>
           </div>
 
           <div className="mb-8">
-            <div className="text-[0.7rem] uppercase tracking-[1.5px] text-slate-400 font-semibold px-5 pb-3">
-              CARD CATEGORY
-            </div>
+            <div className="text-[0.7rem] uppercase tracking-[1.5px] text-slate-400 font-semibold px-5 pb-3">CARD CATEGORY</div>
             {[
               { key: 'all', icon: '📁', label: 'All Templates' },
               { key: 'employee', icon: '👤', label: 'Employee Card' },
               { key: 'visiting', icon: '🎫', label: 'Visiting Card' }
             ].map(item => (
-              <div
-                key={item.key}
-                onClick={() => {
-                  setCategory(item.key);
-                  if (window.innerWidth < 768) setIsSidebarOpen(false);
-                }}
+              <div key={item.key} onClick={() => { setCategory(item.key); if (window.innerWidth < 768) setIsSidebarOpen(false); }}
                 className={`flex items-center gap-3 px-5 py-2.5 cursor-pointer transition-all text-[0.9rem] font-medium
-                  ${category === item.key 
-                    ? 'bg-gradient-to-br from-indigo-600 to-indigo-500 text-white' 
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-indigo-600'
-                  }`}
-              >
+                  ${category === item.key ? 'bg-gradient-to-br from-indigo-600 to-indigo-500 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-indigo-600'}`}>
                 {item.icon} {item.label}
               </div>
             ))}
           </div>
 
           <div className="mb-8">
-            <div className="text-[0.7rem] uppercase tracking-[1.5px] text-slate-400 font-semibold px-5 pb-3">
-              INDUSTRY FILTER
-            </div>
+            <div className="text-[0.7rem] uppercase tracking-[1.5px] text-slate-400 font-semibold px-5 pb-3">INDUSTRY FILTER</div>
             <div className="px-5">
-              <select
-                value={industryFilter}
-                onChange={(e) => setIndustryFilter(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-[10px] text-[0.85rem] text-slate-800 cursor-pointer hover:border-indigo-600 transition-colors"
-              >
+              <select value={industryFilter} onChange={(e) => setIndustryFilter(e.target.value)}
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-[10px] text-[0.85rem] text-slate-800 cursor-pointer hover:border-indigo-600 transition-colors">
                 <option value="all">🌐 All Industries</option>
                 <option value="technology">💻 Technology / IT</option>
                 <option value="marketing">📢 Marketing & Advertising</option>
@@ -346,33 +313,19 @@ export default function TemplatesPage() {
           </div>
         </aside>
 
-        {/* Overlay for mobile sidebar */}
-        {isSidebarOpen && (
-          <div className="fixed inset-0 bg-black/50 z-30 md:hidden" onClick={toggleSidebar} />
-        )}
+        {isSidebarOpen && <div className="fixed inset-0 bg-black/50 z-30 md:hidden" onClick={toggleSidebar} />}
 
-        {/* Content Area */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 lg:p-10 min-w-0">
           <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-800">
-                {categoryTitles[category]}
-              </h1>
-              <p className="text-slate-500 text-sm sm:text-base mt-1">
-                {categoryDescriptions[orientation]}
-              </p>
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-800">{categoryTitles[category]}</h1>
+              <p className="text-slate-500 text-sm sm:text-base mt-1">{categoryDescriptions[orientation]}</p>
             </div>
             <div className="flex gap-3 bg-slate-100 p-1 rounded-full">
               {['landscape', 'portrait'].map(ori => (
-                <button
-                  key={ori}
-                  onClick={() => setOrientation(ori)}
+                <button key={ori} onClick={() => setOrientation(ori)}
                   className={`px-4 py-2 rounded-full font-semibold text-sm transition-all
-                    ${orientation === ori 
-                      ? 'bg-gradient-to-br from-indigo-600 to-indigo-500 text-white shadow-lg shadow-indigo-500/30' 
-                      : 'bg-transparent text-slate-500'
-                    }`}
-                >
+                    ${orientation === ori ? 'bg-gradient-to-br from-indigo-600 to-indigo-500 text-white shadow-lg shadow-indigo-500/30' : 'bg-transparent text-slate-500'}`}>
                   {ori === 'landscape' ? '🌄 Landscape' : '📱 Portrait'}
                 </button>
               ))}
@@ -380,34 +333,16 @@ export default function TemplatesPage() {
           </div>
 
           {isLoading ? (
-            <div className={`grid gap-6 sm:gap-8 ${
-              orientation === 'landscape' 
-                ? 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3' 
-                : 'grid-cols-2 sm:grid-cols-3 xl:grid-cols-4'
-            }`}>
-              {[...Array(6)].map((_, i) => (
-                <SkeletonCard key={i} orientation={orientation} />
-              ))}
+            <div className={`grid gap-6 sm:gap-8 ${orientation === 'landscape' ? 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3' : 'grid-cols-2 sm:grid-cols-3 xl:grid-cols-4'}`}>
+              {[...Array(6)].map((_, i) => <SkeletonCard key={i} orientation={orientation} />)}
             </div>
           ) : filteredTemplates.length === 0 ? (
             <div className="text-center py-16 text-slate-400">No templates found</div>
           ) : (
-            <div className={`grid gap-6 sm:gap-8 ${
-              orientation === 'landscape' 
-                ? 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3' 
-                : 'grid-cols-2 sm:grid-cols-3 xl:grid-cols-4'
-            }`}>
+            <div className={`grid gap-6 sm:gap-8 ${orientation === 'landscape' ? 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3' : 'grid-cols-2 sm:grid-cols-3 xl:grid-cols-4'}`}>
               {filteredTemplates.map((template) => (
-                <div
-                  key={template.id}
-                  onClick={() => openModal(template)}
-                  className="cursor-pointer transition-transform duration-300 hover:-translate-y-2"
-                >
-                  <CardPreview
-                    html={template.htmlContent}
-                    orientation={orientation}
-                    className="w-full transition-all duration-300 hover:shadow-2xl hover:shadow-black/10"
-                  />
+                <div key={template.id} onClick={() => openModal(template)} className="cursor-pointer transition-transform duration-300 hover:-translate-y-2">
+                  <CardPreview html={template.htmlContent} orientation={orientation} className="w-full transition-all duration-300 hover:shadow-2xl hover:shadow-black/10" />
                 </div>
               ))}
             </div>
@@ -415,87 +350,34 @@ export default function TemplatesPage() {
         </div>
       </div>
 
-      {/* Preview Modal - Responsive */}
       {showModal && selectedTemplate && (
-        <div 
-          className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center z-[1000] p-4"
-          onClick={handleOverlayClick}
-        >
+        <div className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center z-[1000] p-4" onClick={handleOverlayClick}>
           <div className="flex flex-col md:flex-row gap-6 items-center justify-center w-full max-w-[90vw]">
-            <div className={`rounded-2xl overflow-hidden shadow-2xl shadow-black/50 bg-transparent
-              ${selectedTemplate.orientation === 'landscape' 
-                ? 'w-full max-w-[550px] aspect-[550/348]' 
-                : 'w-full max-w-[350px] aspect-[350/550]'
-              }`}
-            >
-              <div 
-                className="w-full h-full"
-                dangerouslySetInnerHTML={{ __html: selectedTemplate.htmlContent }}
-                onClick={handleFlipCardClick}
-              />
+            <div className={`rounded-2xl overflow-hidden shadow-2xl shadow-black/50 bg-transparent ${selectedTemplate.orientation === 'landscape' ? 'w-full max-w-[550px] aspect-[550/348]' : 'w-full max-w-[350px] aspect-[350/550]'}`}>
+              <div className="w-full h-full" dangerouslySetInnerHTML={{ __html: selectedTemplate.htmlContent }} onClick={handleFlipCardClick} />
             </div>
             <div className="flex flex-row md:flex-col gap-3 w-full md:w-auto justify-center">
-              <button 
-                onClick={addToWishlist}
-                className="px-5 py-2.5 md:px-6 md:py-3.5 rounded-full font-semibold transition-all text-sm md:text-base bg-white text-red-500 border-2 border-red-500 hover:bg-red-500 hover:text-white"
-              >
-                ⭐ Wishlist
-              </button>
-              <button 
-                onClick={goToCustomize}
-                className="px-5 py-2.5 md:px-6 md:py-3.5 rounded-full font-semibold transition-all text-sm md:text-base bg-gradient-to-br from-indigo-600 to-indigo-500 text-white hover:shadow-lg"
-              >
-                ✏️ Customize
-              </button>
-              <button
-                onClick={downloadTemplate}
-                className="px-5 py-2.5 md:px-6 md:py-3.5 rounded-full font-semibold transition-all text-sm md:text-base bg-emerald-500 text-white hover:bg-emerald-600 hover:shadow-lg flex items-center justify-center gap-2"
-              >
-                <FiDownload /> Download
-              </button>
-              <button 
-                onClick={closeModal}
-                className="px-5 py-2.5 md:px-6 md:py-3.5 rounded-full font-semibold transition-all text-sm md:text-base bg-slate-100 text-slate-500 hover:bg-slate-200"
-              >
-                ✕ Close
-              </button>
+              <button onClick={addToWishlist} className="px-5 py-2.5 md:px-6 md:py-3.5 rounded-full font-semibold transition-all text-sm md:text-base bg-white text-red-500 border-2 border-red-500 hover:bg-red-500 hover:text-white">⭐ Wishlist</button>
+              <button onClick={goToCustomize} className="px-5 py-2.5 md:px-6 md:py-3.5 rounded-full font-semibold transition-all text-sm md:text-base bg-gradient-to-br from-indigo-600 to-indigo-500 text-white hover:shadow-lg">✏️ Customize</button>
+              <button onClick={downloadTemplate} className="px-5 py-2.5 md:px-6 md:py-3.5 rounded-full font-semibold transition-all text-sm md:text-base bg-emerald-500 text-white hover:bg-emerald-600 hover:shadow-lg flex items-center justify-center gap-2"><FiDownload /> Download</button>
+              <button onClick={closeModal} className="px-5 py-2.5 md:px-6 md:py-3.5 rounded-full font-semibold transition-all text-sm md:text-base bg-slate-100 text-slate-500 hover:bg-slate-200">✕ Close</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Toast */}
-      <div className={`fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-full font-semibold transition-all duration-300 z-[1100] text-sm
-        ${showToast ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-[100px]'}`}
-      >
+      <div className={`fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-full font-semibold transition-all duration-300 z-[1100] text-sm ${showToast ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-[100px]'}`}>
         {toastMessage}
       </div>
 
       <style jsx global>{`
-        @keyframes shimmer {
-          0% { background-position: -200% 0; }
-          100% { background-position: 200% 0; }
-        }
-        .animate-shimmer {
-          animation: shimmer 1.5s ease-in-out infinite;
-        }
-        .flip-card .flip-card-inner {
-          transition: transform 0.65s cubic-bezier(0.23, 1, 0.32, 1);
-        }
-        .flip-card.flipped .flip-card-inner {
-          transform: rotateY(180deg);
-        }
-        .flip-card, .card-front, .card-back, .flip-card-inner {
-          width: 100% !important;
-          height: 100% !important;
-        }
-        @media (max-width: 320px) {
-          .grid { gap: 1rem; }
-          button { font-size: 0.75rem; padding: 0.5rem 1rem; }
-        }
-        @media (max-width: 480px) and (orientation: portrait) {
-          .rounded-full { min-height: 44px; }
-        }
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+        .animate-shimmer { animation: shimmer 1.5s ease-in-out infinite; }
+        .flip-card .flip-card-inner { transition: transform 0.65s cubic-bezier(0.23, 1, 0.32, 1); }
+        .flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
+        .flip-card, .card-front, .card-back, .flip-card-inner { width: 100% !important; height: 100% !important; }
+        @media (max-width: 320px) { .grid { gap: 1rem; } button { font-size: 0.75rem; padding: 0.5rem 1rem; } }
+        @media (max-width: 480px) and (orientation: portrait) { .rounded-full { min-height: 44px; } }
       `}</style>
     </div>
   );
