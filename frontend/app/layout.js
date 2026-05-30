@@ -8,19 +8,25 @@ import { usePathname } from "next/navigation";
 export default function RootLayout({ children }) {
   const pathname = usePathname();
 
-  // Pages where navbar/footer should be hidden
-  const hideLayout =
+  // Pages where navbar should be hidden
+  const hideNavbar =
     pathname === "/signin" ||
     pathname === "/signup";
 
+  // Pages where footer should be hidden
+  const hideFooter =
+    pathname === "/signin" ||
+    pathname === "/signup" ||
+    pathname === "/customize";
+
   return (
-    <html lang="en">
-      <body>
-        {!hideLayout && <Navbar />}
+    <html lang="en" suppressHydrationWarning>
+      <body suppressHydrationWarning>
+        {!hideNavbar && <Navbar />}
 
         {children}
 
-        {!hideLayout && <Footer />}
+        {!hideFooter && <Footer />}
       </body>
     </html>
   );

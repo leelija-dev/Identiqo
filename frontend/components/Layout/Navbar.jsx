@@ -1,11 +1,13 @@
 "use client";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { FiLogIn } from "react-icons/fi";
 import { HiBars3, HiXMark } from "react-icons/hi2";
 import Container from "../Common/Container";
 
 export default function NavbarMinimal() {
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
@@ -60,6 +62,14 @@ export default function NavbarMinimal() {
     { name: "Contact", href: "/contact" },
   ];
 
+  // Function to check if link is active
+  const isActive = (href) => {
+    if (href === "/") {
+      return pathname === href;
+    }
+    return pathname.startsWith(href);
+  };
+
   return (
     <>
       <nav
@@ -67,7 +77,7 @@ export default function NavbarMinimal() {
           isVisible ? "translate-y-0" : "-translate-y-full"
         }`}
       >
-       <Container>
+        <Container>
           <div className="flex items-center justify-between h-12 sm:h-14 md:h-16 lg:h-20">
             
             {/* Logo */}
@@ -80,17 +90,26 @@ export default function NavbarMinimal() {
 
             {/* Desktop Menu - Hidden on mobile/tablet */}
             <div className="hidden lg:flex items-center gap-3 xl:gap-4 2xl:gap-6">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.name}
-                  href={link.href}
-                  className="relative text-xs xl:text-sm 2xl:text-base font-medium text-slate-600 transition-all duration-300 hover:text-indigo-600 group whitespace-nowrap"
-                >
-                  {link.name}
-                  <span className="absolute -bottom-1 left-0 h-[2px] w-0 bg-gradient-to-r from-indigo-600 to-purple-600 transition-all duration-300 group-hover:w-full"></span>
-                  <span className="absolute inset-0 rounded-md opacity-0 blur-md bg-indigo-100 transition-all duration-300 group-hover:opacity-100 -z-10"></span>
-                </Link>
-              ))}
+              {navLinks.map((link) => {
+                const active = isActive(link.href);
+                return (
+                  <Link
+                    key={link.name}
+                    href={link.href}
+                    className="relative text-xs xl:text-sm 2xl:text-base font-medium text-slate-600 transition-all duration-300 hover:text-indigo-600 group whitespace-nowrap py-2"
+                  >
+                    {link.name}
+                    {/* Underline indicator - always visible on active page */}
+                    <span 
+                      className={`absolute -bottom-1 left-0 h-[2px] bg-gradient-to-r from-indigo-600 to-purple-600 transition-all duration-300 ${
+                        active ? "w-full" : "w-0 group-hover:w-full"
+                      }`}
+                    ></span>
+                    {/* Blur effect on hover */}
+                    <span className="absolute inset-0 rounded-md opacity-0 blur-md bg-indigo-100 transition-all duration-300 group-hover:opacity-100 -z-10"></span>
+                  </Link>
+                );
+              })}
             </div>
 
             {/* Desktop Button - Attractive Sign In Button with Icon */}
@@ -172,21 +191,28 @@ export default function NavbarMinimal() {
               </button>
             </div>
 
-            {/* Menu Navigation Links */}
+            {/* Menu Navigation Links with active indicator */}
             <div className="flex-1 overflow-y-auto py-4">
-              {navLinks.map((link, index) => (
-                <Link
-                  key={link.name}
-                  href={link.href}
-                  onClick={() => setIsOpen(false)}
-                  className="block px-4 py-3 text-base text-slate-600 transition-all duration-300 hover:bg-indigo-50 hover:text-indigo-600"
-                  style={{
-                    transitionDelay: `${index * 50}ms`,
-                  }}
-                >
-                  {link.name}
-                </Link>
-              ))}
+              {navLinks.map((link, index) => {
+                const active = isActive(link.href);
+                return (
+                  <Link
+                    key={link.name}
+                    href={link.href}
+                    onClick={() => setIsOpen(false)}
+                    className={`block px-4 py-3 text-base transition-all duration-300 ${
+                      active 
+                        ? "bg-indigo-50 text-indigo-600 font-semibold border-r-4 border-indigo-600" 
+                        : "text-slate-600 hover:bg-indigo-50 hover:text-indigo-600"
+                    }`}
+                    style={{
+                      transitionDelay: `${index * 50}ms`,
+                    }}
+                  >
+                    {link.name}
+                  </Link>
+                );
+              })}
             </div>
 
             {/* Menu Footer - Attractive Sign In Button with Icon */}

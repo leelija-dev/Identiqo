@@ -1,4 +1,10 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {};
+const nextConfig = {
+  devIndicators: {
+    autoPrerender: false,
+    buildActivity: false,
+    buildActivityPosition: 'bottom-right', // but we are disabling it anyway
+  },
+};
 
 export default nextConfig;
