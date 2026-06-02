@@ -1,10 +1,12 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import CardPreview from '@/components/Common/CardPreview';
 import { FiMenu, FiX, FiDownload } from 'react-icons/fi';
 
 export default function GalleryPage() {
+  const router = useRouter();
   const [currentCategory, setCurrentCategory] = useState('wishlist');
   const [galleryItems, setGalleryItems] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -128,7 +130,7 @@ export default function GalleryPage() {
     const item = galleryItems.find(i => i.id == id);
     if (item) {
       localStorage.setItem('selectedTemplateForCustomize', JSON.stringify(item));
-      window.location.href = '/customize';
+      router.push('/customize');
     }
   };
 
@@ -191,7 +193,7 @@ export default function GalleryPage() {
     if (typeof window === 'undefined') return;
     if (action === 'customize' && selectedItem) {
       localStorage.setItem('selectedTemplateForCustomize', JSON.stringify(selectedItem));
-      window.location.href = '/customize';
+      router.push('/customize');
     } else if (action === 'delete' && selectedItem) {
       removeItem(selectedItem.id);
     } else if (action === 'wishlist') {

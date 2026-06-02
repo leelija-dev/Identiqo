@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { 
   FiStar, FiArrowLeft, FiArrowRight, FiHeart, 
   FiUsers, FiTrendingUp, FiMessageCircle, FiCheckCircle,
-  FiAward, FiZap
+  FiAward, 
 } from "react-icons/fi";
 import { FaQuoteLeft, FaQuoteRight, FaStar } from "react-icons/fa";
 

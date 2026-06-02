@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { 
   FiMail, FiLock, FiEye, FiEyeOff, FiArrowRight, 
-  FiGithub, FiTwitter, FiFacebook, FiApple, FiBriefcase,
+   FiBriefcase,
   FiTrendingUp, FiUsers, FiShield, FiAlertCircle
 } from "react-icons/fi";
 import { FaGoogle, FaMicrosoft, FaStar } from "react-icons/fa";
@@ -53,7 +53,7 @@ export default function Login() {
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
-      router.push("/dashboard");
+      router.push("/");
     }, 1500);
   };
 
@@ -100,10 +100,8 @@ export default function Login() {
             {/* Logo */}
             <div>
               <div className="flex items-center gap-3 mb-20">
-                <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-lg">
-                  <span className="text-2xl font-bold">C</span>
-                </div>
-                <span className="text-2xl font-bold tracking-tight">CardStudio</span>
+               
+                <span className="text-2xl font-bold tracking-tight">IDENTIQO</span>
               </div>
             </div>
 

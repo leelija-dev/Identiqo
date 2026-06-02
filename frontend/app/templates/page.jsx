@@ -1,12 +1,17 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo, memo } from 'react';
+import { useRouter } from 'next/navigation';
 import { templatesByOrientation } from '../../templatesdata';
 import { normalizeTemplateHtml } from '../../templatesdata';
 import CardPreview from '@/components/Common/CardPreview';
 import { FiMenu, FiX, FiDownload } from 'react-icons/fi';
 
+// Memoized card component to prevent re-renders
+const MemoizedCardPreview = memo(CardPreview);
+
 export default function TemplatesPage() {
+  const router = useRouter();
   const [orientation, setOrientation] = useState('landscape');
   const [category, setCategory] = useState('all');
   const [industryFilter, setIndustryFilter] = useState('all');
@@ -14,10 +19,9 @@ export default function TemplatesPage() {
   const [showModal, setShowModal] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  // Load saved state
+  // Load saved state once
   useEffect(() => {
     const savedState = localStorage.getItem('templatePageState');
     if (savedState) {
@@ -30,23 +34,20 @@ export default function TemplatesPage() {
     }
   }, []);
 
-  // Save state
+  // Save state on changes (debounced to avoid excessive writes)
   useEffect(() => {
-    localStorage.setItem('templatePageState', JSON.stringify({
-      category,
-      filter: industryFilter,
-      orientation
-    }));
+    const timer = setTimeout(() => {
+      localStorage.setItem('templatePageState', JSON.stringify({
+        category,
+        filter: industryFilter,
+        orientation
+      }));
+    }, 300);
+    return () => clearTimeout(timer);
   }, [category, industryFilter, orientation]);
 
-  // Skeleton loading effect
-  useEffect(() => {
-    setIsLoading(true);
-    const timer = setTimeout(() => setIsLoading(false), 600);
-    return () => clearTimeout(timer);
-  }, [orientation, category, industryFilter]);
-
-  const getFilteredTemplates = useCallback(() => {
+  // Memoize filtered templates – prevents re‑filtering on every render
+  const filteredTemplates = useMemo(() => {
     const templates = templatesByOrientation[orientation];
     if (!templates) return [];
     return templates.filter(template => {
@@ -107,7 +108,7 @@ export default function TemplatesPage() {
 
   const goToCustomize = () => {
     if (selectedTemplate) {
-      // Pre‑normalize the HTML to avoid processing on the customize page
+      // Pre‑normalize once before storing
       const preprocessedHTML = normalizeTemplateHtml(selectedTemplate.htmlContent);
       const templateData = {
         ...selectedTemplate,
@@ -116,9 +117,8 @@ export default function TemplatesPage() {
       };
       localStorage.setItem('selectedTemplateForCustomize', JSON.stringify(templateData));
       showToastMessage('Loading customization...');
-      setTimeout(() => {
-        window.location.href = '/customize';
-      }, 50);
+      // Small delay to show toast, then navigate
+      setTimeout(() => router.push('/customize'), 150);
     }
   };
 
@@ -236,8 +236,6 @@ export default function TemplatesPage() {
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
-  const filteredTemplates = getFilteredTemplates();
-  
   const categoryTitles = {
     all: 'All Templates',
     employee: 'Employee Cards',
@@ -248,25 +246,6 @@ export default function TemplatesPage() {
     landscape: 'Browse our landscape collection (550×348px) | Fully editable',
     portrait: 'Browse our portrait collection (350×550px) | Fully editable'
   };
-
-  const SkeletonCard = ({ orientation }) => (
-    <div className={`bg-slate-800 rounded-2xl overflow-hidden relative animate-pulse ${
-      orientation === 'landscape' ? 'aspect-[550/348]' : 'aspect-[350/550] max-w-[280px] mx-auto'
-    }`}>
-      <div className="absolute inset-0 bg-gradient-to-r from-slate-700 via-slate-600 to-slate-700 bg-[length:200%_100%] animate-shimmer" />
-      <div className="absolute top-0 left-0 right-0 h-10 bg-slate-600/50 rounded-t-2xl" />
-      <div className={`absolute bg-slate-500/30 rounded-lg ${
-        orientation === 'landscape' 
-          ? 'top-[60px] left-5 w-20 h-20 rounded-full' 
-          : 'top-20 left-1/2 -translate-x-1/2 w-[100px] h-[100px] rounded-full'
-      }`} />
-      <div className={`absolute bg-slate-500/30 rounded ${
-        orientation === 'landscape'
-          ? 'top-[70px] right-5 w-[120px] h-5'
-          : 'top-[200px] left-5 right-5 h-6'
-      }`} />
-    </div>
-  );
 
   return (
     <div className="min-h-screen bg-[#f5f7fb] font-['Inter'] overflow-x-hidden">
@@ -332,17 +311,13 @@ export default function TemplatesPage() {
             </div>
           </div>
 
-          {isLoading ? (
-            <div className={`grid gap-6 sm:gap-8 ${orientation === 'landscape' ? 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3' : 'grid-cols-2 sm:grid-cols-3 xl:grid-cols-4'}`}>
-              {[...Array(6)].map((_, i) => <SkeletonCard key={i} orientation={orientation} />)}
-            </div>
-          ) : filteredTemplates.length === 0 ? (
+          {filteredTemplates.length === 0 ? (
             <div className="text-center py-16 text-slate-400">No templates found</div>
           ) : (
             <div className={`grid gap-6 sm:gap-8 ${orientation === 'landscape' ? 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3' : 'grid-cols-2 sm:grid-cols-3 xl:grid-cols-4'}`}>
               {filteredTemplates.map((template) => (
                 <div key={template.id} onClick={() => openModal(template)} className="cursor-pointer transition-transform duration-300 hover:-translate-y-2">
-                  <CardPreview html={template.htmlContent} orientation={orientation} className="w-full transition-all duration-300 hover:shadow-2xl hover:shadow-black/10" />
+                  <MemoizedCardPreview html={template.htmlContent} orientation={orientation} className="w-full transition-all duration-300 hover:shadow-2xl hover:shadow-black/10" />
                 </div>
               ))}
             </div>
@@ -370,7 +345,7 @@ export default function TemplatesPage() {
         {toastMessage}
       </div>
 
-      <style jsx global>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
         .animate-shimmer { animation: shimmer 1.5s ease-in-out infinite; }
         .flip-card .flip-card-inner { transition: transform 0.65s cubic-bezier(0.23, 1, 0.32, 1); }
@@ -378,7 +353,7 @@ export default function TemplatesPage() {
         .flip-card, .card-front, .card-back, .flip-card-inner { width: 100% !important; height: 100% !important; }
         @media (max-width: 320px) { .grid { gap: 1rem; } button { font-size: 0.75rem; padding: 0.5rem 1rem; } }
         @media (max-width: 480px) and (orientation: portrait) { .rounded-full { min-height: 44px; } }
-      `}</style>
+      `}} />
     </div>
   );
 }

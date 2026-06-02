@@ -8,8 +8,8 @@ import portraitEmployeeRaw from './portrait-employee';
 export function normalizeTemplateHtml(html = '') {
   if (!html) return '';
   
-  // Only try to fix SVG data URLs if they exist
-  return String(html).replace(
+  // More robust SVG normalization
+  const normalized = String(html).replace(
     /data:image\/svg\+xml,([^"'\s>]+)/gi,
     (match, svgPart) => {
       try {
@@ -29,6 +29,7 @@ export function normalizeTemplateHtml(html = '') {
       }
     }
   );
+  return normalized;
 }
 
 const normalizeTemplate = (template) => ({

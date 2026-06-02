@@ -9,7 +9,7 @@ import {
   FiClock,
   FiHeart,
   FiMessageCircle,
-  FiTag,
+  
   FiTrendingUp,
   FiMail,
   FiArrowRight,

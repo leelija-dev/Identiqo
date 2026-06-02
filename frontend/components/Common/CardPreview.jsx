@@ -19,11 +19,12 @@ function useFitScale(orientation, containerRef) {
       const w = el.clientWidth;
       const h = el.clientHeight;
       if (!w || !h) return;
-      const next = Math.min(w / design.width, h / design.height, 1);
-      setScale(next > 0 ? next : 1);
+      let next = Math.min(w / design.width, h / design.height);
+      next = Math.max(0.3, Math.min(next, 1));
+      setScale(next);
     };
 
-    update();
+    setTimeout(update, 0);
     const ro = new ResizeObserver(update);
     ro.observe(el);
     return () => ro.disconnect();
@@ -99,28 +100,38 @@ export function CardEditorStage({
   orientation = 'landscape',
   innerRef,
   scaleWrapRef,
+  onReady,
   className = '',
 }) {
   const frameRef = useRef(null);
   const { scale, design, scaledWidth, scaledHeight } = useFitScale(orientation, frameRef);
 
+  useEffect(() => {
+    if (innerRef?.current) onReady?.();
+  }, [innerRef, onReady, orientation]);
+
   return (
     <div
       ref={frameRef}
-      className={`relative flex w-full items-center justify-center overflow-visible ${className}`}
+      className={`relative w-full flex items-center justify-center overflow-hidden ${className}`}
       style={{
-        aspectRatio: `${design.width} / ${design.height}`,
-        maxWidth: design.width,
+        maxWidth: '100%',
         width: '100%',
+        height: 'auto',
+        minHeight: `${Math.max(scaledHeight + 20, 240)}px`,
       }}
     >
       <div
         className="relative shrink-0"
-        style={{ width: scaledWidth, height: scaledHeight }}
+        style={{ 
+          width: scaledWidth, 
+          height: scaledHeight,
+          visibility: scale > 0 ? 'visible' : 'hidden',
+        }}
       >
         <div
           ref={scaleWrapRef}
-          className="absolute left-0 top-0"
+          className="absolute left-0 top-0 overflow-hidden"
           style={{
             width: design.width,
             height: design.height,
@@ -130,7 +141,7 @@ export function CardEditorStage({
         >
           <div
             ref={innerRef}
-            className="card-editor-canvas h-full w-full rounded-[20px] overflow-visible"
+            className="card-editor-canvas h-full w-full rounded-[20px] overflow-hidden"
             style={{ width: design.width, height: design.height }}
           />
         </div>
