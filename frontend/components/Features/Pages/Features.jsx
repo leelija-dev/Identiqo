@@ -2,27 +2,19 @@
 import Container from "@/components/Common/Container";
 import { useState, useRef, useEffect } from "react";
 import { 
-  FiZap, FiGrid, FiUpload, FiLock, FiGlobe, 
-  FiSmartphone, FiShield, FiCloud, FiUsers, FiTrendingUp,
+  FiZap, FiGrid, FiUpload, FiLock, FiShield, FiCloud, FiUsers,
   FiArrowRight, FiCheck, FiChevronDown, FiChevronUp
 } from "react-icons/fi";
-import { 
-  MdQrCodeScanner
-} from "react-icons/md";
-import { 
-  BsPrinterFill
-} from "react-icons/bs";
-import { 
-  FaMagic, FaRocket, FaPalette, FaStar, FaGem
-} from "react-icons/fa";
+import { FaPalette, FaStar, FaRobot, FaMagic, FaRocket } from "react-icons/fa";
 import { TbTemplate } from "react-icons/tb";
+import { BsPrinterFill, BsFillShieldLockFill } from "react-icons/bs";
+import { MdQrCodeScanner } from "react-icons/md";
+import SectionTitle from "@/components/Common/SectionTitle";
 
-// Feature Card Component with WORKING sliding animation
-const FeatureCard = ({ feature, index }) => {
-  const [expanded, setExpanded] = useState(false);
+// Feature Card with Read More
+const FeatureCard = ({ title, desc, icon, stat, image, color, index, longDesc, benefits }) => {
   const [isVisible, setIsVisible] = useState(false);
-  const [height, setHeight] = useState(0);
-  const contentRef = useRef(null);
+  const [expanded, setExpanded] = useState(false);
   const cardRef = useRef(null);
 
   useEffect(() => {
@@ -32,456 +24,354 @@ const FeatureCard = ({ feature, index }) => {
           setIsVisible(true);
           observer.disconnect();
         }
-      },
+      }, 
       { threshold: 0.1 }
     );
     if (cardRef.current) observer.observe(cardRef.current);
     return () => observer.disconnect();
   }, []);
 
-  // Update height when expanded changes or content changes
-  useEffect(() => {
-    if (expanded && contentRef.current) {
-      // Small delay to ensure content is rendered
-      setTimeout(() => {
-        if (contentRef.current) {
-          const scrollHeight = contentRef.current.scrollHeight;
-          setHeight(scrollHeight);
-        }
-      }, 10);
-    } else {
-      setHeight(0);
-    }
-  }, [expanded, feature.longDescription, feature.benefits]);
-
   return (
     <div
       ref={cardRef}
-      className={`group relative bg-white rounded-2xl p-6 shadow-lg border border-slate-100/80 hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 backdrop-blur-sm ${
-        isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+      className={`transform transition-all duration-700 ${
+        isVisible ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
       }`}
-      style={{ transitionDelay: `${index * 80}ms` }}
+      style={{ transitionDelay: `${index * 100}ms` }}
     >
-      {/* Animated gradient border on hover */}
-      <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-indigo-500/0 via-purple-500/0 to-pink-500/0 group-hover:via-indigo-500/10 transition-all duration-700 pointer-events-none" />
-      
-      {/* Icon */}
-      <div className={`w-14 h-14 rounded-xl bg-gradient-to-r ${feature.color} flex items-center justify-center text-white shadow-lg mb-5 group-hover:scale-110 transition-transform duration-300`}>
-        {feature.icon}
-      </div>
-
-      {/* Title */}
-      <h3 className="text-xl font-bold text-slate-800 mb-2 tracking-tight">
-        {feature.title}
-      </h3>
-
-      {/* Description */}
-      <p className="text-slate-500 leading-relaxed text-sm">
-        {feature.desc}
-      </p>
-
-      {/* SLIDING CONTENT - This will definitely work */}
-      <div 
-        className="overflow-hidden transition-all duration-500 ease-in-out"
-        style={{ 
-          height: `${height}px`,
-          opacity: expanded ? 1 : 0,
-          marginTop: expanded ? '16px' : '0px'
-        }}
-      >
-        <div ref={contentRef}>
-          <div className="border-t border-slate-100 pt-4 space-y-3">
-            <p className="text-slate-600 text-sm leading-relaxed">
-              {feature.longDescription || "Advanced tools with intuitive dashboard, real-time analytics, and priority support included. Perfect for businesses of all sizes looking to create professional ID cards effortlessly."}
-            </p>
-            {feature.benefits && (
-              <ul className="space-y-2">
-                {feature.benefits.map((benefit, idx) => (
-                  <li key={idx} className="flex items-center gap-2 text-sm text-indigo-600">
-                    <FiCheck className="w-4 h-4 text-green-500 flex-shrink-0" />
-                    <span>{benefit}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-            <div className="flex items-center gap-2 text-xs font-medium text-indigo-500 bg-indigo-50 px-3 py-1.5 rounded-full inline-flex">
-              <FaStar className="w-3 h-3" />
-              <span>Premium feature included</span>
-            </div>
+      <div className="group bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 h-full flex flex-col">
+        {/* Image */}
+        <div className="relative h-48 overflow-hidden flex-shrink-0">
+          <div className={`absolute inset-0 bg-gradient-to-r ${color} opacity-0 group-hover:opacity-30 transition-opacity duration-500 z-10`} />
+          <img 
+            src={image} 
+            alt={title}
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+          />
+          <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-sm rounded-xl p-2.5 shadow-lg z-20">
+            <div className="text-indigo-600">{icon}</div>
+          </div>
+          <div className="absolute bottom-3 right-3 bg-black/70 backdrop-blur-sm rounded-lg px-3 py-1.5 z-20">
+            <div className="text-white text-sm font-bold">{stat}</div>
           </div>
         </div>
-      </div>
-
-      {/* Footer with Stat and Read More Button */}
-      <div className="border-t border-slate-100 pt-4 mt-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-              {feature.stat}
+        
+        {/* Content */}
+        <div className="p-5 flex-1 flex flex-col">
+          <h3 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-indigo-600 transition-colors">
+            {title}
+          </h3>
+          
+          <p className="text-gray-500 text-sm leading-relaxed">
+            {expanded ? (longDesc || desc) : desc}
+          </p>
+          
+          {expanded && benefits && (
+            <div className="mt-4 space-y-2">
+              {benefits.map((benefit, idx) => (
+                <div key={idx} className="flex items-start gap-2">
+                  <FiCheck className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                  <span className="text-sm text-gray-600">{benefit}</span>
+                </div>
+              ))}
             </div>
-            <div className="text-xs font-medium text-slate-400 uppercase tracking-wide">
-              {feature.statLabel}
+          )}
+          
+          <div className="flex items-center justify-between pt-3 mt-auto border-t border-gray-100">
+            <div className="flex gap-0.5">
+              {[...Array(5)].map((_, i) => (
+                <FaStar key={i} className="w-4 h-4 text-yellow-400" />
+              ))}
             </div>
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                setExpanded(!expanded);
+              }}
+              className="flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-700"
+            >
+              {expanded ? "Less" : "More"} {expanded ? <FiChevronUp className="w-3 h-3" /> : <FiChevronDown className="w-3 h-3" />}
+            </button>
           </div>
-          <button
-            onClick={() => setExpanded(!expanded)}
-            className="flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-full bg-slate-50 hover:bg-indigo-50 text-slate-700 hover:text-indigo-600 transition-all duration-200 border border-slate-200 hover:border-indigo-200 group/btn"
-          >
-            <span>{expanded ? "Show less" : "Read more"}</span>
-            <span className={`transition-transform duration-300 ${expanded ? 'rotate-180' : ''}`}>
-              <FiChevronDown className="w-4 h-4" />
-            </span>
-          </button>
         </div>
+        
+        <div className={`h-1 bg-gradient-to-r ${color} transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500`} />
       </div>
     </div>
   );
 };
 
-export default function Features() {
-  const [activeFilter, setActiveFilter] = useState("all");
-  const [hoveredStat, setHoveredStat] = useState(null);
+// Counter Component
+const Counter = ({ target, label, icon }) => {
+  const [count, setCount] = useState(0);
+  const [isVisible, setIsVisible] = useState(false);
+  const ref = useRef(null);
 
-  const filters = [
-    { id: "all", label: "All Features", icon: <FiGrid className="w-4 h-4" /> },
-    { id: "design", label: "Design", icon: <FaPalette className="w-4 h-4" /> },
-    { id: "workflow", label: "Workflow", icon: <FiZap className="w-4 h-4" /> },
-    { id: "security", label: "Security", icon: <FiShield className="w-4 h-4" /> },
-  ];
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.5 }
+    );
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, []);
 
-  const features = [
-    { 
-      id: 1, 
-      icon: <TbTemplate className="w-8 h-8" />, 
-      title: "50+ Premium Templates", 
-      desc: "Professionally designed templates for every industry - corporate, education, healthcare, events, and more.", 
-      color: "from-purple-500 to-pink-500", 
-      stat: "5000+", 
-      statLabel: "Downloads", 
-      category: "design",
-      longDescription: "Includes print-ready CMYK profiles, layered PSD templates, and editable vector files for corporate branding. Each template is crafted by professional designers and optimized for all major card printers.",
-      benefits: ["Regular new template additions", "Fully customizable layouts", "Industry-specific designs"]
-    },
-    { 
-      id: 2, 
-      icon: <FiZap className="w-8 h-8" />, 
-      title: "Real-Time Editing", 
-      desc: "See changes instantly as you type. No waiting, no refreshing - just smooth, real-time updates.", 
-      color: "from-blue-500 to-cyan-500", 
-      stat: "0ms", 
-      statLabel: "Latency", 
-      category: "workflow",
-      longDescription: "Collaborative editing with cursor tracking, live preview, and auto-save every 2 seconds. Zero latency experience with WebSocket technology for seamless teamwork.",
-      benefits: ["Multi-user collaboration", "Instant preview updates", "Auto-save functionality"]
-    },
-    { 
-      id: 3, 
-      icon: <FiUpload className="w-8 h-8" />, 
-      title: "Bulk Generation", 
-      desc: "Create hundreds of ID cards at once with CSV import. Perfect for large teams and organizations.", 
-      color: "from-green-500 to-emerald-500", 
-      stat: "1000+", 
-      statLabel: "Cards/Min", 
-      category: "workflow",
-      longDescription: "Upload your CSV/Excel, map fields, and auto-generate batch of cards with personalized photos and barcodes. Advanced data validation and error handling included.",
-      benefits: ["CSV/Excel import support", "Automatic photo matching", "Error reporting & validation"]
-    },
-    { 
-      id: 4, 
-      icon: <FiLock className="w-8 h-8" />, 
-      title: "Bank-Grade Security", 
-      desc: "Your data never leaves your device. 100% client-side encryption for complete privacy.", 
-      color: "from-red-500 to-orange-500", 
-      stat: "256-bit", 
-      statLabel: "Encryption", 
-      category: "security",
-      longDescription: "End-to-end encrypted, no data stored on servers. SOC2 Type II certified infrastructure with regular third-party security audits.",
-      benefits: ["Client-side encryption", "Zero data retention", "GDPR compliant"]
-    },
-    { 
-      id: 5, 
-      icon: <BsPrinterFill className="w-8 h-8" />, 
-      title: "Print Ready Output", 
-      desc: "Optimized for all major card printers including Evolis, Zebra, Fargo, and Magicard.", 
-      color: "from-indigo-500 to-purple-500", 
-      stat: "99.9%", 
-      statLabel: "Compatibility", 
-      category: "workflow",
-      longDescription: "Supports dual-sided printing, magnetic stripe encoding, and smart card encoding (MIFARE/Desfire). Automatic DPI optimization for crisp, professional results.",
-      benefits: ["Universal printer support", "Automatic color calibration", "Bleed & margin guides"]
-    },
-    { 
-      id: 6, 
-      icon: <FiGlobe className="w-8 h-8" />, 
-      title: "No Account Needed", 
-      desc: "Start creating immediately. No sign-up, no email required - just pure design freedom.", 
-      color: "from-teal-500 to-green-500", 
-      stat: "0", 
-      statLabel: "Sign-ups", 
-      category: "security",
-      longDescription: "No registration wall, fully anonymous usage. GDPR compliant by design. Start designing in seconds with zero commitment.",
-      benefits: ["Instant access", "Privacy focused", "No hidden costs"]
-    },
-    { 
-      id: 7, 
-      icon: <FiSmartphone className="w-8 h-8" />, 
-      title: "Mobile Responsive", 
-      desc: "Create and edit ID cards on any device - desktop, tablet, or mobile phone.", 
-      color: "from-yellow-500 to-orange-500", 
-      stat: "100%", 
-      statLabel: "Responsive", 
-      category: "design",
-      longDescription: "Touch-optimized UI, supports drag and drop on mobile, works offline via PWA mode. Seamless experience across all screen sizes.",
-      benefits: ["Touch-optimized controls", "Offline mode available", "Cross-device sync"]
-    },
-    { 
-      id: 8, 
-      icon: <MdQrCodeScanner className="w-8 h-8" />, 
-      title: "QR Codes & Barcodes", 
-      desc: "Generate dynamic QR codes and barcodes for access control and digital verification.", 
-      color: "from-pink-500 to-rose-500", 
-      stat: "Instant", 
-      statLabel: "Generation", 
-      category: "design",
-      longDescription: "Dynamic QR codes with embed data, custom error correction, and scannable barcode types (Code128, PDF417, DataMatrix). Real-time preview and validation.",
-      benefits: ["Multiple barcode formats", "Customizable QR designs", "Real-time scanning test"]
-    },
-    { 
-      id: 9, 
-      icon: <FaPalette className="w-8 h-8" />, 
-      title: "Custom Branding", 
-      desc: "Add your logo, brand colors, and custom fonts. White-label ready for agencies.", 
-      color: "from-violet-500 to-purple-500", 
-      stat: "Unlimited", 
-      statLabel: "Brands", 
-      category: "design",
-      longDescription: "Upload brand kit, generate style guides, export white-labeled designs for your clients. Custom font upload and brand asset management included.",
-      benefits: ["Custom font upload", "Brand kit storage", "White-label export"]
-    },
-    { 
-      id: 10, 
-      icon: <FaMagic className="w-8 h-8" />, 
-      title: "AI-Powered Design", 
-      desc: "Smart layout suggestions and automatic alignment for perfect card designs every time.", 
-      color: "from-amber-500 to-orange-500", 
-      stat: "AI", 
-      statLabel: "Powered", 
-      category: "design",
-      longDescription: "AI background removal, smart color palette generator, and font pairing suggestions. Machine learning algorithms optimize layouts automatically.",
-      benefits: ["Auto background removal", "Smart color harmony", "Intelligent spacing"]
-    },
-    { 
-      id: 11, 
-      icon: <FiCloud className="w-8 h-8" />, 
-      title: "Cloud Backup", 
-      desc: "Automatic cloud saves with version history. Never lose your work again.", 
-      color: "from-sky-500 to-blue-500", 
-      stat: "Auto", 
-      statLabel: "Backup", 
-      category: "workflow",
-      longDescription: "Version history up to 30 days, one-click restore, encrypted cloud sync across devices. Automatic backups every 5 minutes.",
-      benefits: ["30-day version history", "One-click restore", "Cross-device sync"]
-    },
-    { 
-      id: 12, 
-      icon: <FiUsers className="w-8 h-8" />, 
-      title: "Team Collaboration", 
-      desc: "Invite team members to collaborate on card designs with role-based access.", 
-      color: "from-indigo-500 to-blue-500", 
-      stat: "Unlimited", 
-      statLabel: "Members", 
-      category: "workflow",
-      longDescription: "Role-based permissions, real-time commenting, audit logs, and SSO integration. Perfect for design teams and enterprises.",
-      benefits: ["Role-based access control", "Real-time commenting", "SSO integration"]
-    },
-  ];
-
-  const getFilteredFeatures = () => {
-    if (activeFilter === "all") return features;
-    return features.filter(f => f.category === activeFilter);
-  };
-
-  const stats = [
-    { value: "10,000+", label: "Happy Customers", icon: <FiUsers className="w-5 h-5" /> },
-    { value: "4.9", label: "⭐ Rating", icon: <FaStar className="w-5 h-5" /> },
-    { value: "50,000+", label: "Cards Created", icon: <TbTemplate className="w-5 h-5" /> },
-  ];
+  useEffect(() => {
+    if (isVisible) {
+      let start = 0;
+      const duration = 2000;
+      const increment = target / (duration / 16);
+      
+      const timer = setInterval(() => {
+        start += increment;
+        if (start >= target) {
+          setCount(target);
+          clearInterval(timer);
+        } else {
+          setCount(Math.floor(start));
+        }
+      }, 16);
+      
+      return () => clearInterval(timer);
+    }
+  }, [isVisible, target]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 overflow-x-hidden">
+    <div ref={ref} className="text-center group cursor-pointer">
+      <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-indigo-100 to-purple-100 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+        <div className="text-indigo-600 text-2xl">{icon}</div>
+      </div>
+      <div className="text-3xl md:text-4xl font-bold text-gray-800 mb-1">
+        {count}{target >= 1000 ? '+' : ''}
+      </div>
+      <div className="text-gray-500 text-sm">{label}</div>
+    </div>
+  );
+};
+
+export default function Features() {
+  const [filter, setFilter] = useState("all");
+  const [hoveredFilter, setHoveredFilter] = useState(null);
+
+  const features = [
+    {
+      title: "Premium Templates",
+      desc: "500+ professionally designed templates for every industry",
+      longDesc: "Access our extensive library of 500+ professionally crafted templates designed by experts. Perfect for corporate ID cards, student IDs, event badges, membership cards, and more.",
+      benefits: ["Corporate & business ID cards", "Student & education ID cards", "Event & conference badges", "Membership & loyalty cards"],
+      icon: <TbTemplate className="w-6 h-6" />,
+      stat: "500+",
+      image: "https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?w=600&h=400&fit=crop",
+      color: "from-purple-500 to-pink-500",
+      category: "design"
+    },
+    {
+      title: "AI Design Assistant",
+      desc: "Smart AI that suggests perfect layouts and colors",
+      longDesc: "Our AI analyzes your brand identity and automatically suggests the perfect color schemes, font combinations, and layout arrangements that match your style.",
+      benefits: ["Smart color palette generation", "AI-powered font pairing", "Automatic layout suggestions", "Brand consistency checker"],
+      icon: <FaRobot className="w-6 h-6" />,
+      stat: "98%",
+      image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=600&h=400&fit=crop",
+      color: "from-blue-500 to-cyan-500",
+      category: "design"
+    },
+    {
+      title: "Bulk Generation",
+      desc: "Create thousands of cards in minutes with CSV import",
+      longDesc: "Upload your data via CSV or Excel and generate hundreds of personalized ID cards instantly. Perfect for schools, corporations, and events.",
+      benefits: ["CSV & Excel file support", "Automatic data mapping", "Bulk photo upload", "Error detection & reporting"],
+      icon: <FiUpload className="w-6 h-6" />,
+      stat: "10K+",
+      image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&h=400&fit=crop",
+      color: "from-green-500 to-emerald-500",
+      category: "auto"
+    },
+    {
+      title: "Bank Security",
+      desc: "256-bit encryption - your data never leaves your device",
+      longDesc: "Military-grade encryption ensures your sensitive data remains private. We never store your personal information on our servers.",
+      benefits: ["End-to-end encryption", "Zero-knowledge architecture", "GDPR compliant", "No data retention policy"],
+      icon: <FiLock className="w-6 h-6" />,
+      stat: "256-bit",
+      image: "https://images.unsplash.com/photo-1563986768609-322da13575f3?w=600&h=400&fit=crop",
+      color: "from-red-500 to-orange-500",
+      category: "security"
+    },
+    {
+      title: "Universal Printing",
+      desc: "Optimized for all major card printers",
+      longDesc: "Compatible with Evolis, Zebra, Fargo, Magicard, and 50+ other card printers. Get perfect prints every time with auto color calibration.",
+      benefits: ["50+ printer compatibility", "Auto color calibration", "Dual-sided printing support", "Bleed & margin guides"],
+      icon: <BsPrinterFill className="w-6 h-6" />,
+      stat: "50+",
+      image: "https://images.unsplash.com/photo-1563203369-26f2e4a5ccf7?w=600&h=400&fit=crop",
+      color: "from-indigo-500 to-purple-500",
+      category: "auto"
+    },
+    {
+      title: "QR & Barcodes",
+      desc: "Dynamic QR codes and barcodes for access control",
+      longDesc: "Generate dynamic QR codes, Code128, PDF417, and DataMatrix barcodes. Perfect for access control, attendance tracking, and digital verification.",
+      benefits: ["Multiple barcode formats", "Dynamic QR code generation", "Real-time scanning test", "Custom QR design options"],
+      icon: <MdQrCodeScanner className="w-6 h-6" />,
+      stat: "Instant",
+      image: "https://images.unsplash.com/photo-1507925921958-8a62f3d1a50d?w=600&h=400&fit=crop",
+      color: "from-yellow-500 to-orange-500",
+      category: "design"
+    },
+    {
+      title: "Team Collaboration",
+      desc: "Invite team members and work together",
+      longDesc: "Collaborate with your team in real-time. Assign roles, leave comments, and work simultaneously on card designs.",
+      benefits: ["Unlimited team members", "Role-based access control", "Real-time commenting", "Design approval workflow"],
+      icon: <FiUsers className="w-6 h-6" />,
+      stat: "∞",
+      image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600&h=400&fit=crop",
+      color: "from-pink-500 to-rose-500",
+      category: "auto"
+    },
+    {
+      title: "Cloud Backup",
+      desc: "Auto-save with version history - never lose work",
+      longDesc: "Automatic cloud backups every 5 minutes with 30-day version history. One-click restore to any previous version of your design.",
+      benefits: ["30-day version history", "One-click restore", "Cross-device sync", "Automatic backups"],
+      icon: <FiCloud className="w-6 h-6" />,
+      stat: "30d",
+      image: "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=600&h=400&fit=crop",
+      color: "from-teal-500 to-green-500",
+      category: "security"
+    },
+    {
+      title: "Live Preview",
+      desc: "See changes instantly as you design",
+      longDesc: "Zero-lag real-time preview with instant updates. See exactly how your card will look while you design, with WYSIWYG technology.",
+      benefits: ["Real-time updates", "WYSIWYG editor", "Mobile preview mode", "Print preview option"],
+      icon: <FiZap className="w-6 h-6" />,
+      stat: "0ms",
+      image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&h=400&fit=crop",
+      color: "from-violet-500 to-purple-500",
+      category: "design"
+    }
+  ];
+
+  const filtered = filter === "all" ? features : features.filter(f => f.category === filter);
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-indigo-50/30">
       
-      {/* Hero Section */}
-      <section className="relative pt-28 pb-20 px-4 md:px-8 overflow-hidden">
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-indigo-100/30 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-purple-100/20 rounded-full blur-3xl animate-pulse delay-1000" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-blue-100/20 rounded-full blur-3xl" />
-        
-        <div className="absolute top-20 left-10 w-20 h-20 bg-purple-200/50 rounded-full blur-2xl animate-bounce" />
-        <div className="absolute bottom-20 right-10 w-32 h-32 bg-indigo-200/40 rounded-full blur-2xl animate-bounce delay-700" />
+      {/* SINGLE MAIN SECTION - Everything inside this ONE section */}
+      <section className="relative overflow-hidden">
+        {/* Animated Background */}
+        <div className="absolute inset-0">
+          <div className="absolute top-20 left-10 w-72 h-72 bg-purple-300/20 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-20 right-10 w-96 h-96 bg-indigo-300/20 rounded-full blur-3xl animate-pulse delay-1000" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-blue-300/10 rounded-full blur-3xl animate-pulse delay-2000" />
+        </div>
 
-        <Container className="text-center relative z-10">
-          <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm border border-indigo-100 px-5 py-2.5 rounded-full mb-6 shadow-sm">
-            <div className="w-2 h-2 bg-indigo-600 rounded-full animate-pulse" />
-            <span className="text-indigo-600 font-semibold text-sm tracking-wide">
-              ✨ POWERFUL FEATURES
-            </span>
-          </div>
+        <Container className="relative py-12">
+          {/* Hero Section inside main section */}
+          <div className="text-center max-w-4xl mx-auto mb-12">
+            <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm border border-gray-200 px-5 py-2 rounded-full mb-6 shadow-sm animate-bounce">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+              </span>
+              <span className="text-indigo-600 font-semibold text-sm">✨ Trusted by 10,000+ businesses</span>
+            </div>
 
-          <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold tracking-[-0.04em] leading-[1.1] mb-6">
-            <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 bg-clip-text text-transparent">
-              Advanced Features
-            </span>
-            <span className="block mt-2 bg-gradient-to-r from-slate-600 to-slate-400 bg-clip-text text-transparent">
-              Simple Experience
-            </span>
-          </h1>
+                  <SectionTitle
+              title=" Powerful Features"
+              subtitle="Simple Experience"
+            />
 
-          <p className="text-lg sm:text-xl text-slate-500 max-w-3xl mx-auto leading-relaxed">
-            No design skills required. Our intuitive editor puts professional results at your fingertips.
-            Trusted by over 10,000+ businesses worldwide.
-          </p>
+            <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
+              Everything you need to create professional ID cards in one intuitive platform.
+              No design skills required.
+            </p>
 
-          <div className="flex flex-wrap justify-center gap-8 mt-12">
-            {stats.map((stat, idx) => (
-              <div
-                key={idx}
-                className="group text-center px-6 py-3 rounded-2xl bg-white/40 backdrop-blur-sm border border-white/60 hover:bg-white/60 transition-all duration-300 hover:scale-105 cursor-pointer"
-                onMouseEnter={() => setHoveredStat(idx)}
-                onMouseLeave={() => setHoveredStat(null)}
-              >
-                <div className="flex items-center justify-center gap-2 text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent group-hover:scale-110 transition-transform">
-                  {stat.icon}
-                  <span>{stat.value}</span>
-                </div>
-                <div className="text-sm text-slate-500 mt-1">{stat.label}</div>
-              </div>
-            ))}
-          </div>
-        </Container>
-      </section>
-
-      {/* Filter Tabs */}
-      <section className="sticky top-0 z-20 bg-white/70 backdrop-blur-md border-b border-white/40 py-4 px-4 md:px-8">
-        <Container>
-          <div className="flex flex-wrap justify-center gap-3">
-            {filters.map((filter) => (
-              <button
-                key={filter.id}
-                onClick={() => setActiveFilter(filter.id)}
-                className={`flex items-center gap-2 px-6 py-2.5 rounded-full font-semibold transition-all duration-300 shadow-sm ${
-                  activeFilter === filter.id
-                    ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-200 scale-105"
-                    : "bg-white/80 border border-slate-200 text-slate-600 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50/50"
-                }`}
-              >
-                {filter.icon}
-                {filter.label}
+            <div className="flex flex-wrap justify-center gap-4">
+              <button className="group px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-full font-semibold shadow-lg hover:shadow-xl transition-all hover:scale-105 flex items-center gap-2">
+                Start Creating Free
+                <FiArrowRight className="group-hover:translate-x-1 transition-transform" />
               </button>
-            ))}
-          </div>
-        </Container>
-      </section>
-
-      {/* Features Grid */}
-      <section className="py-16 px-4 md:px-8">
-        <Container>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {getFilteredFeatures().map((feature, index) => (
-              <FeatureCard key={feature.id} feature={feature} index={index} />
-            ))}
-          </div>
-          
-          {getFilteredFeatures().length === 0 && (
-            <div className="text-center py-20">
-              <div className="text-6xl mb-4">🔍</div>
-              <p className="text-slate-400 text-lg">No features found in this category</p>
+              <button className="px-8 py-3 bg-white text-gray-700 rounded-full font-semibold shadow-md hover:shadow-lg transition-all hover:scale-105 border border-gray-200">
+                Watch Demo
+              </button>
             </div>
-          )}
-        </Container>
-      </section>
+          </div>
 
-      {/* Why Choose Us Section */}
-      <section className="py-20 px-4 md:px-8 relative">
-        <div className="absolute inset-0 bg-gradient-to-tr from-indigo-50/40 via-transparent to-purple-50/40 pointer-events-none" />
         
-        <Container>
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div className="space-y-6">
-              <div className="inline-flex items-center gap-2 bg-indigo-50/80 backdrop-blur-sm border border-indigo-100 px-5 py-2 rounded-full">
-                <FaGem className="w-4 h-4 text-indigo-500" />
-                <span className="text-indigo-600 text-sm font-bold tracking-wide">✨ WHY CHOOSE US</span>
-              </div>
-              
-              <h2 className="text-4xl md:text-5xl font-bold text-slate-900 leading-tight">
-                More than just an
-                <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent block">
-                  ID card maker
-                </span>
-              </h2>
-              
-              <p className="text-slate-500 text-lg leading-relaxed">
-                We combine powerful design tools with enterprise-grade security to deliver the best ID card creation experience.
-              </p>
-              
-              <div className="space-y-5">
-                {[
-                  { title: "No design skills needed", desc: "Intuitive drag-and-drop editor for everyone" },
-                  { title: "Export in multiple formats", desc: "PNG, PDF, SVG, and print-ready formats" },
-                  { title: "24/7 Customer Support", desc: "Get help whenever you need it" }
-                ].map((item, idx) => (
-                  <div key={idx} className="flex items-start gap-3 group">
-                    <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center mt-0.5 group-hover:scale-110 transition-transform">
-                      <FiCheck className="w-4 h-4 text-green-600" />
-                    </div>
-                    <div>
-                      <h4 className="text-slate-800 font-semibold">{item.title}</h4>
-                      <p className="text-slate-400 text-sm">{item.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
 
-            <div className="grid grid-cols-2 gap-5">
+          {/* Filter Buttons - STICKY inside main section */}
+          <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md rounded-xl py-3 mb-8 shadow-sm">
+            <div className="flex flex-wrap justify-center gap-3">
               {[
-                { icon: <FaRocket className="w-5 h-5" />, title: "Lightning Fast", desc: "Generate cards in seconds", color: "from-purple-500 to-pink-500" },
-                { icon: <FiShield className="w-5 h-5" />, title: "Secure", desc: "Bank-grade encryption", color: "from-blue-500 to-cyan-500" },
-                { icon: <FiUsers className="w-5 h-5" />, title: "Team Ready", desc: "Collaborate with your team", color: "from-green-500 to-emerald-500" },
-                { icon: <FiTrendingUp className="w-5 h-5" />, title: "Scalable", desc: "Grow with your business", color: "from-orange-500 to-red-500" }
-              ].map((item, idx) => (
-                <div
-                  key={idx}
-                  className="bg-white rounded-xl p-5 border border-slate-100 shadow-lg hover:shadow-xl transition-all hover:-translate-y-1 duration-300 group cursor-pointer"
+                { id: "all", label: "All Features", icon: <FiGrid className="w-4 h-4" /> },
+                { id: "design", label: "Design", icon: <FaPalette className="w-4 h-4" /> },
+                { id: "auto", label: "Automation", icon: <FiZap className="w-4 h-4" /> },
+                { id: "security", label: "Security", icon: <FiShield className="w-4 h-4" /> }
+              ].map((btn) => (
+                <button
+                  key={btn.id}
+                  onClick={() => setFilter(btn.id)}
+                  onMouseEnter={() => setHoveredFilter(btn.id)}
+                  onMouseLeave={() => setHoveredFilter(null)}
+                  className={`relative px-6 py-2.5 rounded-full font-semibold transition-all duration-300 flex items-center gap-2 overflow-hidden ${
+                    filter === btn.id
+                      ? "text-white"
+                      : "text-gray-600 hover:text-indigo-600 bg-gray-100 hover:bg-indigo-50"
+                  }`}
                 >
-                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${item.color} flex items-center justify-center mb-4 shadow-md group-hover:scale-110 transition-transform`}>
-                    <div className="text-white">{item.icon}</div>
-                  </div>
-                  <h4 className="text-slate-800 font-bold text-lg">{item.title}</h4>
-                  <p className="text-slate-400 text-sm">{item.desc}</p>
-                </div>
+                  {filter === btn.id && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-purple-600 animate-gradient bg-[length:200%_200%]" />
+                  )}
+                  <span className="relative z-10 flex items-center gap-2">
+                    {btn.icon}
+                    {btn.label}
+                  </span>
+                </button>
               ))}
             </div>
           </div>
-        </Container>
-      </section>
 
-      {/* CTA Section */}
-      <section className="py-16 px-4 md:px-8 mb-12">
-        <Container>
-          <div className="relative rounded-3xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-12 text-center shadow-2xl overflow-hidden group">
-            <div className="absolute -top-24 -right-24 w-64 h-64 bg-white/10 rounded-full blur-3xl animate-pulse" />
-            <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-white/10 rounded-full blur-3xl animate-pulse delay-700" />
+          {/* Features Grid inside main section */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
+            {filtered.map((feature, i) => (
+              <FeatureCard key={i} {...feature} index={i} />
+            ))}
+          </div>
+          
+          {filtered.length === 0 && (
+            <div className="text-center py-20">
+              <div className="text-6xl mb-4 animate-bounce">🔍</div>
+              <p className="text-gray-400 text-lg">No features found in this category</p>
+            </div>
+          )}
+
+          {/* CTA Section inside main section */}
+          <div className="relative overflow-hidden bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-3xl p-12 text-center text-white group">
+            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700">
+              <div className="absolute -top-20 -right-20 w-64 h-64 bg-white/10 rounded-full blur-3xl animate-ping" />
+              <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-white/10 rounded-full blur-3xl animate-ping delay-700" />
+            </div>
             
             <div className="relative z-10">
-              <h3 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                Ready to create professional ID cards?
-              </h3>
+              <FaRocket className="w-16 h-16 mx-auto mb-6 animate-bounce" />
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                Ready to create your first ID card?
+              </h2>
               <p className="text-indigo-100 text-lg mb-8 max-w-xl mx-auto">
-                Join thousands of teams using our platform to create stunning ID cards in minutes
+                Join 10,000+ businesses already creating stunning ID cards in minutes
               </p>
-              <button className="bg-white text-indigo-700 px-8 py-3 rounded-full font-bold shadow-lg hover:shadow-xl transition-all hover:scale-105 inline-flex items-center gap-2 group/btn">
-                Start Creating Now
-                <FiArrowRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
+              <button className="group/btn px-8 py-3 bg-white text-indigo-600 rounded-full font-semibold shadow-lg hover:shadow-xl transition-all hover:scale-105 inline-flex items-center gap-2">
+                Start Creating Free
+                <FiArrowRight className="group-hover/btn:translate-x-1 transition-transform" />
               </button>
               <p className="text-indigo-200 text-sm mt-6">
                 ✨ No credit card required • Free forever plan available
@@ -490,6 +380,66 @@ export default function Features() {
           </div>
         </Container>
       </section>
+
+      <style jsx>{`
+        @keyframes gradient {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        
+        @keyframes fade-in {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        .animate-gradient {
+          background-size: 200% 200%;
+          animation: gradient 3s ease infinite;
+        }
+        
+        .animate-fade-in {
+          animation: fade-in 0.3s ease-out forwards;
+        }
+        
+        @keyframes bounce {
+          0%, 100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-10px);
+          }
+        }
+        
+        .animate-bounce {
+          animation: bounce 2s ease-in-out infinite;
+        }
+        
+        @keyframes ping {
+          0% {
+            transform: scale(1);
+            opacity: 0.5;
+          }
+          50% {
+            transform: scale(1.5);
+            opacity: 0.2;
+          }
+          100% {
+            transform: scale(2);
+            opacity: 0;
+          } 
+        }
+        
+        .animate-ping {
+          animation: ping 3s cubic-bezier(0, 0, 0.2, 1) infinite;
+        }
+      `}</style>
     </div>
   );
 }
