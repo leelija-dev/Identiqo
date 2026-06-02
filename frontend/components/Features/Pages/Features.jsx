@@ -7,24 +7,19 @@ import {
   FiSmartphone, FiShield, FiCloud, FiUsers, FiTrendingUp,
   FiArrowRight, FiCheck, FiChevronDown, FiChevronUp, FiStar
 } from "react-icons/fi";
-import { 
-  MdQrCodeScanner
-} from "react-icons/md";
-import { 
-  BsPrinterFill
-} from "react-icons/bs";
-import { 
-  FaMagic, FaRocket, FaPalette, FaStar, FaGem, FaCrown
-} from "react-icons/fa";
+import { MdQrCodeScanner } from "react-icons/md";
+import { BsPrinterFill, BsFillShieldLockFill } from "react-icons/bs";
+import { FaMagic, FaRocket, FaPalette, FaStar, FaGem, FaCrown } from "react-icons/fa";
 import { TbTemplate } from "react-icons/tb";
+import SectionTitle from "@/components/Common/SectionTitle";
 
 // Enhanced Feature Card with 3D Tilt and Advanced Animations
 const FeatureCard = ({ feature, index }) => {
   const [expanded, setExpanded] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
-  const [height, setHeight] = useState(0);
-  const contentRef = useRef(null);
   const cardRef = useRef(null);
+  const contentRef = useRef(null);
+  const [height, setHeight] = useState(0);
   const [rotateX, setRotateX] = useState(0);
   const [rotateY, setRotateY] = useState(0);
   const [glowPosition, setGlowPosition] = useState({ x: 0, y: 0 });
@@ -149,6 +144,15 @@ const FeatureCard = ({ feature, index }) => {
                 <span>Premium feature included</span>
               </div>
             </div>
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                setExpanded(!expanded);
+              }}
+              className="flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-700"
+            >
+              {expanded ? "Less" : "More"} {expanded ? <FiChevronUp className="w-3 h-3" /> : <FiChevronDown className="w-3 h-3" />}
+            </button>
           </div>
         </motion.div>
 
@@ -179,6 +183,8 @@ const FeatureCard = ({ feature, index }) => {
             </motion.button>
           </div>
         </div>
+        
+        <div className={`h-1 bg-gradient-to-r ${feature.color} transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500`} />
       </div>
     </motion.div>
   );
@@ -510,7 +516,9 @@ export default function Features() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-5">
+          {/* Filter Buttons - STICKY inside main section */}
+          <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md rounded-xl py-3 mb-8 shadow-sm">
+            <div className="flex flex-wrap justify-center gap-3">
               {[
                 { icon: <FaRocket className="w-5 h-5" />, title: "Lightning Fast", desc: "Generate cards in seconds", color: "from-purple-500 to-pink-500" },
                 { icon: <FiShield className="w-5 h-5" />, title: "Secure", desc: "Bank-grade encryption", color: "from-blue-500 to-cyan-500" },
@@ -537,6 +545,7 @@ export default function Features() {
                 </motion.div>
               ))}
             </div>
+          </div>
           </motion.div>
         </Container>
       </section>
@@ -581,7 +590,7 @@ export default function Features() {
                 Ready to create professional ID cards?
               </motion.h3>
               <p className="text-indigo-100 text-lg mb-8 max-w-xl mx-auto">
-                Join thousands of teams using our platform to create stunning ID cards in minutes
+                Join 10,000+ businesses already creating stunning ID cards in minutes
               </p>
               <motion.button
                 whileHover={{ scale: 1.05 }}

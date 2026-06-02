@@ -17,7 +17,7 @@ export default function GalleryPage() {
   const [totalItems, setTotalItems] = useState(0);
   const [isClient, setIsClient] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const modalCardRef = useRef(null);
+  const modalCardRef = useRef(null); 
 
   useEffect(() => {
     setIsClient(true);
