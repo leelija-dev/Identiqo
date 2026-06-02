@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback, startTransition } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo, startTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import { CardEditorStage, withFullSizeCapture } from '@/components/Common/CardPreview';
 import { allTemplates, normalizeTemplateHtml } from '@/templatesdata';
 import { 
@@ -54,7 +55,6 @@ function getFieldLabel(className) {
   return labels[className] || toTitleCase(className);
 }
 
-// Simple hash for caching DOM scans
 function simpleHash(str) {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
@@ -64,9 +64,20 @@ function simpleHash(str) {
   return hash.toString();
 }
 
+// Throttle helper to limit how often a function runs
+function throttle(func, delay) {
+  let lastCall = 0;
+  return function(...args) {
+    const now = Date.now();
+    if (now - lastCall < delay) return;
+    lastCall = now;
+    return func.apply(this, args);
+  };
+}
+
 // -------------------- MAIN COMPONENT --------------------
 export default function CustomizePage() {
-  // Refs
+  const router = useRouter();
   const previewCanvasRef = useRef(null);
   const cardScaleWrapRef = useRef(null);
   const sidebarRef = useRef(null);
@@ -74,8 +85,8 @@ export default function CustomizePage() {
   const loadTimeoutRef = useRef(null);
   const isMountedRef = useRef(true);
   const textCacheRef = useRef({ hash: null, items: [] });
+  const resetCooldownRef = useRef({ index: null, active: false });
 
-  // State
   const [currentTemplate, setCurrentTemplate] = useState(null);
   const [currentOrientation, setCurrentOrientation] = useState('landscape');
   const [originalHTML, setOriginalHTML] = useState(null);
@@ -100,6 +111,8 @@ export default function CustomizePage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [displayMode, setDisplayMode] = useState('flip');
   const [sidePreviewHtml, setSidePreviewHtml] = useState({ front: '', back: '' });
+  const [isDesktopLayout, setIsDesktopLayout] = useState(false);
+  const [editorStageToken, setEditorStageToken] = useState(0);
   const [popupDragActive, setPopupDragActive] = useState(false);
   const [popupDragStart, setPopupDragStart] = useState({ x: 0, y: 0 });
   const [detectedFeatures, setDetectedFeatures] = useState({
@@ -110,21 +123,87 @@ export default function CustomizePage() {
   const [customSecondary, setCustomSecondary] = useState('#6a11cb');
   const [customAccent, setCustomAccent] = useState('#2575fc');
   const [customCardBg, setCustomCardBg] = useState('#ffffff');
+  
+  // Track unsaved changes
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-  // Toast
+  // Mark changes on any edit
+  const markUnsaved = useCallback(() => {
+    if (!hasUnsavedChanges) setHasUnsavedChanges(true);
+  }, [hasUnsavedChanges]);
+
+  // Reset unsaved flag after save/download/reset
+  const clearUnsaved = useCallback(() => {
+    setHasUnsavedChanges(false);
+  }, []);
+
+  // Warn before leaving page
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+        return e.returnValue;
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
+
+  // Intercept client-side navigation (Next.js router)
+  useEffect(() => {
+    const handleRouteChange = (url) => {
+      if (hasUnsavedChanges) {
+        const confirmLeave = window.confirm('You have unsaved changes. Are you sure you want to leave?');
+        if (!confirmLeave) {
+          throw 'Route change cancelled';
+        } else {
+          clearUnsaved();
+        }
+      }
+    };
+    router.events?.on('beforeHistoryChange', handleRouteChange);
+    return () => {
+      router.events?.off('beforeHistoryChange', handleRouteChange);
+    };
+  }, [hasUnsavedChanges, router, clearUnsaved]);
+
   const showToastMessage = useCallback((msg) => {
     setToastMessage(msg);
     setShowToast(true);
     setTimeout(() => setShowToast(false), 2000);
   }, []);
 
-  // DOM helpers
   const getCurrentCardElement = useCallback(() => {
     if (!previewCanvasRef.current) return null;
     return previewCanvasRef.current.querySelector('.flip-card') ||
       previewCanvasRef.current.querySelector('.card') ||
       previewCanvasRef.current.firstElementChild;
   }, []);
+
+  const invalidateEditorCaches = useCallback(() => {
+    textCacheRef.current = { hash: null, items: [] };
+  }, []);
+
+  const resolveTextFieldElement = useCallback((field) => {
+    if (!field || !previewCanvasRef.current) return null;
+    if (field.element && previewCanvasRef.current.contains(field.element)) {
+      return field.element;
+    }
+
+    const card = getCurrentCardElement();
+    return card?.querySelector(`[data-element-index="${field.index}"]`) || null;
+  }, [getCurrentCardElement]);
+
+  const resolveBackgroundElement = useCallback((block) => {
+    if (!block || !previewCanvasRef.current) return null;
+    if (block.element && previewCanvasRef.current.contains(block.element)) {
+      return block.element;
+    }
+
+    const card = getCurrentCardElement();
+    return card?.querySelectorAll('.editable-bg')?.[block.index] || null;
+  }, [getCurrentCardElement]);
 
   const getFrontFace = useCallback(() => {
     const card = getCurrentCardElement();
@@ -136,20 +215,19 @@ export default function CustomizePage() {
     return card?.querySelector('.card-back, .face.back');
   }, [getCurrentCardElement]);
 
-  // CACHED text list builder
   const buildTextList = useCallback(() => {
     const card = getCurrentCardElement();
     if (!card) return;
 
     const currentHTML = card.innerHTML;
     const hash = simpleHash(currentHTML);
-    // Use cache if unchanged
-    if (hash === textCacheRef.current.hash && textCacheRef.current.items.length) {
+    const cachedItems = textCacheRef.current.items;
+    const cacheIsLive = cachedItems.every(item => item.element && previewCanvasRef.current?.contains(item.element));
+    if (hash === textCacheRef.current.hash && cachedItems.length && cacheIsLive) {
       setTextFields(textCacheRef.current.items);
       return;
     }
 
-    // Otherwise scan
     const classSelector = DEFAULT_TEXT_CLASSES.map(cls => `.${cls}`).join(', ');
     const attributeSelector = '[data-editable="true"], [data-field]';
     const textElements = card.querySelectorAll(`${classSelector}, ${attributeSelector}`);
@@ -175,6 +253,9 @@ export default function CustomizePage() {
       if (!element.dataset.originalColor) element.dataset.originalColor = rgbToHex(computed.color) || '#000000';
       if (!element.dataset.originalFontSize) element.dataset.originalFontSize = computed.fontSize;
       if (!element.dataset.originalFontFamily) element.dataset.originalFontFamily = computed.fontFamily;
+      if (!element.dataset.originalFontWeight) element.dataset.originalFontWeight = computed.fontWeight;
+      if (!element.dataset.originalFontStyle) element.dataset.originalFontStyle = computed.fontStyle;
+      if (!element.dataset.originalTextDecoration) element.dataset.originalTextDecoration = computed.textDecoration;
       
       const classList = element.className.split(/\s+/);
       const dataField = element.dataset.field;
@@ -188,6 +269,11 @@ export default function CustomizePage() {
         label: isBackField ? `${label} (Back)` : label,
         text,
         color,
+        fontSize: parseInt(computed.fontSize, 10) || 14,
+        fontFamily: computed.fontFamily.split(',')[0].replace(/['"]/g, '').trim() || 'Inter',
+        bold: computed.fontWeight === 'bold' || parseInt(computed.fontWeight, 10) >= 600,
+        italic: computed.fontStyle === 'italic',
+        underline: computed.textDecoration?.includes('underline') || false,
         side: isBackField ? 'Back' : 'Front',
         element,
         originalText: text,
@@ -199,7 +285,6 @@ export default function CustomizePage() {
     setTextFields(items);
   }, [getCurrentCardElement]);
 
-  // Background blocks (no cache needed – usually few elements)
   const buildBackgroundBlocks = useCallback(() => {
     const card = getCurrentCardElement();
     if (!card) return;
@@ -248,7 +333,6 @@ export default function CustomizePage() {
     setDetectedFeatures(features);
   }, [getCurrentCardElement]);
 
-  // Side preview
   const cloneFaceForPreview = useCallback((face) => {
     if (!face) return '';
     const clone = face.cloneNode(true);
@@ -297,9 +381,15 @@ export default function CustomizePage() {
     });
   }, [buildSidePreviewHtml]);
 
-  const triggerUpdate = useCallback(() => refreshSidePreviewHtml(), [refreshSidePreviewHtml]);
+  const triggerUpdate = useCallback(() => {
+    refreshSidePreviewHtml();
+    markUnsaved();
+  }, [refreshSidePreviewHtml, markUnsaved]);
 
-  // Sidebar builder (runs in startTransition)
+  const handleEditorStageReady = useCallback(() => {
+    setEditorStageToken(token => token + 1);
+  }, []);
+
   const buildSidebar = useCallback(() => {
     buildTextList();
     if (currentTemplate?.category === 'employee') {
@@ -312,13 +402,13 @@ export default function CustomizePage() {
     if (currentTemplate?.category === 'employee') {
       buildBackgroundBlocks();
       showToastMessage('Background list refreshed');
+      markUnsaved();
     }
   };
 
   // Load template
   useEffect(() => {
     isMountedRef.current = true;
-    // Timeout now 10 seconds
     loadTimeoutRef.current = setTimeout(() => {
       if (isMountedRef.current && isLoading) {
         setIsLoading(false);
@@ -337,7 +427,6 @@ export default function CustomizePage() {
         setIsLoading(false);
         return;
       }
-      // Use pre‑normalized HTML if available, otherwise fallback
       const rawHTML = template.fullHTML || template.htmlContent || '';
       const normalizedHTML = normalizeTemplateHtml(rawHTML);
       
@@ -351,12 +440,11 @@ export default function CustomizePage() {
         return;
       }
 
-      // Inject HTML immediately
       if (previewCanvasRef.current && normalizedHTML) {
+        invalidateEditorCaches();
         previewCanvasRef.current.innerHTML = normalizedHTML;
         setOriginalHTML(normalizedHTML);
 
-        // Apply visiting card theme
         if (template.category === 'visiting') {
           const defaults = { primary: '#ff7e5f', secondary: '#6a11cb', accent: '#2575fc', cardBg: '#ffffff' };
           ['primary', 'secondary', 'accent', 'cardBg'].forEach(key => {
@@ -373,15 +461,14 @@ export default function CustomizePage() {
         const flipInner = card?.querySelector('.flip-card-inner');
         if (flipInner) flipInner.style.transform = 'rotateY(0deg)';
         
-        // Hide loading spinner immediately – card is visible
         setIsLoading(false);
         if (loadTimeoutRef.current) clearTimeout(loadTimeoutRef.current);
         
-        // Build sidebar in background (non‑blocking)
         startTransition(() => {
           buildSidebar();
           refreshSidePreviewHtml();
         });
+        clearUnsaved(); // no unsaved changes after initial load
       } else {
         showToastMessage('Template preview is unavailable.');
         setIsLoading(false);
@@ -399,8 +486,9 @@ export default function CustomizePage() {
   }, []);
 
   useEffect(() => {
-    if (isLoading || !previewCanvasRef.current || !pendingTemplateHtml) return;
+    if (isLoading || !editorStageToken || !previewCanvasRef.current || !pendingTemplateHtml) return;
 
+    invalidateEditorCaches();
     previewCanvasRef.current.innerHTML = pendingTemplateHtml;
 
     if (currentTemplate?.category === 'visiting') {
@@ -425,13 +513,38 @@ export default function CustomizePage() {
         refreshSidePreviewHtml();
       });
     });
-  }, [isLoading, pendingTemplateHtml, currentTemplate, displayMode, buildSidebar, refreshSidePreviewHtml, getCurrentCardElement]);
+  }, [isLoading, editorStageToken, pendingTemplateHtml, currentTemplate, displayMode, buildSidebar, refreshSidePreviewHtml, getCurrentCardElement, invalidateEditorCaches]);
 
-  // Sidebar width
   useEffect(() => {
     const savedWidth = localStorage.getItem('sidebarWidth');
     if (savedWidth) setSidebarWidth(parseInt(savedWidth));
   }, []);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(min-width: 1024px)');
+    const updateLayout = () => {
+      const isDesktop = mediaQuery.matches;
+      if (previewCanvasRef.current?.innerHTML) {
+        setPendingTemplateHtml(previewCanvasRef.current.innerHTML);
+      }
+      setIsDesktopLayout(isDesktop);
+      // Force flip mode on mobile
+      if (!isDesktop && displayMode !== 'flip') {
+        setDisplayMode('flip');
+      }
+    };
+    updateLayout();
+    mediaQuery.addEventListener('change', updateLayout);
+    return () => mediaQuery.removeEventListener('change', updateLayout);
+  }, [displayMode]);
+
+  // Close popup on scroll (desktop only)
+  useEffect(() => {
+    if (!showTextPopup) return;
+    const handleScroll = () => setShowTextPopup(false);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [showTextPopup]);
 
   const handleResizeStart = (e) => {
     e.preventDefault();
@@ -450,7 +563,6 @@ export default function CustomizePage() {
     document.addEventListener('mouseup', handleMouseUp);
   };
 
-  // Flip card
   const flipCard = () => {
     const card = getCurrentCardElement();
     const front = getFrontFace();
@@ -463,35 +575,124 @@ export default function CustomizePage() {
       flipInner.dataset.flipped = isFlipped ? 'false' : 'true';
     }
     showToastMessage(flipInner?.dataset.flipped === 'true' ? 'Showing back side' : 'Showing front side');
+    // flipping doesn't count as edit
   };
 
-  // All editing functions (same as original, but triggerUpdate calls refresh)
   const handleTextChange = (index, newText) => {
     const field = textFields.find(f => f.index === index);
-    if (field?.element) {
-      field.element.innerText = newText;
-      field.element.setAttribute('data-fulltext', newText);
-      setTextFields(prev => prev.map(f => f.index === index ? { ...f, text: newText } : f));
+    const element = resolveTextFieldElement(field);
+    if (element) {
+      element.innerText = newText;
+      element.setAttribute('data-fulltext', newText);
+      setTextFields(prev => prev.map(f => f.index === index ? { ...f, text: newText, element } : f));
       triggerUpdate();
     }
   };
 
-  const handleColorChange = (index, newColor) => {
+  const throttledColorChange = useMemo(() => {
+    const fn = (index, newColor) => {
+      const field = textFields.find(f => f.index === index);
+      const element = resolveTextFieldElement(field);
+      if (element) {
+        element.style.color = newColor;
+        setTextFields(prev => prev.map(f => f.index === index ? { ...f, color: newColor, element } : f));
+        triggerUpdate();
+      }
+    };
+    return throttle(fn, 40);
+  }, [textFields, resolveTextFieldElement, triggerUpdate]);
+
+  const handleColorChange = useCallback((index, newColor) => {
+    // Set cooldown immediately when user interacts
+    resetCooldownRef.current = { index, active: true };
+    setTimeout(() => {
+      if (resetCooldownRef.current.index === index) {
+        resetCooldownRef.current.active = false;
+      }
+    }, 300);
+    // Call throttled update
+    throttledColorChange(index, newColor);
+  }, [throttledColorChange]);
+
+  const handleFontSizeChange = (index, nextSize) => {
+    const size = Math.min(72, Math.max(8, Number(nextSize) || 14));
     const field = textFields.find(f => f.index === index);
-    if (field?.element) {
-      field.element.style.color = newColor;
-      setTextFields(prev => prev.map(f => f.index === index ? { ...f, color: newColor } : f));
+    const element = resolveTextFieldElement(field);
+    if (element) {
+      element.style.fontSize = `${size}px`;
+      setTextFields(prev => prev.map(f => f.index === index ? { ...f, fontSize: size, element } : f));
       triggerUpdate();
     }
+  };
+
+  const handleFontFamilyChange = (index, fontFamily) => {
+    const field = textFields.find(f => f.index === index);
+    const element = resolveTextFieldElement(field);
+    if (element) {
+      element.style.fontFamily = fontFamily;
+      setTextFields(prev => prev.map(f => f.index === index ? { ...f, fontFamily, element } : f));
+      triggerUpdate();
+    }
+  };
+
+  const toggleTextFieldStyle = (index, type) => {
+    const field = textFields.find(f => f.index === index);
+    const element = resolveTextFieldElement(field);
+    if (!element) return;
+
+    const computed = getComputedStyle(element);
+    const next = {};
+
+    if (type === 'bold') {
+      const isBold = element.style.fontWeight === 'bold' || parseInt(computed.fontWeight, 10) >= 600;
+      element.style.fontWeight = isBold ? 'normal' : 'bold';
+      next.bold = !isBold;
+    }
+
+    if (type === 'italic') {
+      const isItalic = element.style.fontStyle === 'italic' || computed.fontStyle === 'italic';
+      element.style.fontStyle = isItalic ? 'normal' : 'italic';
+      next.italic = !isItalic;
+    }
+
+    if (type === 'underline') {
+      const hasUnderline = (element.style.textDecoration || computed.textDecoration || '').includes('underline');
+      element.style.textDecoration = hasUnderline ? 'none' : 'underline';
+      next.underline = !hasUnderline;
+    }
+
+    setTextFields(prev => prev.map(f => f.index === index ? { ...f, ...next, element } : f));
+    triggerUpdate();
   };
 
   const resetTextField = (index) => {
+    // If this field is in cooldown, ignore the reset
+    if (resetCooldownRef.current.active && resetCooldownRef.current.index === index) {
+      return;
+    }
+
     const field = textFields.find(f => f.index === index);
-    if (field?.element) {
-      field.element.innerText = field.originalText;
-      field.element.style.color = field.originalColor;
-      if (field.element.dataset.originalFontSize) field.element.style.fontSize = field.element.dataset.originalFontSize;
-      setTextFields(prev => prev.map(f => f.index === index ? { ...f, text: field.originalText, color: field.originalColor } : f));
+    const element = resolveTextFieldElement(field);
+    if (element) {
+      element.innerText = field.originalText;
+      element.style.color = field.originalColor;
+      if (element.dataset.originalFontSize) element.style.fontSize = element.dataset.originalFontSize;
+      if (element.dataset.originalFontWeight) element.style.fontWeight = element.dataset.originalFontWeight;
+      if (element.dataset.originalFontStyle) element.style.fontStyle = element.dataset.originalFontStyle;
+      if (element.dataset.originalTextDecoration) element.style.textDecoration = element.dataset.originalTextDecoration;
+      if (element.dataset.originalFontFamily) element.style.fontFamily = element.dataset.originalFontFamily;
+      const computed = getComputedStyle(element);
+      setTextFields(prev => prev.map(f => f.index === index ? {
+        ...f,
+        text: field.originalText,
+        color: field.originalColor,
+        fontSize: parseInt(computed.fontSize, 10) || 14,
+        fontFamily: computed.fontFamily.split(',')[0].replace(/['"]/g, '').trim() || 'Inter',
+        bold: computed.fontWeight === 'bold' || parseInt(computed.fontWeight, 10) >= 600,
+        italic: computed.fontStyle === 'italic',
+        underline: computed.textDecoration?.includes('underline') || false,
+        element
+      } : f));
       showToastMessage('Field reset to original');
       triggerUpdate();
     }
@@ -499,33 +700,51 @@ export default function CustomizePage() {
 
   const setBackgroundMode = (blockIndex, mode) => {
     const block = backgroundBlocks.find(b => b.index === blockIndex);
-    if (block) {
+    const element = resolveBackgroundElement(block);
+    if (block && element) {
       if (mode === 'solid') {
-        block.element.style.backgroundImage = 'none';
-        block.element.style.background = block.currentColor;
+        element.style.backgroundImage = 'none';
+        element.style.background = block.currentColor;
       }
-      setBackgroundBlocks(prev => prev.map(b => b.index === blockIndex ? { ...b, mode } : b));
+      setBackgroundBlocks(prev => prev.map(b => b.index === blockIndex ? { ...b, mode, element } : b));
       triggerUpdate();
     }
   };
 
-  const setSolidColor = (blockIndex, color) => {
-    const block = backgroundBlocks.find(b => b.index === blockIndex);
-    if (block) {
-      block.element.style.backgroundImage = 'none';
-      block.element.style.background = color;
-      setBackgroundBlocks(prev => prev.map(b => b.index === blockIndex ? { ...b, currentColor: color } : b));
-      triggerUpdate();
-    }
-  };
+  const throttledSolidColorChange = useMemo(() => {
+    const fn = (blockIndex, color) => {
+      const block = backgroundBlocks.find(b => b.index === blockIndex);
+      const element = resolveBackgroundElement(block);
+      if (block && element) {
+        element.style.backgroundImage = 'none';
+        element.style.background = color;
+        setBackgroundBlocks(prev => prev.map(b => b.index === blockIndex ? { ...b, currentColor: color, element } : b));
+        triggerUpdate();
+      }
+    };
+    return throttle(fn, 40);
+  }, [backgroundBlocks, resolveBackgroundElement, triggerUpdate]);
+
+  const setSolidColor = useCallback((blockIndex, color) => {
+    // Set cooldown for background blocks too
+    resetCooldownRef.current = { index: `bg-${blockIndex}`, active: true };
+    setTimeout(() => {
+      if (resetCooldownRef.current.index === `bg-${blockIndex}`) {
+        resetCooldownRef.current.active = false;
+      }
+    }, 300);
+    // Call throttled update
+    throttledSolidColorChange(blockIndex, color);
+  }, [throttledSolidColorChange]);
 
   const setGradient = (blockIndex, color1, color2, direction) => {
     const block = backgroundBlocks.find(b => b.index === blockIndex);
-    if (block) {
+    const element = resolveBackgroundElement(block);
+    if (block && element) {
       const gradient = `linear-gradient(${direction}, ${color1}, ${color2})`;
-      block.element.style.background = gradient;
-      block.element.style.backgroundImage = gradient;
-      setBackgroundBlocks(prev => prev.map(b => b.index === blockIndex ? { ...b, gradColor1: color1, gradColor2: color2, gradDirection: direction } : b));
+      element.style.background = gradient;
+      element.style.backgroundImage = gradient;
+      setBackgroundBlocks(prev => prev.map(b => b.index === blockIndex ? { ...b, gradColor1: color1, gradColor2: color2, gradDirection: direction, element } : b));
       triggerUpdate();
     }
   };
@@ -540,10 +759,11 @@ export default function CustomizePage() {
       const reader = new FileReader();
       reader.onload = (ev) => {
         const block = backgroundBlocks.find(b => b.index === blockIndex);
-        if (block) {
-          block.element.style.backgroundImage = `url(${ev.target.result})`;
-          block.element.style.backgroundSize = 'cover';
-          block.element.style.backgroundPosition = 'center';
+        const element = resolveBackgroundElement(block);
+        if (block && element) {
+          element.style.backgroundImage = `url(${ev.target.result})`;
+          element.style.backgroundSize = 'cover';
+          element.style.backgroundPosition = 'center';
           setBackgroundMode(blockIndex, 'image');
           triggerUpdate();
         }
@@ -566,26 +786,45 @@ export default function CustomizePage() {
     triggerUpdate();
   };
 
-  // Text popup handlers (draggable) – same as original
+  // Popup handler - disabled on mobile
   const showTextPopupHandler = (field, event) => {
+    if (window.innerWidth < 768) return;
     event?.stopPropagation();
-    setCurrentEditingElement(field.element);
-    const computed = getComputedStyle(field.element);
+    const element = resolveTextFieldElement(field);
+    if (!element) {
+      buildTextList();
+      showToastMessage('Refreshing editable fields');
+      return;
+    }
+
+    setCurrentEditingElement(element);
+    setTextFields(prev => prev.map(f => f.index === field.index ? { ...f, element } : f));
+    const computed = getComputedStyle(element);
     setPopupFontFamily(computed.fontFamily.split(',')[0].replace(/['"]/g, '').trim());
     setPopupFontSize(parseInt(computed.fontSize, 10) || 14);
     setPopupBold(computed.fontWeight >= 600);
     setPopupItalic(computed.fontStyle === 'italic');
     setPopupUnderline(computed.textDecoration?.includes('underline') || false);
     
-    const rect = field.element.getBoundingClientRect();
+    const rect = element.getBoundingClientRect();
     const popupWidth = 280;
+    const popupHeight = 220;
     const viewportWidth = window.innerWidth;
-    const desiredX = viewportWidth < 768 ? rect.left + rect.width / 2 - popupWidth / 2 : rect.right + 14;
-    const desiredY = viewportWidth < 768 ? rect.bottom + 10 : rect.top + 8;
-    setTextPopupPosition({ 
-      x: Math.min(Math.max(desiredX, 10), viewportWidth - popupWidth - 10),
-      y: Math.min(Math.max(desiredY, 10), window.innerHeight - 200)
-    });
+    const viewportHeight = window.innerHeight;
+    
+    let left, top;
+    if (viewportWidth < 768) {
+      left = rect.left + rect.width / 2 - popupWidth / 2;
+      top = rect.bottom + 8;
+    } else {
+      left = rect.right + 12;
+      top = rect.top;
+    }
+    
+    left = Math.min(Math.max(left, 10), viewportWidth - popupWidth - 10);
+    top = Math.min(Math.max(top, 10), viewportHeight - popupHeight - 10);
+    
+    setTextPopupPosition({ x: left, y: top });
     setShowTextPopup(true);
   };
 
@@ -675,7 +914,6 @@ export default function CustomizePage() {
     triggerUpdate();
   };
 
-  // Image, barcode, QR (unchanged)
   const uploadImage = (type) => {
     const input = document.createElement('input');
     input.type = 'file';
@@ -810,6 +1048,7 @@ export default function CustomizePage() {
       const downloads = JSON.parse(localStorage.getItem('cardstudio_downloads') || '[]');
       downloads.unshift({ id: Date.now(), name: currentTemplate?.name + " (Downloaded)", orientation: currentOrientation, fullHTML: previewCanvasRef.current?.innerHTML, createdAt: new Date().toISOString() });
       localStorage.setItem('cardstudio_downloads', JSON.stringify(downloads));
+      clearUnsaved();
     } catch (e) {
       showToastMessage('Download failed: ' + e.message);
     }
@@ -821,13 +1060,17 @@ export default function CustomizePage() {
     drafts.push({ id: Date.now(), name: `${currentTemplate?.name} (Custom)`, orientation: currentOrientation, fullHTML: previewCanvasRef.current.innerHTML, createdAt: new Date().toISOString() });
     localStorage.setItem('cardstudio_drafts', JSON.stringify(drafts));
     showToastMessage('✅ Saved to Drafts!');
+    clearUnsaved();
   };
 
   const resetAll = () => {
     if (originalHTML && previewCanvasRef.current) {
+      invalidateEditorCaches();
       previewCanvasRef.current.innerHTML = originalHTML;
       setUploadedImages({ profile: null, signature: null, logo: null });
-      textCacheRef.current = { hash: null, items: [] }; // invalidate cache
+      setBackgroundBlocks([]);
+      setCurrentEditingElement(null);
+      setShowTextPopup(false);
       if (currentTemplate?.category === 'visiting') {
         const defaults = { primary: '#ff7e5f', secondary: '#6a11cb', accent: '#2575fc', cardBg: '#ffffff' };
         Object.entries(defaults).forEach(([key, value]) => {
@@ -841,6 +1084,7 @@ export default function CustomizePage() {
         triggerUpdate();
       });
       showToastMessage('Reset to original template');
+      clearUnsaved();
     }
   };
 
@@ -854,6 +1098,7 @@ export default function CustomizePage() {
       setSidePreviewHtml(buildSidePreviewHtml());
     }
     setDisplayMode(next);
+    // changing display mode doesn't count as unsaved change
   };
 
   const showImageSection = detectedFeatures.hasProfile || detectedFeatures.hasSignature || detectedFeatures.hasLogo || detectedFeatures.hasBarcode || detectedFeatures.hasQR;
@@ -870,16 +1115,314 @@ export default function CustomizePage() {
     );
   }
 
-  // Main render – identical to your original layout (kept unchanged)
   return (
-    <div className="h-screen flex flex-col bg-[#f5f7fb] font-['Inter'] overflow-hidden">
-      <div className="lg:hidden fixed top-20 left-4 z-50">
-        <button onClick={toggleSidebar} className="bg-indigo-500 text-white p-3 rounded-full shadow-lg hover:bg-indigo-600 transition-colors">
-          <FiMenu size={20} />
-        </button>
-      </div>
+    <div className="h-[100dvh] flex flex-col bg-[#f5f7fb] font-['Inter'] overflow-hidden">
+      {/* MOBILE LAYOUT: only flip mode, no both-sides button */}
+      {!isDesktopLayout && (
+      <div className="lg:hidden flex flex-col h-full max-h-full overflow-hidden">
+        
+        {/* ========== CARD PREVIEW AREA ========== */}
+        <div className={`flex-shrink-0 bg-gradient-to-br from-indigo-100 to-purple-100 flex items-start sm:items-center justify-center p-3 relative overflow-y-auto overscroll-contain ${
+          currentOrientation === 'portrait' 
+            ? 'h-[55vh] min-h-[400px]' 
+            : 'h-[42vh] min-h-[260px] sm:min-h-[300px]'
+        }`}>
+          
+          {/* Action Buttons - no toggleDisplayMode button on mobile */}
+          <div className="absolute top-2 right-2 flex gap-2 z-30">
+            <button 
+              onClick={downloadCardBothSides} 
+              className="min-w-[44px] min-h-[44px] w-7 h-7 bg-green-500 text-white rounded-full shadow-lg flex items-center justify-center" 
+              title="Download both sides"
+            >
+              <FiDownload size={12} />
+            </button>
+            {/* Flip button only (both-sides mode not available on mobile) */}
+            <button 
+              onClick={flipCard} 
+              className="min-w-[44px] min-h-[44px] w-7 h-7 bg-white rounded-full shadow-lg text-indigo-600 flex items-center justify-center" 
+              title="Flip card"
+            >
+              <FiRefreshCw size={12} />
+            </button>
+          </div>
 
-      <div className="flex flex-1 overflow-hidden">
+          <div className={`w-full mx-auto py-2 flex items-start sm:items-center justify-center ${
+            currentOrientation === 'portrait' ? 'max-w-[280px]' : 'max-w-xs sm:max-w-sm'
+          }`}>
+            <CardEditorStage orientation={currentOrientation} innerRef={previewCanvasRef} scaleWrapRef={cardScaleWrapRef} onReady={handleEditorStageReady} />
+          </div>
+        </div>
+
+        {/* ========== BOTTOM SHEET EDITOR ========== */}
+        <div className="flex-1 bg-white rounded-t-2xl shadow-2xl flex flex-col overflow-hidden min-h-0">
+          
+          {/* Drag Handle */}
+          <div className="flex justify-center pt-2 pb-1 flex-shrink-0">
+            <div className="w-10 h-1 bg-slate-300 rounded-full" />
+          </div>
+          
+          {/* Header */}
+          <div className="px-4 pb-2 border-b border-slate-100 flex-shrink-0">
+            <h2 className="text-sm font-semibold text-slate-800 flex items-center gap-2 flex-wrap">
+              <FiEdit2 className="text-indigo-500" /> Customize
+              <span className="text-[8px] font-bold bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded-full">{currentOrientation}</span>
+              <span className="text-[8px] font-bold bg-amber-50 text-amber-600 px-1.5 py-0.5 rounded-full">{currentTemplate?.category || ''}</span>
+            </h2>
+          </div>
+
+          {/* ========== SINGLE SCROLLABLE AREA ========== */}
+          <div className="flex-1 overflow-y-auto px-3 py-2 pb-24">
+            
+            {/* TEXT FIELDS */}
+            <div className="mb-3 p-2.5 border border-slate-100 rounded-xl bg-white shadow-sm">
+              <div className="flex items-center gap-2 mb-2 text-slate-700 font-semibold text-[10px] uppercase">
+                <FiType size={12} /> Editable Text Fields
+              </div>
+              {textFields.length === 0 ? (
+                <p className="text-center py-3 text-slate-400 text-xs">No editable text found</p>
+              ) : (
+                <div className="space-y-2">
+                  {textFields.map(field => (
+                    <div key={field.index} className="bg-slate-50 rounded-lg p-2">
+                      <div className="text-[9px] text-slate-500 truncate mb-1">{field.label}</div>
+                      <input 
+                        type="text" 
+                        value={field.text} 
+                        onChange={(e) => handleTextChange(field.index, e.target.value)} 
+                        className="w-full px-2 py-1.5 bg-white border border-slate-200 rounded text-xs focus:border-indigo-500" 
+                      />
+                      <div className="mt-1.5">
+                        {/* Row 1: Controls that wrap */}
+                        <div className="flex flex-wrap items-center gap-1.5 pb-1">
+                          <select
+                            value={field.fontFamily || 'Inter'}
+                            onChange={(e) => handleFontFamilyChange(field.index, e.target.value)}
+                            className="h-7 rounded-md border border-slate-200 bg-white px-1.5 text-[10px] font-medium text-slate-600 outline-none"
+                          >
+                            <option value="Inter">Inter</option>
+                            <option value="Arial">Arial</option>
+                            <option value="Times New Roman">Times New Roman</option>
+                            <option value="Georgia">Georgia</option>
+                            <option value="Poppins">Poppins</option>
+                            <option value="Playfair Display">Playfair Display</option>
+                            <option value="Space Grotesk">Space Grotesk</option>
+                          </select>
+                          <label className="flex h-7 min-w-[56px] items-center gap-1 rounded-md border border-slate-200 bg-white px-1.5 text-[10px] font-bold text-slate-600">
+                            T
+                            <input
+                              type="number"
+                              min="8"
+                              max="72"
+                              value={field.fontSize || 14}
+                              onChange={(e) => handleFontSizeChange(field.index, e.target.value)}
+                              className="w-8 bg-transparent text-center text-[10px] outline-none"
+                            />
+                          </label>
+                          <input 
+                            type="color" 
+                            value={field.color} 
+                            onChange={(e) => handleColorChange(field.index, e.target.value)} 
+                            className="h-7 w-8 flex-shrink-0 rounded-md border border-slate-200 bg-white p-0.5 cursor-pointer" 
+                          />
+                          <button
+                            type="button"
+                            onClick={() => toggleTextFieldStyle(field.index, 'bold')}
+                            className={`h-7 w-7 flex-shrink-0 rounded-md border text-[11px] font-bold ${field.bold ? 'border-indigo-500 bg-indigo-500 text-white' : 'border-slate-200 bg-white text-slate-600'}`}
+                          >B</button>
+                          <button
+                            type="button"
+                            onClick={() => toggleTextFieldStyle(field.index, 'italic')}
+                            className={`h-7 w-7 flex-shrink-0 rounded-md border text-[11px] italic ${field.italic ? 'border-indigo-500 bg-indigo-500 text-white' : 'border-slate-200 bg-white text-slate-600'}`}
+                          >I</button>
+                          <button
+                            type="button"
+                            onClick={() => toggleTextFieldStyle(field.index, 'underline')}
+                            className={`h-7 w-7 flex-shrink-0 rounded-md border text-[11px] underline ${field.underline ? 'border-indigo-500 bg-indigo-500 text-white' : 'border-slate-200 bg-white text-slate-600'}`}
+                          >U</button>
+                        </div>
+
+                        {/* Row 2: Reset button - now below */}
+                        <div className="mt-1.5">
+                          <button 
+                            onClick={() => resetTextField(field.index)} 
+                            className="flex h-7 w-full items-center justify-center gap-1 rounded-md bg-slate-100 px-2 text-[9px] text-slate-500"
+                          >
+                            <FiRefreshCw size={10} /> Reset
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* BACKGROUND EDITOR (Employee only) */}
+            {currentTemplate?.category === 'employee' && (
+              <div className="mb-3 p-2.5 border border-slate-100 rounded-xl bg-white shadow-sm">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2 text-slate-700 font-semibold text-[10px] uppercase">
+                    <FiDroplet size={12} /> Background Editor
+                  </div>
+                  <button onClick={refreshBackgrounds} className="text-indigo-500 text-[9px] flex items-center gap-0.5">
+                    <FiRefreshCcw size={10} /> Refresh
+                  </button>
+                </div>
+                {backgroundBlocks.length === 0 ? (
+                  <p className="text-center py-3 text-slate-400 text-xs">No editable backgrounds found.</p>
+                ) : (
+                  backgroundBlocks.map(block => (
+                    <div key={block.index} className="mb-2 last:mb-0">
+                      <span className="text-[9px] text-slate-400 mb-1 block">{block.label}</span>
+                      <div className="flex bg-slate-100 p-0.5 rounded-lg gap-0.5 mb-1.5">
+                        {['solid', 'gradient', 'image'].map(mode => (
+                          <button 
+                            key={mode} 
+                            onClick={() => setBackgroundMode(block.index, mode)} 
+                            className={`flex-1 py-1 text-[9px] rounded cursor-pointer font-semibold ${block.mode === mode ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500'}`}
+                          >
+                            {mode}
+                          </button>
+                        ))}
+                      </div>
+                      {block.mode === 'solid' && (
+                        <div className="flex gap-2 items-center">
+                          <input type="color" value={block.currentColor} onChange={(e) => setSolidColor(block.index, e.target.value)} className="w-7 h-6 rounded cursor-pointer" />
+                          <input type="text" value={block.currentColor} onChange={(e) => setSolidColor(block.index, e.target.value)} className="flex-1 px-1.5 py-1 border border-slate-200 rounded text-xs" />
+                        </div>
+                      )}
+                      {block.mode === 'gradient' && (
+                        <div className="flex gap-1 items-center">
+                          <input type="color" value={block.gradColor1} onChange={(e) => setGradient(block.index, e.target.value, block.gradColor2, block.gradDirection)} className="w-6 h-6 rounded cursor-pointer" />
+                          <input type="color" value={block.gradColor2} onChange={(e) => setGradient(block.index, block.gradColor1, e.target.value, block.gradDirection)} className="w-6 h-6 rounded cursor-pointer" />
+                          <select value={block.gradDirection} onChange={(e) => setGradient(block.index, block.gradColor1, block.gradColor2, e.target.value)} className="flex-1 px-1 py-1 border border-slate-200 rounded text-[11px]">
+                            <option value="to right">→</option>
+                            <option value="to left">←</option>
+                            <option value="to bottom">↓</option>
+                          </select>
+                        </div>
+                      )}
+                      {block.mode === 'image' && (
+                        <div className="flex gap-2">
+                          <button onClick={() => uploadBackgroundImage(block.index)} className="flex-1 bg-slate-50 text-slate-600 border border-slate-100 py-1 rounded text-[10px] flex items-center justify-center gap-1">
+                            <FiUpload size={10} /> Upload
+                          </button>
+                          <button onClick={() => setBackgroundMode(block.index, 'solid')} className="flex-1 bg-slate-50 text-slate-600 border border-slate-100 py-1 rounded text-[10px] flex items-center justify-center gap-1">
+                            <FiTrash2 size={10} /> Remove
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+
+            {/* COLOR THEME (Visiting only) */}
+            {currentTemplate?.category === 'visiting' && (
+              <div className="mb-3 p-2.5 border border-slate-100 rounded-xl bg-white shadow-sm">
+                <div className="flex items-center gap-2 mb-2 text-slate-700 font-semibold text-[10px] uppercase">
+                  <FiDroplet size={12} /> Color Theme
+                </div>
+                <div className="mb-2">
+                  <div className="flex gap-2 items-center">
+                    <input type="color" value={customCardBg} onChange={(e) => { setCustomCardBg(e.target.value); previewCanvasRef.current?.style.setProperty('--card-bg', e.target.value); triggerUpdate(); }} className="w-7 h-6 border border-slate-200 rounded cursor-pointer" />
+                    <input type="text" value={customCardBg} onChange={(e) => { setCustomCardBg(e.target.value); previewCanvasRef.current?.style.setProperty('--card-bg', e.target.value); triggerUpdate(); }} className="flex-1 px-2 py-1 border border-slate-200 rounded text-xs" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-1 mb-2">
+                  {[
+                    { name: 'Default', primary: '#ff7e5f', secondary: '#6a11cb', accent: '#2575fc' },
+                    { name: 'Sunset', primary: '#ff6b35', secondary: '#f7931e', accent: '#ff2d55' },
+                    { name: 'Midnight', primary: '#6c63ff', secondary: '#3f37c9', accent: '#4895ef' },
+                  ].map(theme => (
+                    <button 
+                      key={theme.name} 
+                      onClick={() => applyTheme(theme.name, theme.primary, theme.secondary, theme.accent)} 
+                      className={`p-1 rounded-lg border transition-all ${selectedTheme === theme.name ? 'border-indigo-500 bg-indigo-50/30' : 'border-slate-200'}`}
+                    >
+                      <span className="text-[9px] font-semibold text-slate-600">{theme.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* IMAGES & DIGITAL ID */}
+            {showImageSection && (
+              <div className="mb-3 p-2.5 border border-slate-100 rounded-xl bg-white shadow-sm">
+                <div className="flex items-center gap-2 mb-2 text-slate-700 font-semibold text-[10px] uppercase">
+                  <FiImage size={12} /> Images & Digital ID
+                </div>
+                <div className="space-y-2">
+                  {detectedFeatures.hasProfile && (
+                    <div className="flex items-center gap-3 bg-slate-50 p-2 rounded-lg">
+                      <div onClick={() => uploadImage('profile')} className="w-10 h-10 bg-white border border-dashed border-slate-300 rounded-lg flex items-center justify-center cursor-pointer overflow-hidden flex-shrink-0">
+                        {uploadedImages.profile ? <img src={uploadedImages.profile} className="w-full h-full object-cover" alt="Profile" /> : <FiUser size={14} className="text-slate-400" />}
+                      </div>
+                      <div className="flex-1">
+                        <span className="text-xs font-medium text-slate-700 block">Profile Image</span>
+                        {uploadedImages.profile && (
+                          <button onClick={() => removeImage('profile')} className="text-[10px] text-red-500 flex items-center gap-0.5 mt-0.5">
+                            <FiTrash2 size={10} /> Remove
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  {detectedFeatures.hasSignature && (
+                    <div className="flex items-center gap-3 bg-slate-50 p-2 rounded-lg">
+                      <div onClick={() => uploadImage('signature')} className="w-10 h-10 bg-white border border-dashed border-slate-300 rounded-lg flex items-center justify-center cursor-pointer overflow-hidden flex-shrink-0">
+                        {uploadedImages.signature ? <img src={uploadedImages.signature} className="w-full h-full object-contain" alt="Signature" /> : <span className="text-sm">✍️</span>}
+                      </div>
+                      <div className="flex-1">
+                        <span className="text-xs font-medium text-slate-700 block">Signature</span>
+                        {uploadedImages.signature && (
+                          <button onClick={() => removeImage('signature')} className="text-[10px] text-red-500 flex items-center gap-0.5 mt-0.5">
+                            <FiTrash2 size={10} /> Remove
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  {detectedFeatures.hasBarcode && (
+                    <div className="bg-slate-50 p-2 rounded-lg">
+                      <input type="text" value={barcodeValue} onChange={(e) => setBarcodeValue(e.target.value)} placeholder="Barcode text..." className="w-full px-2 py-1 border border-slate-200 rounded text-xs mb-1.5" />
+                      <button onClick={applyBarcode} className="w-full py-1 bg-indigo-500 text-white rounded text-[10px] font-semibold flex items-center justify-center gap-1">
+                        <FaBarcode size={10} /> Generate Barcode
+                      </button>
+                    </div>
+                  )}
+                  {detectedFeatures.hasQR && (
+                    <div className="bg-slate-50 p-2 rounded-lg">
+                      <input type="text" value={qrValue} onChange={(e) => setQrValue(e.target.value)} placeholder="QR URL or text..." className="w-full px-2 py-1 border border-slate-200 rounded text-xs mb-1.5" />
+                      <button onClick={applyQRCode} className="w-full py-1 bg-indigo-500 text-white rounded text-[10px] font-semibold flex items-center justify-center gap-1">
+                        <FaQrcode size={10} /> Generate QR Code
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Fixed Action Buttons Footer */}
+          <div className="flex-shrink-0 bg-white px-4 py-3 border-t border-slate-100 flex gap-2">
+            <button onClick={saveToDrafts} className="flex-[2] bg-gradient-to-br from-indigo-600 to-indigo-500 text-white py-2 rounded-xl font-bold text-sm flex items-center justify-center gap-1">
+              <FiSave size={13} /> Save
+            </button>
+            <button onClick={resetAll} className="flex-1 bg-slate-50 text-slate-600 border border-slate-100 py-2 rounded-xl font-semibold text-sm flex items-center justify-center gap-1">
+              <FiRotateCcw size={13} /> Reset
+            </button>
+          </div>
+        </div>
+      </div>
+      )}
+
+      {/* DESKTOP LAYOUT: both modes (flip and both sides) */}
+      {isDesktopLayout && (
+      <div className="hidden lg:flex flex-1 overflow-hidden">
         <div className="flex-1 bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center overflow-y-auto p-2 sm:p-4 md:p-6 lg:p-10 relative">
           <div className="absolute left-3 top-3 sm:left-5 sm:top-5 flex gap-2 z-30">
             <button onClick={downloadCardBothSides} className="w-10 h-10 sm:w-11 sm:h-11 bg-green-500 text-white rounded-full shadow-lg hover:bg-green-600 flex items-center justify-center" title="Download both sides">
@@ -896,7 +1439,7 @@ export default function CustomizePage() {
           </div>
 
           {displayMode === 'flip' ? (
-            <CardEditorStage orientation={currentOrientation} innerRef={previewCanvasRef} scaleWrapRef={cardScaleWrapRef} />
+            <CardEditorStage orientation={currentOrientation} innerRef={previewCanvasRef} scaleWrapRef={cardScaleWrapRef} onReady={handleEditorStageReady} />
           ) : (
             <div className="flex gap-6 items-center justify-center flex-wrap">
               <div className={`rounded-2xl overflow-hidden shadow-xl bg-white ${currentOrientation === 'portrait' ? 'w-[300px] h-[500px]' : 'w-[500px] h-[320px]'}`}>
@@ -924,7 +1467,7 @@ export default function CustomizePage() {
           </div>
 
           <div className="flex-1 overflow-y-auto px-3 sm:px-4 py-3 sm:py-4 min-h-0">
-            {/* TEXT FIELDS */}
+            {/* TEXT FIELDS (desktop) */}
             <div className="mb-3 p-3 sm:p-3.5 border border-slate-100 rounded-2xl bg-white shadow-sm">
               <div className="flex items-center gap-2 mb-3 text-slate-700 font-semibold text-xs uppercase tracking-wider"><FiType /> Editable Text Fields</div>
               {textFields.length === 0 ? (
@@ -933,7 +1476,7 @@ export default function CustomizePage() {
                 <div className="flex flex-col gap-3 max-h-[350px] sm:max-h-[450px] overflow-y-auto">
                   {textFields.map(field => (
                     <div key={field.index} className="bg-slate-50 rounded-[10px] p-2 border border-slate-100">
-                      <div className="flex items-center gap-1 mb-1 text-[10px] text-slate-500 truncate">{field.labelIcon} {field.label}</div>
+                      <div className="flex items-center gap-1 mb-1 text-[10px] text-slate-500 truncate">{field.label}</div>
                       <input type="text" value={field.text} onChange={(e) => handleTextChange(field.index, e.target.value)} onClick={(e) => showTextPopupHandler(field, e)} className="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-xs focus:outline-none focus:border-indigo-500 cursor-pointer" placeholder="Click to edit..." />
                       <div className="flex flex-wrap gap-2 mt-2 items-center">
                         <div className="flex items-center gap-1.5 flex-1">
@@ -947,7 +1490,7 @@ export default function CustomizePage() {
               )}
             </div>
 
-            {/* BACKGROUND EDITOR */}
+            {/* BACKGROUND EDITOR (desktop) */}
             {currentTemplate?.category === 'employee' && (
               <div className="mb-3 p-3 sm:p-3.5 border border-slate-100 rounded-2xl bg-white shadow-sm">
                 <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
@@ -995,7 +1538,7 @@ export default function CustomizePage() {
               </div>
             )}
 
-            {/* COLOR THEME */}
+            {/* COLOR THEME (desktop) */}
             {currentTemplate?.category === 'visiting' && (
               <div className="mb-3 p-3 sm:p-3.5 border border-slate-100 rounded-2xl bg-white shadow-sm">
                 <div className="flex items-center gap-2 mb-3 text-slate-700 font-semibold text-xs uppercase tracking-wider"><FiDroplet /> Color Theme & Background</div>
@@ -1034,7 +1577,7 @@ export default function CustomizePage() {
               </div>
             )}
 
-            {/* IMAGES & DIGITAL ID */}
+            {/* IMAGES & DIGITAL ID (desktop) */}
             {showImageSection && (
               <div className="mb-3 p-3 sm:p-3.5 border border-slate-100 rounded-2xl bg-white shadow-sm">
                 <div className="flex items-center gap-2 mb-3 text-slate-700 font-semibold text-xs uppercase tracking-wider"><FiImage /> Images & Digital ID</div>
@@ -1086,8 +1629,9 @@ export default function CustomizePage() {
           </div>
         </div>
       </div>
+      )}
 
-      {/* Text Style Popup */}
+      {/* Text Style Popup - only visible on desktop */}
       {showTextPopup && (
         <>
           <div className="fixed inset-0 z-[9998]" onClick={hideTextPopup} />
@@ -1129,6 +1673,25 @@ export default function CustomizePage() {
         .card-back, .face.back { transform: rotateY(180deg); }
         .qr-placeholder { max-width: 70px !important; max-height: 70px !important; width: auto !important; height: auto !important; margin: 0 auto !important; overflow: hidden !important; }
         .qr-placeholder canvas, .qr-placeholder img { width: 100% !important; height: 100% !important; object-fit: contain !important; }
+        
+        /* Text overflow protection */
+        .flip-card [class*="name"], 
+        .flip-card [class*="title"],
+        .flip-card p, 
+        .flip-card span,
+        .flip-card .company_name,
+        .flip-card .employee_name,
+        .flip-card .designation,
+        .flip-card .tagline {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          display: -webkit-box;
+          -webkit-line-clamp: 3;
+          -webkit-box-orient: vertical;
+          word-break: break-word;
+          max-width: 100%;
+        }
+
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .animate-spin { animation: spin 1s linear infinite; }
         @media (max-width: 480px) {
