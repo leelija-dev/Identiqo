@@ -1,0 +1,40 @@
+{% extends 'super_admin/base.html' %}
+
+{% block page_title %}Contact Submissions{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <form class="search-bar" method="get">
+      <select name="status">
+        <option value="">All</option>
+        <option value="new" {% if status == 'new' %}selected{% endif %}>New</option>
+        <option value="in_progress" {% if status == 'in_progress' %}selected{% endif %}>In progress</option>
+        <option value="closed" {% if status == 'closed' %}selected{% endif %}>Closed</option>
+      </select>
+      <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
+    </form>
+  </div>
+  <div class="card-body table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr><th>Name</th><th>Email</th><th>Status</th><th>Received</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for c in contacts %}
+        <tr>
+          <td>{{ c.name }}</td>
+          <td>{{ c.email }}</td>
+          <td><span class="badge badge-{% if c.status == 'new' %}warning{% elif c.status == 'closed' %}muted{% else %}info{% endif %}">{{ c.get_status_display }}</span></td>
+          <td>{{ c.created_at|date:"M d, Y" }}</td>
+          <td><a href="{% url 'super_admin:contact_detail' c.pk %}" class="btn btn-secondary btn-sm">View</a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5">No submissions.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% include 'super_admin/partials/pagination.html' %}
+  </div>
+</div>
+{% endblock %}

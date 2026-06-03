@@ -1,0 +1,42 @@
+{% extends 'super_admin/base.html' %}
+
+{% block page_title %}Subscriptions{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <form class="search-bar" method="get">
+      <select name="status">
+        <option value="">All statuses</option>
+        <option value="active" {% if status == 'active' %}selected{% endif %}>Active</option>
+        <option value="pending" {% if status == 'pending' %}selected{% endif %}>Pending</option>
+        <option value="trial" {% if status == 'trial' %}selected{% endif %}>Trial</option>
+        <option value="cancelled" {% if status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+        <option value="expired" {% if status == 'expired' %}selected{% endif %}>Expired</option>
+      </select>
+      <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
+    </form>
+  </div>
+  <div class="card-body table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr><th>User</th><th>Plan</th><th>Org</th><th>Status</th><th>Period</th></tr>
+      </thead>
+      <tbody>
+        {% for s in subscriptions %}
+        <tr>
+          <td>{{ s.user.email }}</td>
+          <td>{{ s.plan.name }}</td>
+          <td>{{ s.organization.name|default:"—" }}</td>
+          <td><span class="badge badge-{% if s.status == 'active' %}success{% elif s.status == 'pending' %}warning{% else %}muted{% endif %}">{{ s.get_status_display }}</span></td>
+          <td>{{ s.start_date|date:"M d" }} – {{ s.end_date|date:"M d, Y" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5">No subscriptions.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% include 'super_admin/partials/pagination.html' %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends 'super_admin/base.html' %}
+
+{% block page_title %}Customers{% endblock %}
+{% block topbar_actions %}<a href="{% url 'super_admin:user_create' %}" class="btn btn-primary btn-sm">+ Add customer</a>{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <form class="search-bar" method="get">
+      <input type="search" name="q" value="{{ q }}" placeholder="Search name or email…">
+      <button type="submit" class="btn btn-secondary btn-sm">Search</button>
+    </form>
+  </div>
+  <div class="card-body table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr><th>Name</th><th>Email</th><th>Phone</th><th>Joined</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td>{{ u.name }}</td>
+          <td>{{ u.email }}</td>
+          <td>{{ u.phone|default:"—" }}</td>
+          <td>{{ u.created_at|date:"M d, Y" }}</td>
+          <td>
+            <a href="{% url 'super_admin:user_edit' u.pk %}" class="btn btn-secondary btn-sm">Edit</a>
+            <form method="post" action="{% url 'super_admin:user_delete' u.pk %}" style="display:inline;" onsubmit="return confirm('Delete this customer?');">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5">No customers found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% include 'super_admin/partials/pagination.html' %}
+  </div>
+</div>
+{% endblock %}

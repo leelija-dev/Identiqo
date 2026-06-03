@@ -1,0 +1,30 @@
+{% extends 'super_admin/base.html' %}
+
+{% block page_title %}Payments{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-body table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr><th>Transaction</th><th>User</th><th>Plan</th><th>Amount</th><th>Status</th><th>Date</th></tr>
+      </thead>
+      <tbody>
+        {% for p in payments %}
+        <tr>
+          <td>{{ p.transaction_id|default:"—" }}</td>
+          <td>{{ p.subscription.user.email }}</td>
+          <td>{{ p.subscription.plan.name }}</td>
+          <td>{{ p.currency }} {{ p.amount }}</td>
+          <td><span class="badge badge-{% if p.status == 'success' %}success{% elif p.status == 'failed' %}danger{% else %}warning{% endif %}">{{ p.get_status_display }}</span></td>
+          <td>{{ p.created_at|date:"M d, Y H:i" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6">No payments.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% include 'super_admin/partials/pagination.html' %}
+  </div>
+</div>
+{% endblock %}

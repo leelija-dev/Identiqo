@@ -1,0 +1,11 @@
+{% if total_pages > 1 %}
+<div class="pagination">
+  {% if page > 1 %}
+    <a href="?page={{ page|add:-1 }}{% if q %}&q={{ q }}{% endif %}{% if status %}&status={{ status }}{% endif %}{% if category %}&category={{ category }}{% endif %}" class="btn btn-secondary btn-sm">← Prev</a>
+  {% endif %}
+  <span>Page {{ page }} of {{ total_pages }} ({{ total }} items)</span>
+  {% if page < total_pages %}
+    <a href="?page={{ page|add:1 }}{% if q %}&q={{ q }}{% endif %}{% if status %}&status={{ status }}{% endif %}{% if category %}&category={{ category }}{% endif %}" class="btn btn-secondary btn-sm">Next →</a>
+  {% endif %}
+</div>
+{% endif %}
