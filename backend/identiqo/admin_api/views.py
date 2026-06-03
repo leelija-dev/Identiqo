@@ -95,12 +95,12 @@ def add_subscription_plan(request):
 
     data = request.data.copy()
 
-    if 'features' in data:
+    if 'features' in data and isinstance(data['features'], str):
         data['features'] = json.loads(data['features'])
 
     serializer = SubscriptionPlanSerializer(data=data)
 
-    if serializer.is_valid():admin
+    if serializer.is_valid():
         serializer.save()
 
         return Response({
