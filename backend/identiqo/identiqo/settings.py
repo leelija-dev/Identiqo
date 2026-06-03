@@ -13,20 +13,38 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+load_dotenv(BASE_DIR / '.env')
+
+
+def _env_bool(name, default=False):
+    value = os.environ.get(name)
+    if value is None:
+        return default
+    return value.lower() in ('1', 'true', 'yes', 'on')
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-*n0i(g+ic6f5idt)rzif+9_%#(bwr03-wy!+veo*uvv1*sv#pz'
+SECRET_KEY = os.environ.get(
+    'SECRET_KEY',
+    'django-insecure-*n0i(g+ic6f5idt)rzif+9_%#(bwr03-wy!+veo*uvv1*sv#pz',
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = _env_bool('DEBUG', True)
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+    if host.strip()
+]
 
 
 # Application definition
@@ -77,7 +95,7 @@ WSGI_APPLICATION = 'identiqo.wsgi.application'
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
 # Local dev defaults to SQLite. Set USE_POSTGRES=true when PostgreSQL is running.
-_use_postgres = os.environ.get('USE_POSTGRES', '').lower() in ('1', 'true', 'yes')
+_use_postgres = _env_bool('USE_POSTGRES', False)
 
 if _use_postgres:
     DATABASES = {
