@@ -17,7 +17,6 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState("login");
   const [errors, setErrors] = useState({});
   const router = useRouter();
 
@@ -66,6 +65,11 @@ export default function Login() {
     { icon: <FiTrendingUp className="w-5 h-5" />, value: "50,000+", label: "Cards Created" },
     { icon: <FiShield className="w-5 h-5" />, value: "99.99%", label: "Uptime" },
   ];
+
+  // Direct navigation to signup page
+  const handleCreateAccountClick = () => {
+    router.push("/signup");
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -179,184 +183,136 @@ export default function Login() {
               </div>
             </div>
 
-            {/* Tabs */}
-            <div className="flex gap-4 mb-8 border-b border-slate-200">
-              <button
-                onClick={() => {
-                  setActiveTab("login");
-                  setErrors({});
-                }}
-                className={`pb-3 px-2 text-base font-semibold transition-all duration-300 ${
-                  activeTab === "login"
-                    ? "text-indigo-600 border-b-2 border-indigo-600"
-                    : "text-slate-500 hover:text-slate-700"
-                }`}
-              >
-                Sign In
-              </button>
-              <button
-                onClick={() => {
-                  setActiveTab("signup");
-                  setErrors({});
-                }}
-                className={`pb-3 px-2 text-base font-semibold transition-all duration-300 ${
-                  activeTab === "signup"
-                    ? "text-indigo-600 border-b-2 border-indigo-600"
-                    : "text-slate-500 hover:text-slate-700"
-                }`}
-              >
-                Create Account
-              </button>
-            </div>
-
-            {activeTab === "login" ? (
-              <>
-                {/* Social Login Buttons */}
-                <div className="grid grid-cols-2 gap-3 mb-6">
-                  <button
-                    onClick={() => handleSocialLogin("Google")}
-                    className="flex items-center justify-center gap-2 py-3 px-4 border border-slate-200 rounded-xl hover:bg-slate-50 hover:border-indigo-300 hover:shadow-md transition-all duration-300"
-                  >
-                    <FaGoogle className="w-5 h-5 text-red-500" />
-                    <span className="text-sm font-medium text-slate-600">Google</span>
-                  </button>
-                  <button
-                    onClick={() => handleSocialLogin("Microsoft")}
-                    className="flex items-center justify-center gap-2 py-3 px-4 border border-slate-200 rounded-xl hover:bg-slate-50 hover:border-indigo-300 hover:shadow-md transition-all duration-300"
-                  >
-                    <FaMicrosoft className="w-5 h-5 text-blue-600" />
-                    <span className="text-sm font-medium text-slate-600">Microsoft</span>
-                  </button>
-                </div>
-
-                {/* Divider */}
-                <div className="relative my-6">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-slate-200" />
-                  </div>
-                  <div className="relative flex justify-center text-sm">
-                    <span className="px-4 bg-white text-slate-400">Or continue with email</span>
-                  </div>
-                </div>
-
-                {/* Login Form */}
-                <form onSubmit={handleSubmit} className="space-y-5">
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
-                      Email address
-                    </label>
-                    <div className="relative">
-                      <FiMail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-                      <input
-                        type="email"
-                        value={email}
-                        onChange={(e) => {
-                          setEmail(e.target.value);
-                          if (errors.email) setErrors({...errors, email: ""});
-                        }}
-                        placeholder="hello@cardstudio.com"
-                        className={`w-full pl-12 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-4 transition-all ${
-                          errors.email 
-                            ? "border-red-300 focus:border-red-400 focus:ring-red-100" 
-                            : "border-slate-200 focus:border-indigo-400 focus:ring-indigo-100"
-                        }`}
-                      />
-                    </div>
-                    {errors.email && (
-                      <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
-                        <FiAlertCircle className="w-3 h-3" /> {errors.email}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
-                      Password
-                    </label>
-                    <div className="relative">
-                      <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-                      <input
-                        type={showPassword ? "text" : "password"}
-                        value={password}
-                        onChange={(e) => {
-                          setPassword(e.target.value);
-                          if (errors.password) setErrors({...errors, password: ""});
-                        }}
-                        placeholder="Enter your password"
-                        className={`w-full pl-12 pr-12 py-3 border rounded-xl focus:outline-none focus:ring-4 transition-all ${
-                          errors.password 
-                            ? "border-red-300 focus:border-red-400 focus:ring-red-100" 
-                            : "border-slate-200 focus:border-indigo-400 focus:ring-indigo-100"
-                        }`}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                      >
-                        {showPassword ? <FiEyeOff className="w-5 h-5" /> : <FiEye className="w-5 h-5" />}
-                      </button>
-                    </div>
-                    {errors.password && (
-                      <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
-                        <FiAlertCircle className="w-3 h-3" /> {errors.password}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={rememberMe}
-                        onChange={(e) => setRememberMe(e.target.checked)}
-                        className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                      />
-                      <span className="text-sm text-slate-600">Remember me</span>
-                    </label>
-                    <Link href="/forgot-password" className="text-sm text-indigo-600 hover:text-indigo-700 font-medium">
-                      Forgot password?
-                    </Link>
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="w-full py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg shadow-indigo-200 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 flex items-center justify-center gap-2"
-                  >
-                    Sign in
-                    <FiArrowRight className="w-4 h-4" />
-                  </button>
-                </form>
-              </>
-            ) : (
-              // Sign Up Form - Now redirects to /signup page
-              <div className="text-center py-12">
-                <div className="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <FiBriefcase className="w-8 h-8 text-indigo-600" />
-                </div>
-                <h3 className="text-xl font-semibold text-slate-800 mb-2">Create your account</h3>
-                <p className="text-slate-500 mb-6">Get started with CardStudio today</p>
-                <Link
-                  href="/signup"
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl hover:shadow-lg hover:scale-[1.02] transition-all duration-300"
-                >
-                  Create Account <FiArrowRight className="w-4 h-4" />
-                </Link>
-              </div>
-            )}
-
-            {/* Sign Up Link at bottom (when on login tab) */}
-            {activeTab === "login" && (
-              <p className="text-center text-sm text-slate-600 mt-6">
-                Don't have an account?{" "}
+            {/* Login Form */}
+            <>
+              {/* Social Login Buttons */}
+              <div className="grid grid-cols-2 gap-3 mb-6">
                 <button
-                  onClick={() => setActiveTab("signup")}
-                  className="text-indigo-600 font-semibold hover:text-indigo-700"
+                  onClick={() => handleSocialLogin("Google")}
+                  className="flex items-center justify-center gap-2 py-3 px-4 border border-slate-200 rounded-xl hover:bg-slate-50 hover:border-indigo-300 hover:shadow-md transition-all duration-300"
                 >
-                  Create account
+                  <FaGoogle className="w-5 h-5 text-red-500" />
+                  <span className="text-sm font-medium text-slate-600">Google</span>
                 </button>
-              </p>
-            )}
+                <button
+                  onClick={() => handleSocialLogin("Microsoft")}
+                  className="flex items-center justify-center gap-2 py-3 px-4 border border-slate-200 rounded-xl hover:bg-slate-50 hover:border-indigo-300 hover:shadow-md transition-all duration-300"
+                >
+                  <FaMicrosoft className="w-5 h-5 text-blue-600" />
+                  <span className="text-sm font-medium text-slate-600">Microsoft</span>
+                </button>
+              </div>
+
+              {/* Divider */}
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-slate-200" />
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-4 bg-white text-slate-400">Or continue with email</span>
+                </div>
+              </div>
+
+              {/* Login Form */}
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Email address
+                  </label>
+                  <div className="relative">
+                    <FiMail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        if (errors.email) setErrors({...errors, email: ""});
+                      }}
+                      placeholder="hello@cardstudio.com"
+                      className={`w-full pl-12 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-4 transition-all ${
+                        errors.email 
+                          ? "border-red-300 focus:border-red-400 focus:ring-red-100" 
+                          : "border-slate-200 focus:border-indigo-400 focus:ring-indigo-100"
+                      }`}
+                    />
+                  </div>
+                  {errors.email && (
+                    <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                      <FiAlertCircle className="w-3 h-3" /> {errors.email}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        if (errors.password) setErrors({...errors, password: ""});
+                      }}
+                      placeholder="Enter your password"
+                      className={`w-full pl-12 pr-12 py-3 border rounded-xl focus:outline-none focus:ring-4 transition-all ${
+                        errors.password 
+                          ? "border-red-300 focus:border-red-400 focus:ring-red-100" 
+                          : "border-slate-200 focus:border-indigo-400 focus:ring-indigo-100"
+                      }`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    >
+                      {showPassword ? <FiEyeOff className="w-5 h-5" /> : <FiEye className="w-5 h-5" />}
+                    </button>
+                  </div>
+                  {errors.password && (
+                    <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                      <FiAlertCircle className="w-3 h-3" /> {errors.password}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                    />
+                    <span className="text-sm text-slate-600">Remember me</span>
+                  </label>
+                  <Link href="/forgot-password" className="text-sm text-indigo-600 hover:text-indigo-700 font-medium">
+                    Forgot password?
+                  </Link>
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg shadow-indigo-200 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 flex items-center justify-center gap-2"
+                >
+                  Sign in
+                  <FiArrowRight className="w-4 h-4" />
+                </button>
+              </form>
+            </>
+
+            {/* Sign Up Link */}
+            <p className="text-center text-sm text-slate-600 mt-6">
+              Don't have an account?{" "}
+              <button
+                onClick={handleCreateAccountClick}
+                className="text-indigo-600 font-semibold hover:text-indigo-700"
+              >
+                Create account
+              </button>
+            </p>
 
             {/* Security Notice */}
             <div className="mt-8 pt-6 border-t border-slate-200">

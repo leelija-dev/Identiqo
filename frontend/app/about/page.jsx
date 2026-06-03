@@ -5,7 +5,6 @@ import Link from "next/link";
 import {
   FiHeart,
   FiUsers,
-
   FiGlobe,
   FiMail,
   FiMapPin,
@@ -25,6 +24,122 @@ import {
   FiEye,
   FiMessageCircle,
 } from "react-icons/fi";
+
+// Container component for consistent padding and max-width
+const Container = ({ children, className = "" }) => (
+  <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ${className}`}>
+    {children}
+  </div>
+);
+
+// Section wrapper with consistent spacing
+const Section = ({ children, className = "", bg = "transparent" }) => (
+  <section className={`py-16 ${bg !== "transparent" ? bg : ""} ${className}`}>
+    {children}
+  </section>
+);
+
+// Section header component
+const SectionHeader = ({ icon: Icon, label, title, description }) => (
+  <div className="text-center mb-12">
+    <div className="inline-flex items-center gap-2 bg-white/60 backdrop-blur-sm rounded-full px-4 py-1.5 mb-4">
+      <Icon className="text-rose-500 w-4 h-4" />
+      <span className="text-rose-600 text-xs font-semibold tracking-wide">{label}</span>
+    </div>
+    <h2 className="text-3xl lg:text-4xl font-bold text-gray-800 mb-4">
+      {title}
+    </h2>
+    {description && (
+      <p className="text-gray-600 max-w-2xl mx-auto">{description}</p>
+    )}
+  </div>
+);
+
+// Stat card component
+const StatCard = ({ number, label, icon: Icon, color }) => (
+  <div className="bg-white rounded-2xl p-6 text-center shadow-md border border-rose-100 hover:shadow-lg transition-all group">
+    <div className={`w-12 h-12 mx-auto rounded-full bg-gradient-to-r ${color} flex items-center justify-center mb-4 shadow-sm group-hover:scale-110 transition-transform`}>
+      <Icon className="w-6 h-6 text-white" />
+    </div>
+    <div className="text-2xl font-bold text-gray-800">{number}</div>
+    <div className="text-sm text-gray-500 mt-1">{label}</div>
+  </div>
+);
+
+// Value card component
+const ValueCard = ({ title, description, icon: Icon, color }) => (
+  <div className="bg-white rounded-2xl p-6 text-center shadow-md border border-rose-100 hover:shadow-lg transition-all group">
+    <div className={`w-14 h-14 mx-auto rounded-full bg-gradient-to-r ${color} flex items-center justify-center mb-4 shadow-sm group-hover:scale-110 transition-transform`}>
+      <Icon className="w-7 h-7 text-white" />
+    </div>
+    <h3 className="text-lg font-bold text-gray-800 mb-2">{title}</h3>
+    <p className="text-sm text-gray-600">{description}</p>
+  </div>
+);
+
+// Team member card
+const TeamCard = ({ name, role, bio, icon: Icon, color }) => (
+  <div className="bg-white rounded-2xl p-6 text-center shadow-md border border-rose-100 hover:shadow-lg transition-all group">
+    <div className={`w-20 h-20 mx-auto rounded-full bg-gradient-to-r ${color} flex items-center justify-center mb-4 shadow-md group-hover:scale-105 transition-transform`}>
+      <Icon className="w-8 h-8 text-white" />
+    </div>
+    <h3 className="text-lg font-bold text-gray-800 mb-1">{name}</h3>
+    <p className="text-rose-600 text-sm font-medium mb-2">{role}</p>
+    <p className="text-xs text-gray-500">{bio}</p>
+    
+    <div className="flex justify-center gap-3 mt-4 pt-4 border-t border-rose-50">
+      <button className="text-gray-400 hover:text-rose-500 transition">
+        <FiTwitter className="w-4 h-4" />
+      </button>
+      <button className="text-gray-400 hover:text-rose-500 transition">
+        <FiLinkedin className="w-4 h-4" />
+      </button>
+      <button className="text-gray-400 hover:text-rose-500 transition">
+        <FiGithub className="w-4 h-4" />
+      </button>
+    </div>
+  </div>
+);
+
+// Journey timeline item
+const JourneyItem = ({ year, title, description, icon: Icon, index }) => {
+  const isEven = index % 2 === 0;
+  
+  return (
+    <div className={`relative flex flex-col md:flex-row ${isEven ? 'md:flex-row' : 'md:flex-row-reverse'} items-center gap-6`}>
+      <div className="flex-1 md:text-right">
+        <div className="bg-white rounded-2xl p-6 shadow-md border border-rose-100 hover:shadow-lg transition-all">
+          <div className="inline-flex items-center gap-2 mb-2">
+            <span className="text-2xl font-bold text-rose-500">{year}</span>
+          </div>
+          <h3 className="text-lg font-bold text-gray-800 mb-2">{title}</h3>
+          <p className="text-sm text-gray-600">{description}</p>
+        </div>
+      </div>
+      
+      <div className="relative z-10">
+        <div className="w-12 h-12 rounded-full bg-gradient-to-r from-rose-400 to-amber-400 flex items-center justify-center shadow-md">
+          <Icon className="w-5 h-5 text-white" />
+        </div>
+      </div>
+      
+      <div className="flex-1"></div>
+    </div>
+  );
+};
+
+// Contact info item
+const ContactInfo = ({ icon: Icon, title, details, bgColor }) => (
+  <div className="flex flex-col items-center">
+    <div className={`w-12 h-12 rounded-full ${bgColor} flex items-center justify-center mb-3`}>
+      <Icon className="w-5 h-5" />
+    </div>
+    <h3 className="font-semibold text-gray-800 mb-1">{title}</h3>
+    {details.map((detail, idx) => (
+      <p key={idx} className="text-sm text-gray-500">{detail}</p>
+    ))}
+  </div>
+);
 
 export default function AboutPage() {
   const stats = [
@@ -100,16 +215,23 @@ export default function AboutPage() {
     { year: "2024", title: "Scale", description: "Reached 50,000+ active users worldwide.", icon: FiGlobe },
   ];
 
+  const contactInfo = [
+    { icon: FiMapPin, title: "Visit us", details: ["123 Innovation Street", "San Francisco, CA 94105"], bgColor: "bg-rose-100 text-rose-500" },
+    { icon: FiMail, title: "Email us", details: ["hello@cardstudio.com", "support@cardstudio.com"], bgColor: "bg-amber-100 text-amber-500" },
+    { icon: FiClock, title: "Support hours", details: ["Monday - Friday: 9am - 6pm", "24/7 emergency support"], bgColor: "bg-orange-100 text-orange-500" },
+  ];
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-rose-50 via-amber-50 to-orange-50">
       
       {/* Hero Section */}
-      <section className="relative overflow-hidden">
+      <Section className="relative overflow-hidden pt-20 lg:pt-28">
+        {/* Background decorative elements */}
         <div className="absolute inset-0 bg-white/40"></div>
         <div className="absolute top-20 right-10 w-96 h-96 bg-rose-200 rounded-full blur-3xl opacity-30"></div>
         <div className="absolute bottom-20 left-10 w-96 h-96 bg-amber-200 rounded-full blur-3xl opacity-30"></div>
         
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
+        <Container className="relative">
           <div className="max-w-4xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 bg-white/60 backdrop-blur-sm rounded-full px-5 py-2 mb-6 shadow-sm">
               <FiHeart className="text-rose-500 w-4 h-4" />
@@ -144,32 +266,23 @@ export default function AboutPage() {
               </Link>
             </div>
           </div>
-        </div>
-      </section>
+        </Container>
+      </Section>
 
       {/* Stats Section */}
-      <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <Section>
+        <Container>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {stats.map((stat, index) => {
-              const Icon = stat.icon;
-              return (
-                <div key={index} className="bg-white rounded-2xl p-6 text-center shadow-md border border-rose-100 hover:shadow-lg transition-all">
-                  <div className={`w-12 h-12 mx-auto rounded-full bg-gradient-to-r ${stat.color} flex items-center justify-center mb-4 shadow-sm`}>
-                    <Icon className="w-6 h-6 text-white" />
-                  </div>
-                  <div className="text-2xl font-bold text-gray-800">{stat.number}</div>
-                  <div className="text-sm text-gray-500 mt-1">{stat.label}</div>
-                </div>
-              );
-            })}
+            {stats.map((stat, index) => (
+              <StatCard key={index} {...stat} />
+            ))}
           </div>
-        </div>
-      </section>
+        </Container>
+      </Section>
 
       {/* Mission Section */}
-      <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <Section>
+        <Container>
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
               <div className="inline-flex items-center gap-2 bg-white/60 backdrop-blur-sm rounded-full px-4 py-1.5 mb-4">
@@ -222,140 +335,70 @@ export default function AboutPage() {
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </Container>
+      </Section>
 
       {/* Values Section */}
-      <section className="py-16 bg-white/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 bg-white/60 backdrop-blur-sm rounded-full px-4 py-1.5 mb-4">
-              <FiStar className="text-rose-500 w-4 h-4" />
-              <span className="text-rose-600 text-xs font-semibold">OUR VALUES</span>
-            </div>
-            <h2 className="text-3xl lg:text-4xl font-bold text-gray-800 mb-4">
-              What drives us forward
-            </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Our core values shape everything we do, from product development to customer support.
-            </p>
-          </div>
+      <Section bg="bg-white/50">
+        <Container>
+          <SectionHeader 
+            icon={FiStar}
+            label="OUR VALUES"
+            title="What drives us forward"
+            description="Our core values shape everything we do, from product development to customer support."
+          />
           
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {values.map((value, index) => {
-              const Icon = value.icon;
-              return (
-                <div key={index} className="bg-white rounded-2xl p-6 text-center shadow-md border border-rose-100 hover:shadow-lg transition-all group">
-                  <div className={`w-14 h-14 mx-auto rounded-full bg-gradient-to-r ${value.color} flex items-center justify-center mb-4 shadow-sm group-hover:scale-110 transition-transform`}>
-                    <Icon className="w-7 h-7 text-white" />
-                  </div>
-                  <h3 className="text-lg font-bold text-gray-800 mb-2">{value.title}</h3>
-                  <p className="text-sm text-gray-600">{value.description}</p>
-                </div>
-              );
-            })}
+            {values.map((value, index) => (
+              <ValueCard key={index} {...value} />
+            ))}
           </div>
-        </div>
-      </section>
+        </Container>
+      </Section>
 
       {/* Journey Section */}
-      <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 bg-white/60 backdrop-blur-sm rounded-full px-4 py-1.5 mb-4">
-              <FiTrendingUp className="text-rose-500 w-4 h-4" />
-              <span className="text-rose-600 text-xs font-semibold">OUR JOURNEY</span>
-            </div>
-            <h2 className="text-3xl lg:text-4xl font-bold text-gray-800 mb-4">
-              The road so far
-            </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              From humble beginnings to serving thousands of businesses worldwide.
-            </p>
-          </div>
+      <Section>
+        <Container>
+          <SectionHeader 
+            icon={FiTrendingUp}
+            label="OUR JOURNEY"
+            title="The road so far"
+            description="From humble beginnings to serving thousands of businesses worldwide."
+          />
           
           <div className="relative">
             <div className="absolute left-1/2 transform -translate-x-1/2 w-0.5 h-full bg-gradient-to-b from-rose-300 via-amber-300 to-orange-300 hidden md:block"></div>
             
             <div className="space-y-8">
-              {journey.map((item, index) => {
-                const Icon = item.icon;
-                return (
-                  <div key={index} className={`relative flex flex-col md:flex-row ${index % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'} items-center gap-6`}>
-                    <div className="flex-1 md:text-right">
-                      <div className="bg-white rounded-2xl p-6 shadow-md border border-rose-100 hover:shadow-lg transition-all">
-                        <div className="inline-flex items-center gap-2 mb-2">
-                          <span className="text-2xl font-bold text-rose-500">{item.year}</span>
-                        </div>
-                        <h3 className="text-lg font-bold text-gray-800 mb-2">{item.title}</h3>
-                        <p className="text-sm text-gray-600">{item.description}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="relative z-10">
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-r from-rose-400 to-amber-400 flex items-center justify-center shadow-md">
-                        <Icon className="w-5 h-5 text-white" />
-                      </div>
-                    </div>
-                    
-                    <div className="flex-1"></div>
-                  </div>
-                );
-              })}
+              {journey.map((item, index) => (
+                <JourneyItem key={index} {...item} index={index} />
+              ))}
             </div>
           </div>
-        </div>
-      </section>
+        </Container>
+      </Section>
 
       {/* Team Section */}
-      <section className="py-16 bg-white/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 bg-white/60 backdrop-blur-sm rounded-full px-4 py-1.5 mb-4">
-              <FiUsers className="text-rose-500 w-4 h-4" />
-              <span className="text-rose-600 text-xs font-semibold">MEET THE TEAM</span>
-            </div>
-            <h2 className="text-3xl lg:text-4xl font-bold text-gray-800 mb-4">
-              The people behind CardStudio
-            </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Passionate individuals dedicated to making digital identification better for everyone.
-            </p>
-          </div>
+      <Section bg="bg-white/50">
+        <Container>
+          <SectionHeader 
+            icon={FiUsers}
+            label="MEET THE TEAM"
+            title="The people behind CardStudio"
+            description="Passionate individuals dedicated to making digital identification better for everyone."
+          />
           
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {team.map((member, index) => {
-              const Icon = member.icon;
-              return (
-                <div key={index} className="bg-white rounded-2xl p-6 text-center shadow-md border border-rose-100 hover:shadow-lg transition-all group">
-                  <div className={`w-20 h-20 mx-auto rounded-full bg-gradient-to-r ${member.color} flex items-center justify-center mb-4 shadow-md group-hover:scale-105 transition-transform`}>
-                    <Icon className="w-8 h-8 text-white" />
-                  </div>
-                  <h3 className="text-lg font-bold text-gray-800 mb-1">{member.name}</h3>
-                  <p className="text-rose-600 text-sm font-medium mb-2">{member.role}</p>
-                  <p className="text-xs text-gray-500">{member.bio}</p>
-                  
-                  <div className="flex justify-center gap-3 mt-4 pt-4 border-t border-rose-50">
-                    <button className="text-gray-400 hover:text-rose-500 transition">
-                      <FiTwitter className="w-4 h-4" />
-                    </button>
-                    <button className="text-gray-400 hover:text-rose-500 transition">
-                      <FiLinkedin className="w-4 h-4" />
-                    </button>
-                    <button className="text-gray-400 hover:text-rose-500 transition">
-                      <FiGithub className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
+            {team.map((member, index) => (
+              <TeamCard key={index} {...member} />
+            ))}
           </div>
-        </div>
-      </section>
+        </Container>
+      </Section>
 
       {/* CTA Section */}
-      <section className="py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <Section>
+        <Container>
           <div className="bg-gradient-to-r from-rose-500 via-amber-500 to-orange-500 rounded-3xl p-12 text-center shadow-xl">
             <h2 className="text-3xl lg:text-4xl font-bold text-white mb-4">
               Ready to get started?
@@ -378,39 +421,19 @@ export default function AboutPage() {
               </Link>
             </div>
           </div>
-        </div>
-      </section>
+        </Container>
+      </Section>
 
-      {/* Footer Contact Info */}
-      <section className="py-12 border-t border-rose-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Contact Info Footer */}
+      <Section className="border-t border-rose-100">
+        <Container>
           <div className="grid md:grid-cols-3 gap-8 text-center">
-            <div className="flex flex-col items-center">
-              <div className="w-12 h-12 rounded-full bg-rose-100 flex items-center justify-center mb-3">
-                <FiMapPin className="w-5 h-5 text-rose-500" />
-              </div>
-              <h3 className="font-semibold text-gray-800 mb-1">Visit us</h3>
-              <p className="text-sm text-gray-500">123 Innovation Street<br />San Francisco, CA 94105</p>
-            </div>
-            
-            <div className="flex flex-col items-center">
-              <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center mb-3">
-                <FiMail className="w-5 h-5 text-amber-500" />
-              </div>
-              <h3 className="font-semibold text-gray-800 mb-1">Email us</h3>
-              <p className="text-sm text-gray-500">hello@cardstudio.com<br />support@cardstudio.com</p>
-            </div>
-            
-            <div className="flex flex-col items-center">
-              <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center mb-3">
-                <FiClock className="w-5 h-5 text-orange-500" />
-              </div>
-              <h3 className="font-semibold text-gray-800 mb-1">Support hours</h3>
-              <p className="text-sm text-gray-500">Monday - Friday: 9am - 6pm<br />24/7 emergency support</p>
-            </div>
+            {contactInfo.map((info, index) => (
+              <ContactInfo key={index} {...info} />
+            ))}
           </div>
-        </div>
-      </section>
+        </Container>
+      </Section>
     </div>
   );
 }

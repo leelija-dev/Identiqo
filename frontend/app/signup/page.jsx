@@ -95,10 +95,8 @@ export default function Signup() {
             {/* Logo */}
             <div>
               <div className="flex items-center gap-3 mb-20">
-                <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-lg">
-                  <span className="text-2xl font-bold">C</span>
-                </div>
-                <span className="text-2xl font-bold tracking-tight">CardStudio</span>
+               
+                <span className="text-2xl font-bold tracking-tight">IDENTIQO</span>
               </div>
             </div>
 

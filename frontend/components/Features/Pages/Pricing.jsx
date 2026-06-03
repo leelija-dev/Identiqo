@@ -29,6 +29,7 @@ export default function PricingPage() {
       name: "Essential",
       price: "$29",
       priceYearly: "$278",
+
       note: "billed monthly · cancel anytime",
       noteYearly: "billed yearly · 2 months free",
       features: [
