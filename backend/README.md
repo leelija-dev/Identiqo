@@ -10,8 +10,8 @@ python -m venv venv
 venv\Scripts\activate          # Windows
 pip install -r requirements.txt
 
-# SQLite is the default (no PostgreSQL required).
-# For PostgreSQL: set USE_POSTGRES=true and ensure the server is running.
+copy .env.example .env
+# Edit .env — SQLite is default; set USE_POSTGRES=true for PostgreSQL
 
 python manage.py migrate
 python manage.py seed_super_admin
