@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import CardPreview from '@/components/Common/CardPreview';
-import { FiMenu, FiX, FiDownload } from 'react-icons/fi';
+import { FiMenu, FiX, FiDownload, FiStar, FiTrash2, FiEdit2, FiChevronLeft } from 'react-icons/fi';
 
 export default function GalleryPage() {
   const router = useRouter();
@@ -17,10 +17,15 @@ export default function GalleryPage() {
   const [totalItems, setTotalItems] = useState(0);
   const [isClient, setIsClient] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const modalCardRef = useRef(null); 
+  const [isMobile, setIsMobile] = useState(false);
+  const modalCardRef = useRef(null);
 
   useEffect(() => {
     setIsClient(true);
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   useEffect(() => {
@@ -253,21 +258,15 @@ export default function GalleryPage() {
           backgroundColor: '#ffffff',
         });
 
-        // Combine both sides into a single canvas
         const combinedCanvas = document.createElement('canvas');
         const combinedCtx = combinedCanvas.getContext('2d');
         
-        // Set combined canvas dimensions (stack vertically)
         combinedCanvas.width = frontCanvas.width;
         combinedCanvas.height = frontCanvas.height + backCanvas.height;
         
-        // Draw front on top
         combinedCtx.drawImage(frontCanvas, 0, 0);
-        
-        // Draw back below front
         combinedCtx.drawImage(backCanvas, 0, frontCanvas.height);
         
-        // Download combined image
         const link = document.createElement('a');
         link.download = `${safeName}-both-sides-${timestamp}.png`;
         link.href = combinedCanvas.toDataURL('image/png');
@@ -297,7 +296,7 @@ export default function GalleryPage() {
         fullHTML: selectedItem.fullHTML,
         createdAt: new Date().toISOString()
       });
-      localStorage.setItem('cardstudio_downloads', JSON.stringify(downloads));
+      localStorage.setItem('cardstudio_downloads', JSON.stringify(downloads.slice(0, 50)));
       updateStorageInfo();
     } catch (error) {
       console.error(error);
@@ -324,108 +323,331 @@ export default function GalleryPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 font-['Inter'] overflow-x-hidden">
-      <div className="md:hidden fixed top-20 left-4 z-50">
-        <button onClick={toggleSidebar} className="bg-indigo-500 text-white p-3 rounded-full shadow-lg hover:bg-indigo-600 transition-colors">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 font-['Inter'] overflow-x-hidden">
+      {/* Mobile Header - Side se open karne ke liye button left side */}
+      <div className="md:hidden fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-md border-b border-slate-200 z-40 px-4 py-3 flex items-center shadow-sm">
+        <button 
+          onClick={toggleSidebar} 
+          className="p-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl shadow-lg active:scale-95 transition-transform"
+        >
           <FiMenu size={20} />
         </button>
+        <div className="flex-1 text-center">
+          <h2 className="font-bold text-lg text-slate-800">My Gallery</h2>
+        </div>
+        <div className="w-10" /> {/* Spacer for centering */}
       </div>
 
-      <div className="flex min-h-[calc(100vh-72px)]">
-        <aside className={`fixed md:relative top-0 left-0 h-full w-[280px] max-w-[85vw] bg-white border-r border-slate-200 flex flex-col flex-shrink-0 overflow-y-auto transition-transform duration-300 ease-in-out z-40 md:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-          <div className="md:hidden absolute right-3 top-3">
-            <button onClick={toggleSidebar} className="p-2 bg-slate-100 rounded-full">
-              <FiX size={20} />
-            </button>
+      <div className="flex min-h-screen md:min-h-[calc(100vh-72px)]">
+        {/* Sidebar - Left se slide hoga */}
+        <aside className={`fixed top-0 left-0 h-full w-[280px] max-w-[85vw] bg-white shadow-2xl flex flex-col flex-shrink-0 overflow-y-auto transition-transform duration-300 ease-in-out z-50 md:relative md:translate-x-0 md:shadow-md ${
+          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}>
+          {/* Sidebar Header */}
+          <div className="p-5 border-b border-slate-200 bg-gradient-to-r from-indigo-50 to-purple-50">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="font-bold text-xl bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                  My Gallery
+                </h2>
+                <p className="text-xs text-slate-500 mt-1">Manage your designs</p>
+              </div>
+              <button 
+                onClick={toggleSidebar} 
+                className="md:hidden p-2 bg-white rounded-full shadow-md hover:bg-slate-50 transition-colors"
+              >
+                <FiX size={18} />
+              </button>
+            </div>
           </div>
-          <div className="p-5 border-b">
-            <h2 className="font-bold text-lg text-slate-800">My Gallery</h2>
-            <p className="text-xs text-slate-400 mt-1">Manage your saved designs</p>
-          </div>
-          <nav className="flex-1 py-4 px-3">
+
+          {/* Navigation */}
+          <nav className="flex-1 py-4 px-3 space-y-1.5">
             {['wishlist', 'drafts', 'downloads'].map(key => (
               <div
                 key={key}
                 onClick={() => {
                   setCurrentCategory(key);
-                  if (window.innerWidth < 768) setIsSidebarOpen(false);
+                  if (isMobile) setIsSidebarOpen(false);
                 }}
-                className={`cursor-pointer transition-all rounded-xl py-3 px-4 mb-2 flex items-center gap-2.5 text-sm sm:text-base ${currentCategory === key ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/30' : 'hover:bg-slate-50 text-slate-600'}`}
+                className={`cursor-pointer transition-all rounded-xl py-3 px-4 flex items-center gap-3 group ${
+                  currentCategory === key 
+                    ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/30' 
+                    : 'hover:bg-slate-100 text-slate-600 hover:text-slate-900'
+                }`}
               >
-                <span>{key === 'wishlist' ? '⭐ Wishlist' : key === 'drafts' ? '✏️ Drafts' : '⬇️ Downloads'}</span>
+                <span className="text-xl">
+                  {key === 'wishlist' ? '⭐' : key === 'drafts' ? '✏️' : '⬇️'}
+                </span>
+                <span className="font-medium flex-1">
+                  {key === 'wishlist' ? 'Wishlist' : key === 'drafts' ? 'Drafts' : 'Downloads'}
+                </span>
+                {currentCategory === key && (
+                  <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">
+                    {galleryItems.length}
+                  </span>
+                )}
               </div>
             ))}
           </nav>
-          
+
+          {/* Footer Stats */}
+          <div className="p-4 border-t border-slate-200 bg-slate-50/50">
+            <div className="text-xs text-slate-500 text-center">
+              <p>Total Items: {totalItems}</p>
+              <p className="text-[11px] text-slate-400 mt-1">Tap to select category</p>
+            </div>
+          </div>
         </aside>
 
-        {isSidebarOpen && <div className="fixed inset-0 bg-black/50 z-30 md:hidden" onClick={toggleSidebar} />}
+        {/* Overlay for mobile - jab sidebar open ho */}
+        {isSidebarOpen && (
+          <div 
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden transition-opacity duration-300" 
+            onClick={toggleSidebar}
+          />
+        )}
 
-        <div className="flex-1 overflow-y-auto bg-slate-100/40 p-4 sm:p-6 md:p-8">
-          <div className="mb-6">
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">{categoryTitles[currentCategory]}</h1>
-            <p className="text-slate-500 text-sm mt-1">{categoryDescriptions[currentCategory]}</p>
+        {/* Main Content */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 pt-16 md:pt-8">
+          {/* Header Section - Desktop */}
+          <div className="hidden md:block mb-8">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">
+              {categoryTitles[currentCategory]}
+            </h1>
+            <p className="text-slate-500 text-sm mt-2">{categoryDescriptions[currentCategory]}</p>
           </div>
 
+          {/* Header Section - Mobile */}
+          <div className="md:hidden mb-6">
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">
+              {categoryTitles[currentCategory]}
+            </h1>
+            <p className="text-slate-500 text-xs mt-1">{categoryDescriptions[currentCategory]}</p>
+          </div>
+
+          {/* Content */}
           {!isClient ? (
-            <div className="text-center py-16 text-slate-400">Loading...</div>
-          ) : galleryItems.length === 0 ? (
-            <div className="text-center py-16 text-slate-400">✨ No items in {currentCategory}</div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-6 md:gap-8 items-start">
-              {galleryItems.map(item => {
-                const orientation = item.orientation || getOrientationFromHTML(item.fullHTML);
-                return (
-                  <div key={item.id} onClick={(e) => handleCardClick(e, item)} className="group relative flex cursor-pointer flex-col items-center overflow-visible transition-transform duration-300 hover:-translate-y-2">
-                    <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                      <button data-action="edit" data-id={item.id} className="w-8 h-8 rounded-lg bg-indigo-500 text-white flex items-center justify-center hover:bg-indigo-600 transition-colors text-sm">✏️</button>
-                      <button data-action="delete" data-id={item.id} className="w-8 h-8 rounded-lg bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition-colors text-sm">🗑️</button>
-                    </div>
-                    <CardPreview html={item.fullHTML} orientation={orientation} className="w-full max-w-[280px] sm:max-w-none transition-all duration-300 group-hover:shadow-2xl group-hover:shadow-black/10" />
-                  </div>
-                );
-              })}
+            <div className="flex items-center justify-center py-20">
+              <div className="text-center">
+                <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                <p className="text-slate-400 text-sm">Loading your gallery...</p>
+              </div>
             </div>
+          ) : galleryItems.length === 0 ? (
+            <div className="text-center py-16 md:py-24">
+              <div className="text-6xl mb-4">✨</div>
+              <h3 className="text-base md:text-lg font-semibold text-slate-700 mb-2">No items yet</h3>
+              <p className="text-slate-400 text-sm">Your {currentCategory} will appear here</p>
+            </div>
+          ) : (
+            <>
+              {/* Grid View */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
+                {galleryItems.map(item => {
+                  const orientation = item.orientation || getOrientationFromHTML(item.fullHTML);
+                  return (
+                    <div 
+                      key={item.id} 
+                      onClick={(e) => handleCardClick(e, item)} 
+                      className="group relative flex cursor-pointer flex-col items-center overflow-visible transition-all duration-300 hover:-translate-y-2"
+                    >
+                      {/* Action Buttons */}
+                      <div className="absolute -top-2 right-2 flex gap-2 z-10 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 opacity-100">
+                        <button 
+                          data-action="edit" 
+                          data-id={item.id} 
+                          className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-indigo-500 text-white flex items-center justify-center hover:bg-indigo-600 transition-all hover:scale-110 shadow-lg text-sm active:scale-95"
+                        >
+                          <FiEdit2 size={14} />
+                        </button>
+                        <button 
+                          data-action="delete" 
+                          data-id={item.id} 
+                          className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition-all hover:scale-110 shadow-lg text-sm active:scale-95"
+                        >
+                          <FiTrash2 size={14} />
+                        </button>
+                      </div>
+
+                      {/* Card Preview */}
+                      <CardPreview 
+                        html={item.fullHTML} 
+                        orientation={orientation} 
+                        className="w-full max-w-[260px] sm:max-w-none transition-all duration-300 group-hover:shadow-2xl group-hover:shadow-black/10" 
+                      />
+                      
+                      {/* Card Title - Mobile only */}
+                      <p className="mt-3 text-sm font-medium text-slate-700 md:hidden truncate max-w-[200px]">
+                        {item.name || 'Untitled Card'}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Items Count */}
+              <div className="mt-8 text-center text-sm text-slate-400">
+                Showing {galleryItems.length} item{galleryItems.length !== 1 ? 's' : ''}
+              </div>
+            </>
           )}
         </div>
       </div>
 
-      {/* Modal with reliable flip */}
+      {/* Modal */}
       {showModal && selectedItem && (
-        <div className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center z-[2000] p-4" onClick={(e) => e.target === e.currentTarget && closeModal()}>
-          <div className="flex flex-col md:flex-row gap-6 items-center justify-center w-full max-w-[90vw]">
+        <div 
+          className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center z-[2000] p-3 sm:p-4 md:p-6" 
+          onClick={(e) => e.target === e.currentTarget && closeModal()}
+        >
+          <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 items-center justify-center w-full max-w-[95vw] sm:max-w-[90vw] lg:max-w-[85vw]">
+            {/* Card Container */}
             <div
               ref={modalCardRef}
               onClick={handleModalCardFlip}
-              className={`rounded-2xl overflow-hidden shadow-2xl shadow-black/50 ${(selectedItem.orientation || getOrientationFromHTML(selectedItem.fullHTML)) === 'portrait' ? 'w-full max-w-[350px] aspect-[350/550]' : 'w-full max-w-[550px] aspect-[550/348]'}`}
+              className={`rounded-2xl overflow-hidden shadow-2xl shadow-black/50 transition-all duration-300 ${
+                (selectedItem.orientation || getOrientationFromHTML(selectedItem.fullHTML)) === 'portrait' 
+                  ? 'w-full max-w-[300px] sm:max-w-[350px] aspect-[350/550]' 
+                  : 'w-full max-w-[450px] sm:max-w-[550px] aspect-[550/348]'
+              }`}
             >
               <div className="w-full h-full" dangerouslySetInnerHTML={{ __html: selectedItem.fullHTML || '' }} />
             </div>
-            <div className="flex flex-row md:flex-col gap-3 w-full md:w-auto justify-center">
-              <button onClick={() => handleModalAction('customize')} className="px-5 py-2.5 md:px-6 md:py-3.5 rounded-full font-semibold bg-indigo-500 text-white hover:-translate-y-0.5 hover:shadow-lg transition-all text-sm md:text-base">✏️ Customize</button>
+
+            {/* Action Buttons */}
+            <div className="flex flex-row lg:flex-col gap-2 sm:gap-3 w-full lg:w-auto justify-center flex-wrap">
+              <button 
+                onClick={() => handleModalAction('customize')} 
+                className="px-4 py-2 sm:px-5 sm:py-2.5 md:px-6 md:py-3 rounded-full font-semibold bg-indigo-500 text-white hover:bg-indigo-600 transition-all hover:scale-105 active:scale-95 text-sm sm:text-base flex items-center gap-2 shadow-lg"
+              >
+                <FiEdit2 size={16} /> Customize
+              </button>
+              
               {(currentCategory === 'drafts' || currentCategory === 'downloads') && (
-                <button onClick={() => handleModalAction('wishlist')} className="px-5 py-2.5 md:px-6 md:py-3.5 rounded-full font-semibold bg-amber-500 text-white hover:-translate-y-0.5 hover:shadow-lg transition-all text-sm md:text-base">⭐ Wishlist</button>
+                <button 
+                  onClick={() => handleModalAction('wishlist')} 
+                  className="px-4 py-2 sm:px-5 sm:py-2.5 md:px-6 md:py-3 rounded-full font-semibold bg-amber-500 text-white hover:bg-amber-600 transition-all hover:scale-105 active:scale-95 text-sm sm:text-base flex items-center gap-2 shadow-lg"
+                >
+                  <FiStar size={16} /> Save
+                </button>
               )}
-              <button onClick={() => handleModalAction('download')} className="px-5 py-2.5 md:px-6 md:py-3.5 rounded-full font-semibold bg-emerald-500 text-white hover:-translate-y-0.5 hover:shadow-lg transition-all text-sm md:text-base flex items-center justify-center gap-2"><FiDownload /> Download</button>
-              <button onClick={() => handleModalAction('delete')} className="px-5 py-2.5 md:px-6 md:py-3.5 rounded-full font-semibold bg-red-500 text-white hover:-translate-y-0.5 hover:shadow-lg transition-all text-sm md:text-base">🗑️ Delete</button>
-              <button onClick={() => handleModalAction('close')} className="px-5 py-2.5 md:px-6 md:py-3.5 rounded-full font-semibold bg-slate-100 text-slate-800 border border-slate-200 hover:-translate-y-0.5 hover:shadow-lg transition-all text-sm md:text-base">✕ Close</button>
+              
+              <button 
+                onClick={() => handleModalAction('download')} 
+                className="px-4 py-2 sm:px-5 sm:py-2.5 md:px-6 md:py-3 rounded-full font-semibold bg-emerald-500 text-white hover:bg-emerald-600 transition-all hover:scale-105 active:scale-95 text-sm sm:text-base flex items-center gap-2 shadow-lg"
+              >
+                <FiDownload size={16} /> Download
+              </button>
+              
+              <button 
+                onClick={() => handleModalAction('delete')} 
+                className="px-4 py-2 sm:px-5 sm:py-2.5 md:px-6 md:py-3 rounded-full font-semibold bg-red-500 text-white hover:bg-red-600 transition-all hover:scale-105 active:scale-95 text-sm sm:text-base flex items-center gap-2 shadow-lg"
+              >
+                <FiTrash2 size={16} /> Delete
+              </button>
+              
+              <button 
+                onClick={() => handleModalAction('close')} 
+                className="px-4 py-2 sm:px-5 sm:py-2.5 md:px-6 md:py-3 rounded-full font-semibold bg-slate-100 text-slate-800 border border-slate-200 hover:bg-slate-200 transition-all hover:scale-105 active:scale-95 text-sm sm:text-base flex items-center gap-2"
+              >
+                <FiChevronLeft size={16} /> Close
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      <div className={`fixed bottom-4 right-4 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 z-[1100] ${showToast ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-[100px]'} ${toastType === 'warning' ? 'bg-amber-500' : 'bg-green-500'} text-white`}>
+      {/* Toast Notification */}
+      <div className={`fixed bottom-4 sm:bottom-6 right-4 sm:right-6 px-4 py-2.5 sm:px-5 sm:py-3 rounded-xl text-sm font-medium transition-all duration-300 z-[1100] shadow-lg ${
+        showToast ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-[100px]'
+      } ${toastType === 'warning' ? 'bg-amber-500' : 'bg-gradient-to-r from-green-500 to-emerald-500'} text-white`}>
         {toastMessage}
       </div>
 
       <style jsx global>{`
-        .flip-card { width: 100%; height: 100%; perspective: 1800px; cursor: pointer; }
-        .flip-card-inner { position: relative; width: 100%; height: 100%; transition: transform 0.65s; transform-style: preserve-3d; }
-        .flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
-        .card-front, .card-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 20px; overflow: hidden; }
-        .card-back { transform: rotateY(180deg); }
-        @media (max-width: 320px) { .grid { gap: 1rem; } }
-        @media (max-width: 480px) and (orientation: portrait) { button { min-height: 44px; } }
+        /* Flip Card Styles */
+        .flip-card { 
+          width: 100%; 
+          height: 100%; 
+          perspective: 1800px; 
+          cursor: pointer; 
+        }
+        
+        .flip-card-inner { 
+          position: relative; 
+          width: 100%; 
+          height: 100%; 
+          transition: transform 0.65s cubic-bezier(0.4, 0, 0.2, 1); 
+          transform-style: preserve-3d; 
+        }
+        
+        .flip-card.flipped .flip-card-inner { 
+          transform: rotateY(180deg); 
+        }
+        
+        .card-front, .card-back { 
+          position: absolute; 
+          width: 100%; 
+          height: 100%; 
+          backface-visibility: hidden; 
+          border-radius: 20px; 
+          overflow: hidden; 
+        }
+        
+        .card-back { 
+          transform: rotateY(180deg); 
+        }
+        
+        /* Touch device optimizations */
+        @media (hover: hover) {
+          .group:hover .md\\:group-hover\\:opacity-100 {
+            opacity: 1;
+          }
+        }
+        
+        @media (hover: none) {
+          .group .opacity-100 {
+            opacity: 1;
+          }
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 640px) {
+          .grid {
+            gap: 1rem;
+          }
+        }
+        
+        @media (min-width: 641px) and (max-width: 768px) {
+          .grid {
+            gap: 1.5rem;
+          }
+        }
+        
+        /* Smooth scrolling */
+        .overflow-y-auto {
+          scroll-behavior: smooth;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+          width: 6px;
+          height: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+          background: #f1f5f9;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+          background: #94a3b8;
+        }
       `}</style>
     </div>
   );
