@@ -100,7 +100,7 @@ def add_subscription_plan(request):
 
     serializer = SubscriptionPlanSerializer(data=data)
 
-    if serializer.is_valid():
+    if serializer.is_valid():admin
         serializer.save()
 
         return Response({
