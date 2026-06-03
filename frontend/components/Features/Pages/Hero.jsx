@@ -36,7 +36,7 @@ export default function Hero() {
       <Container className="relative z-10 px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 items-center">
           {/* LEFT CONTENT - Text */}
-          <div className="text-left order-1 lg:order-none"> 
+          <div className="text-left order-1 lg:order-none">
             <div className={`transition-all duration-700 ease-out ${animatedText.badge ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-8'}`}>
               <div className="inline-flex items-center gap-2 px-3 sm:px-4 md:px-5 py-2 md:py-2.5 rounded-full bg-white/80 backdrop-blur-sm border border-indigo-100 mb-4 sm:mb-6 shadow-sm">
                 <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-indigo-600 animate-pulse" />
