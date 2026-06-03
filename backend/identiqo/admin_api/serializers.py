@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import AdminUser
 from django.contrib.auth.hashers import make_password, check_password
+from .models import SubscriptionPlan
 
 
 class AdminUserSerializer(serializers.ModelSerializer):
@@ -40,3 +41,10 @@ class AdminRegistrationSerializer(serializers.ModelSerializer):
 class AdminLoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
+
+
+class SubscriptionPlanSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = SubscriptionPlan
+        fields = '__all__'
