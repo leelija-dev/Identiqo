@@ -1,0 +1,109 @@
+{% extends 'super_admin/base.html' %}
+
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="label">Customers</div>
+    <div class="value">{{ stats.users_total }}</div>
+    <div class="sub">+{{ stats.users_new_month }} this month</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Organizations</div>
+    <div class="value">{{ stats.organizations_total }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Templates</div>
+    <div class="value">{{ stats.templates_published }}/{{ stats.templates_total }}</div>
+    <div class="sub">published / total</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Active subs</div>
+    <div class="value">{{ stats.subscriptions_active }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">New contact</div>
+    <div class="value">{{ stats.contact_new }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Revenue (30d)</div>
+    <div class="value">${{ stats.revenue_month }}</div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <div class="card">
+    <div class="card-header"><h2>Recent customers</h2><a href="{% url 'super_admin:users_list' %}" class="btn btn-secondary btn-sm">View all</a></div>
+    <div class="card-body table-wrap">
+      <table class="data-table">
+        <thead><tr><th>Name</th><th>Email</th><th>Joined</th></tr></thead>
+        <tbody>
+          {% for u in recent_users %}
+          <tr>
+            <td>{{ u.name }}</td>
+            <td>{{ u.email }}</td>
+            <td>{{ u.created_at|date:"M d, Y" }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="3">No customers yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h2>Contact inbox</h2><a href="{% url 'super_admin:contact_list' %}" class="btn btn-secondary btn-sm">View all</a></div>
+    <div class="card-body table-wrap">
+      <table class="data-table">
+        <thead><tr><th>From</th><th>Status</th><th>Date</th></tr></thead>
+        <tbody>
+          {% for c in recent_contacts %}
+          <tr>
+            <td><a href="{% url 'super_admin:contact_detail' c.pk %}">{{ c.name }}</a></td>
+            <td><span class="badge badge-{% if c.status == 'new' %}warning{% elif c.status == 'closed' %}muted{% else %}info{% endif %}">{{ c.get_status_display }}</span></td>
+            <td>{{ c.created_at|date:"M d" }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="3">No messages.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <div class="card">
+    <div class="card-header"><h2>Plan breakdown</h2></div>
+    <div class="card-body">
+      {% for row in plan_breakdown %}
+        <p style="margin:0.35rem 0;"><strong>{{ row.plan_tier|title }}</strong>: {{ row.count }} org(s)</p>
+      {% empty %}
+        <p class="help-text">No organizations yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h2>Recent audit</h2><a href="{% url 'super_admin:audit_list' %}" class="btn btn-secondary btn-sm">View all</a></div>
+    <div class="card-body table-wrap">
+      <table class="data-table">
+        <thead><tr><th>Action</th><th>Entity</th><th>When</th></tr></thead>
+        <tbody>
+          {% for log in recent_audit %}
+          <tr>
+            <td>{{ log.action }}</td>
+            <td>{{ log.entity_type }} #{{ log.entity_id }}</td>
+            <td>{{ log.created_at|timesince }} ago</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="3">No activity logged.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

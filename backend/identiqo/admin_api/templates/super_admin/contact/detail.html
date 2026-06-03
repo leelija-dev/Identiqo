@@ -1,0 +1,26 @@
+{% extends 'super_admin/base.html' %}
+
+{% block page_title %}Contact #{{ contact.pk }}{% endblock %}
+{% block topbar_actions %}<a href="{% url 'super_admin:contact_list' %}" class="btn btn-secondary btn-sm">← Inbox</a>{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header"><h2>{{ contact.name }} &lt;{{ contact.email }}&gt;</h2></div>
+  <div class="card-body">
+    <p><strong>Received:</strong> {{ contact.created_at }}</p>
+    <p style="white-space:pre-wrap;background:#f8fafc;padding:1rem;border-radius:0.5rem;">{{ contact.message }}</p>
+    <hr>
+    <form method="post" class="form-grid">
+      {% csrf_token %}
+      {% for field in form %}
+      <div class="form-group">
+        <label>{{ field.label }}</label>
+        {{ field }}
+        {{ field.errors }}
+      </div>
+      {% endfor %}
+      <button type="submit" class="btn btn-primary">Update</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

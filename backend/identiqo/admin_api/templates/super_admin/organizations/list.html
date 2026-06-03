@@ -1,0 +1,31 @@
+{% extends 'super_admin/base.html' %}
+
+{% block page_title %}Organizations{% endblock %}
+{% block topbar_actions %}<a href="{% url 'super_admin:organization_create' %}" class="btn btn-primary btn-sm">+ Add org</a>{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-body table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr><th>Name</th><th>Slug</th><th>Owner</th><th>Plan</th><th>Status</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for org in organizations %}
+        <tr>
+          <td>{{ org.name }}</td>
+          <td>{{ org.slug }}</td>
+          <td>{{ org.owner.name|default:"—" }}</td>
+          <td><span class="badge badge-info">{{ org.get_plan_tier_display }}</span></td>
+          <td>{% if org.status %}<span class="badge badge-success">Active</span>{% else %}<span class="badge badge-danger">Inactive</span>{% endif %}</td>
+          <td><a href="{% url 'super_admin:organization_edit' org.pk %}" class="btn btn-secondary btn-sm">Edit</a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6">No organizations.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% include 'super_admin/partials/pagination.html' %}
+  </div>
+</div>
+{% endblock %}
