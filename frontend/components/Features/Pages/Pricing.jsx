@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Container from "../../Common/Container";
+import SectionTitle from "../../Common/SectionTitle";
 
 export default function PricingPage() {
   const router = useRouter();
@@ -236,10 +237,11 @@ export default function PricingPage() {
             </span>
           </div>
 
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-[#0a2540] mb-4 tracking-tight">
-            Choose the perfect
-            <span className="bg-gradient-to-r from-[#2563eb] via-[#3b82f6] to-[#60a5fa] bg-clip-text text-transparent animate-gradient bg-[length:200%_auto]"> plan</span>
-          </h1>
+         
+                   <SectionTitle
+                     title="Choose the perfect plan"
+                     subtitle="for your team"
+                   />
           
           <p className="text-base sm:text-lg text-[#5a6e8a] max-w-2xl mx-auto">
             for your team. Start for free and upgrade when you need more.

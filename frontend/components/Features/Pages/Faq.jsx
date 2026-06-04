@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import Container from "../../Common/Container";
-import SectionTitle from "@/components/Common/SectionTitle";
+import SectionTitle from "../../Common/SectionTitle";
 import {
   FiSearch,
   FiChevronDown,

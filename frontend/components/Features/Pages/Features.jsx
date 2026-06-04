@@ -2,6 +2,7 @@
 
 import { useRef, useState, useEffect } from "react";
 import { motion, useScroll, useTransform, useInView } from "framer-motion";
+import SectionTitle from "../../Common/SectionTitle";
 
 export default function FeatureFlow() {
   const containerRef = useRef(null);
@@ -127,18 +128,10 @@ export default function FeatureFlow() {
               <span className="text-orange-600 text-xs font-medium">Professional ID Card Solution</span>
             </motion.div>
             
-            {/* Main Title */}
-            <motion.h1 
-              className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tighter mb-4"
-              animate={{ scale: [1, 1.02, 1] }}
-              transition={{ duration: 4, repeat: Infinity }}
-            >
-              <span className="bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 bg-clip-text text-transparent">
-                Employee ID Cards
-              </span>
-              <br />
-              <span className="text-slate-800">Made Simple</span>
-            </motion.h1>
+             <SectionTitle
+                               title="Employee ID Card "
+                               subtitle="Specifications & Features"
+                             />
             
             <motion.p 
               className="text-base sm:text-lg text-slate-500 max-w-2xl mx-auto leading-relaxed"
