@@ -16,7 +16,7 @@ export default function GalleryPage() {
   const [toastType, setToastType] = useState('success');
   const [totalItems, setTotalItems] = useState(0);
   const [isClient, setIsClient] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);  // ← YEH IMPORTANT HAI
   const [isMobile, setIsMobile] = useState(false);
   const modalCardRef = useRef(null);
 
@@ -324,7 +324,7 @@ export default function GalleryPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 font-['Inter'] overflow-x-hidden">
-      {/* Mobile Header - Side se open karne ke liye button left side */}
+      {/* Mobile Header */}
       <div className="md:hidden fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-md border-b border-slate-200 z-40 px-4 py-3 flex items-center shadow-sm">
         <button 
           onClick={toggleSidebar} 
@@ -335,14 +335,16 @@ export default function GalleryPage() {
         <div className="flex-1 text-center">
           <h2 className="font-bold text-lg text-slate-800">My Gallery</h2>
         </div>
-        <div className="w-10" /> {/* Spacer for centering */}
+        <div className="w-10" />
       </div>
 
       <div className="flex min-h-screen md:min-h-[calc(100vh-72px)]">
-        {/* Sidebar - Left se slide hoga */}
-        <aside className={`fixed top-0 left-0 h-full w-[280px] max-w-[85vw] bg-white shadow-2xl flex flex-col flex-shrink-0 overflow-y-auto transition-transform duration-300 ease-in-out z-50 md:relative md:translate-x-0 md:shadow-md ${
-          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}>
+        {/* Sidebar - LEFT SE SLIDE HOGI */}
+        <aside 
+          className={`fixed top-0 left-0 h-full w-[280px] max-w-[85vw] bg-white shadow-2xl flex flex-col flex-shrink-0 overflow-y-auto transition-transform duration-300 ease-in-out z-50 md:relative md:translate-x-0 md:shadow-md ${
+            isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
+        >
           {/* Sidebar Header */}
           <div className="p-5 border-b border-slate-200 bg-gradient-to-r from-indigo-50 to-purple-50">
             <div className="flex items-center justify-between">
@@ -400,7 +402,7 @@ export default function GalleryPage() {
           </div>
         </aside>
 
-        {/* Overlay for mobile - jab sidebar open ho */}
+        {/* Overlay */}
         {isSidebarOpen && (
           <div 
             className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden transition-opacity duration-300" 
@@ -442,7 +444,6 @@ export default function GalleryPage() {
             </div>
           ) : (
             <>
-              {/* Grid View */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
                 {galleryItems.map(item => {
                   const orientation = item.orientation || getOrientationFromHTML(item.fullHTML);
@@ -452,7 +453,6 @@ export default function GalleryPage() {
                       onClick={(e) => handleCardClick(e, item)} 
                       className="group relative flex cursor-pointer flex-col items-center overflow-visible transition-all duration-300 hover:-translate-y-2"
                     >
-                      {/* Action Buttons */}
                       <div className="absolute -top-2 right-2 flex gap-2 z-10 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 opacity-100">
                         <button 
                           data-action="edit" 
@@ -470,14 +470,12 @@ export default function GalleryPage() {
                         </button>
                       </div>
 
-                      {/* Card Preview */}
                       <CardPreview 
                         html={item.fullHTML} 
                         orientation={orientation} 
                         className="w-full max-w-[260px] sm:max-w-none transition-all duration-300 group-hover:shadow-2xl group-hover:shadow-black/10" 
                       />
                       
-                      {/* Card Title - Mobile only */}
                       <p className="mt-3 text-sm font-medium text-slate-700 md:hidden truncate max-w-[200px]">
                         {item.name || 'Untitled Card'}
                       </p>
@@ -486,7 +484,6 @@ export default function GalleryPage() {
                 })}
               </div>
 
-              {/* Items Count */}
               <div className="mt-8 text-center text-sm text-slate-400">
                 Showing {galleryItems.length} item{galleryItems.length !== 1 ? 's' : ''}
               </div>
@@ -502,7 +499,6 @@ export default function GalleryPage() {
           onClick={(e) => e.target === e.currentTarget && closeModal()}
         >
           <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 items-center justify-center w-full max-w-[95vw] sm:max-w-[90vw] lg:max-w-[85vw]">
-            {/* Card Container */}
             <div
               ref={modalCardRef}
               onClick={handleModalCardFlip}
@@ -515,7 +511,6 @@ export default function GalleryPage() {
               <div className="w-full h-full" dangerouslySetInnerHTML={{ __html: selectedItem.fullHTML || '' }} />
             </div>
 
-            {/* Action Buttons */}
             <div className="flex flex-row lg:flex-col gap-2 sm:gap-3 w-full lg:w-auto justify-center flex-wrap">
               <button 
                 onClick={() => handleModalAction('customize')} 
@@ -566,7 +561,6 @@ export default function GalleryPage() {
       </div>
 
       <style jsx global>{`
-        /* Flip Card Styles */
         .flip-card { 
           width: 100%; 
           height: 100%; 
@@ -599,7 +593,6 @@ export default function GalleryPage() {
           transform: rotateY(180deg); 
         }
         
-        /* Touch device optimizations */
         @media (hover: hover) {
           .group:hover .md\\:group-hover\\:opacity-100 {
             opacity: 1;
@@ -612,7 +605,6 @@ export default function GalleryPage() {
           }
         }
         
-        /* Responsive adjustments */
         @media (max-width: 640px) {
           .grid {
             gap: 1rem;
@@ -625,12 +617,10 @@ export default function GalleryPage() {
           }
         }
         
-        /* Smooth scrolling */
         .overflow-y-auto {
           scroll-behavior: smooth;
         }
         
-        /* Custom scrollbar */
         ::-webkit-scrollbar {
           width: 6px;
           height: 6px;
