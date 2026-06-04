@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Container from "../../Common/Container";
-import Button from "@/components/Common/Button";
+import SectionTitle from "../../Common/SectionTitle";
+import Button from "@/components/Common/Button";  
 
 export default function PricingPage() {
   const router = useRouter();
@@ -266,12 +267,11 @@ export default function PricingPage() {
             </span>
           </div>
 
-          <h1 className="text-slate-800 text-h1-md sm:text-h1-lg md:text-h1-xl font-extrabold mb-2 tracking-tight animate-fade-in-up">
-            Choose the perfect{" "}
-            <span className="text-transparent bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 bg-clip-text animate-gradient bg-[length:200%_auto]">
-              plan
-            </span>
-          </h1>
+         
+                   <SectionTitle
+                     title="Choose the perfect plan"
+                     subtitle="for your team"
+                   />
           
           <div className="text-slate-800 text-h3-sm sm:text-h3-lg md:text-h2-xl font-extrabold tracking-tight animate-fade-in-up">
             <span className="inline-block min-w-[200px] text-center">

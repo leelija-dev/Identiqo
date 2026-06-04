@@ -7,11 +7,8 @@ const nextConfig = {
   turbopack: {
     root: projectRoot,
   },
-  devIndicators: {
-    autoPrerender: false,
-    buildActivity: false,
-    buildActivityPosition: 'bottom-right', // but we are disabling it anyway
-  },
+  // Complete disable of dev indicators
+  devIndicators: false,
 };
 
 export default nextConfig;

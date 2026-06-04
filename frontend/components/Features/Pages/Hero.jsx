@@ -28,7 +28,7 @@ export default function Hero() {
   const barcodePattern = [4, 8, 12, 6, 10, 14, 5, 9, 11, 7, 13, 8, 6, 10, 12, 4, 9, 11, 7, 13, 8, 6, 10, 14, 5, 9, 11, 7, 13, 8];
 
   return (
-    <section className="relative min-h-screen overflow-hidden bg-gradient-to-br from-indigo-50/50 via-white to-purple-50/50 flex items-center py-12 sm:py-16 lg:py-20 px-4 sm:px-6">
+   <section className="relative min-h-screen overflow-hidden bg-gradient-to-br from-[#fdf4ff] via-[#eef2ff] to-[#ecfeff] flex items-center py-12 sm:py-16 lg:py-20 px-4 sm:px-6">
       {/* Background Blur Effects */}
       <div className="absolute -top-[120px] -right-[120px] w-[250px] h-[250px] sm:w-[320px] sm:h-[320px] lg:w-[420px] lg:h-[420px] bg-indigo-300/20 rounded-full blur-80px" />
       <div className="absolute -bottom-[120px] -left-[120px] w-[250px] h-[250px] sm:w-[320px] sm:h-[320px] lg:w-[420px] lg:h-[420px] bg-purple-300/20 rounded-full blur-80px" />
@@ -64,22 +64,13 @@ export default function Hero() {
 
             <div className={`transition-all duration-700 delay-300 ease-out ${animatedText.buttons ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}>
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-2.5 mt-6 sm:mt-7 md:mt-8">
-                <Button
-                  href="/customize"
-                  variant="primary"
-                  size="lg"
-                  className="w-full sm:w-auto"
-                >
-                  Customize your card
-                </Button>
-                <Button
-                  href="/templates"
-                  variant="secondary"
-                  size="lg"
-                  className="w-full sm:w-auto"
-                >
-                  View Templates
-                </Button>
+                <Link href="/templates" className="group relative px-5 sm:px-4 md:px-8 py-3 sm:py-2 md:py-3.5 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold text-sm sm:text-xs md:text-base shadow-lg shadow-indigo-300/40 hover:shadow-xl hover:scale-105 transition-all duration-300 overflow-hidden w-full sm:w-auto inline-flex items-center justify-center">
+                  <span className="relative z-10 flex items-center justify-center gap-1">Explore your cards →</span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                </Link>
+                <Link href="/pricing" className="w-full sm:w-auto px-5 sm:px-4 md:px-8 py-3 sm:py-2 md:py-3.5 rounded-full border-2 border-slate-200 bg-white text-slate-700 font-bold text-sm sm:text-xs md:text-base hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50/30 transition-all duration-300 inline-flex items-center justify-center">
+                  View pricing
+                </Link>
               </div>
             </div>
 

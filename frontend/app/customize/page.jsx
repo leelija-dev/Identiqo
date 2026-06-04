@@ -961,7 +961,6 @@ export default function CustomizePage() {
           onSave={saveToDrafts}
           onReset={resetAll}
           triggerUpdate={triggerUpdate}
-          previewCanvasRef={previewCanvasRef}
           isEditorOpen={isMobileEditorOpen}
           onToggleEditor={() => setIsMobileEditorOpen(prev => !prev)}
         />

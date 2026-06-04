@@ -19,7 +19,7 @@ export default function GalleryPage() {
   const [toastType, setToastType] = useState('success');
   const [totalItems, setTotalItems] = useState(0);
   const [isClient, setIsClient] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);  // ← YEH IMPORTANT HAI
   const [isMobile, setIsMobile] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const modalCardRef = useRef(null);
@@ -624,7 +624,6 @@ export default function GalleryPage() {
           onClick={(e) => e.target === e.currentTarget && closeModal()}
         >
           <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 items-center justify-center w-full max-w-[95vw] sm:max-w-[90vw] lg:max-w-[85vw]">
-            {/* Card Container */}
             <div
               ref={modalCardRef}
               onClick={handleModalCardFlip}
