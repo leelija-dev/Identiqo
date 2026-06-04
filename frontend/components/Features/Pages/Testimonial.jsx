@@ -8,8 +8,8 @@ import {
   FiAward, FiStar
 } from "react-icons/fi";
 import { FaQuoteLeft, FaQuoteRight } from "react-icons/fa";
-import SectionTitle from "@/components/Common/SectionTitle";
- 
+import Button from "@/components/Common/Button";
+
 export default function Testimonials() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [animateCard, setAnimateCard] = useState(false);
@@ -103,48 +103,69 @@ export default function Testimonials() {
   const currentTestimonial = testimonials[currentIndex];
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
       
       {/* SINGLE SECTION - Everything inside */}
       <section className="relative">
         {/* Background */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-pink-200/20 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-20 right-10 w-72 h-72 bg-purple-200/20 rounded-full blur-3xl animate-pulse delay-1000" />
+          <div className="absolute top-20 left-10 w-72 h-72 bg-rose-200/20 rounded-full blur-80px animate-pulse" />
+          <div className="absolute bottom-20 right-10 w-72 h-72 bg-purple-200/20 rounded-full blur-80px animate-pulse delay-1000" />
         </div>
 
-        <Container className="relative py-12">
+        <Container className="relative py-12 sm:py-16">
           
           {/* Header */}
           <div className="text-center max-w-3xl mx-auto mb-12">
-            <div className="inline-flex items-center gap-2 bg-pink-50 border border-pink-100 px-5 py-2 rounded-full mb-6">
+            <div className="inline-flex items-center gap-2 bg-rose-50 border border-rose-100 px-5 py-2 rounded-full mb-6 animate-fade-in-up">
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-400" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-pink-500" />
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500" />
               </span>
-              <span className="text-pink-600 font-semibold text-sm">❤️ LOVED BY CUSTOMERS</span>
+              <span className="text-rose-600 font-semibold text-p-xs">❤️ LOVED BY CUSTOMERS</span>
             </div>
 
-                  <SectionTitle
-              title=" What Our "
-              subtitle="Customer says"
-            />
-            <p className="text-slate-500 text-lg mt-3">
+            {/* Section Title - Hardcoded to avoid component issues */}
+            <div className="text-center">
+              <h2 className="text-slate-800 text-h1-md sm:text-h1-lg font-extrabold mb-2">
+                What Our{" "}
+                <span className="text-transparent bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 bg-clip-text">
+                  Customers
+                </span>{" "}
+                Say
+              </h2>
+            </div>
+            
+            <p className="text-slate-500 text-p-sm mt-3 animate-fade-in-up">
               Join thousands of satisfied customers who trust CardStudio
             </p>
           </div>
 
           {/* Stats Row */}
-         
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-12">
+            {stats.map((stat, idx) => (
+              <div 
+                key={idx}
+                className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 text-center border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 animate-fade-in-up"
+                style={{ animationDelay: `${idx * 100}ms` }}
+              >
+                <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${stat.color} flex items-center justify-center text-white mx-auto mb-3 shadow-md`}>
+                  {stat.icon}
+                </div>
+                <div className="text-slate-800 text-h4-sm font-bold">{stat.value}</div>
+                <div className="text-slate-500 text-p-xs mt-1">{stat.label}</div>
+              </div>
+            ))}
+          </div>
 
           {/* Main Testimonial Slider */}
           <div className="max-w-5xl mx-auto">
             <div className="relative">
               {/* Quote Icons */}
-              <div className="absolute -top-6 -left-6 text-7xl text-indigo-100/50 font-serif">
+              <div className="absolute -top-6 -left-6 text-6xl text-indigo-200/50 font-serif animate-float-1">
                 <FaQuoteLeft />
               </div>
-              <div className="absolute -bottom-6 -right-6 text-7xl text-indigo-100/50 font-serif">
+              <div className="absolute -bottom-6 -right-6 text-6xl text-indigo-200/50 font-serif animate-float-2">
                 <FaQuoteRight />
               </div>
 
@@ -154,21 +175,21 @@ export default function Testimonials() {
               }`}>
                 <div className="grid md:grid-cols-2">
                   {/* Left Side - Person Info */}
-                  <div className="bg-gradient-to-br from-pink-50 to-purple-50 p-8 text-center">
-                    <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-xl mx-auto">
+                  <div className="bg-gradient-to-br from-rose-50 to-purple-50 p-6 sm:p-8 text-center">
+                    <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full overflow-hidden border-4 border-white shadow-xl mx-auto">
                       <img 
                         src={currentTestimonial.image} 
                         alt={currentTestimonial.name}
                         className="w-full h-full object-cover"
                       />
                     </div>
-                    <h3 className="text-2xl font-bold text-slate-900 mt-4">
+                    <h3 className="text-slate-800 text-h4-sm font-bold mt-4">
                       {currentTestimonial.name}
                     </h3>
-                    <p className="text-pink-600 font-medium">
+                    <p className="text-rose-600 font-medium text-p-xs">
                       {currentTestimonial.role}
                     </p>
-                    <p className="text-slate-500 text-sm">
+                    <p className="text-slate-500 text-xs">
                       {currentTestimonial.company}
                     </p>
                     <div className="inline-block mt-3 px-3 py-1 bg-white rounded-full text-xs text-slate-500 border border-slate-200">
@@ -177,22 +198,22 @@ export default function Testimonials() {
                   </div>
 
                   {/* Right Side - Testimonial Text */}
-                  <div className="p-8 flex flex-col justify-between">
+                  <div className="p-6 sm:p-8 flex flex-col justify-between">
                     <div>
-                      <FaQuoteLeft className="w-8 h-8 text-pink-300 opacity-50 mb-4" />
-                      <p className="text-slate-600 text-lg leading-relaxed italic">
+                      <FaQuoteLeft className="w-8 h-8 text-rose-300 opacity-50 mb-4" />
+                      <p className="text-slate-700 text-p-sm sm:text-p-md leading-relaxed italic">
                         "{currentTestimonial.text}"
                       </p>
                     </div>
                     <div className="mt-6 pt-4 border-t border-slate-100">
                       <div className="flex justify-between items-center">
-                        <p className="text-sm text-slate-400">{currentTestimonial.date}</p>
+                        <p className="text-p-xs text-slate-400">{currentTestimonial.date}</p>
                         <div className="flex gap-2">
-                          <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
-                            <FiCheckCircle className="w-4 h-4 text-green-600" />
+                          <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
+                            <FiCheckCircle className="w-4 h-4 text-emerald-600" />
                           </div>
-                          <div className="w-8 h-8 rounded-full bg-pink-100 flex items-center justify-center">
-                            <FiHeart className="w-4 h-4 text-pink-600" />
+                          <div className="w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center">
+                            <FiHeart className="w-4 h-4 text-rose-600" />
                           </div>
                         </div>
                       </div>
@@ -203,12 +224,13 @@ export default function Testimonials() {
 
               {/* Navigation Buttons */}
               <div className="flex justify-center gap-4 mt-8">
-                <button
+                <Button
                   onClick={handlePrev}
-                  className="w-12 h-12 rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all duration-300 flex items-center justify-center shadow-md hover:scale-110"
-                >
-                  <FiArrowLeft className="w-5 h-5" />
-                </button>
+                  variant="secondary"
+                  size="sm"
+                  icon={FiArrowLeft}
+                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-full"
+                />
                 <div className="flex gap-2 items-center">
                   {testimonials.map((_, idx) => (
                     <button
@@ -228,18 +250,34 @@ export default function Testimonials() {
                     />
                   ))}
                 </div>
-                <button
+                <Button
                   onClick={handleNext}
-                  className="w-12 h-12 rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all duration-300 flex items-center justify-center shadow-md hover:scale-110"
-                >
-                  <FiArrowRight className="w-5 h-5" />
-                </button>
+                  variant="secondary"
+                  size="sm"
+                  icon={FiArrowRight}
+                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-full"
+                />
               </div>
             </div>
           </div>
 
           {/* CTA Section */}
-          
+          <div className="mt-16 text-center">
+            <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-3xl p-8 sm:p-12 border border-indigo-100 animate-fade-in-up">
+              <h3 className="text-slate-800 text-h3-sm font-bold mb-3">
+                Ready to create your own success story?
+              </h3>
+              <p className="text-slate-500 text-p-xs mb-6 max-w-lg mx-auto">
+                Join thousands of businesses already using CardStudio
+              </p>
+              <button
+                onClick={() => window.location.href = '/templates'}
+                className="px-6 py-2.5 sm:px-8 sm:py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-full font-semibold text-p-xs sm:text-p-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
+              >
+                Start Creating Now →
+              </button>
+            </div>
+          </div>
 
         </Container>
       </section>
@@ -247,13 +285,40 @@ export default function Testimonials() {
       <style jsx>{`
         @keyframes pulse {
           0%, 100% { opacity: 0.3; }
-          50% { opacity: 0.6; }
+          50% { opacity: 0.7; }
+        }
+        @keyframes fade-in-up {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes float-1 {
+          0%, 100% { transform: translateY(0px) translateX(0px); }
+          50% { transform: translateY(-10px) translateX(5px); }
+        }
+        @keyframes float-2 {
+          0%, 100% { transform: translateY(0px) translateX(0px); }
+          50% { transform: translateY(-8px) translateX(-5px); }
         }
         .animate-pulse {
           animation: pulse 3s ease-in-out infinite;
         }
+        .animate-fade-in-up {
+          animation: fade-in-up 0.5s ease-out forwards;
+        }
+        .animate-float-1 {
+          animation: float-1 5s ease-in-out infinite;
+        }
+        .animate-float-2 {
+          animation: float-2 4.5s ease-in-out infinite;
+        }
         .delay-1000 {
           animation-delay: 1s;
+        }
+        .blur-80px {
+          filter: blur(80px);
+        }
+        .blur-120px {
+          filter: blur(120px);
         }
       `}</style>
     </div>

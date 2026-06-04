@@ -1,9 +1,12 @@
+// components/common/Navbar.jsx
+
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { FiLogIn } from "react-icons/fi";
 import { HiBars3, HiXMark } from "react-icons/hi2";
+import Button from "@/components/Common/Button";
 import Container from "../Common/Container";
 
 export default function NavbarMinimal() {
@@ -83,7 +86,7 @@ export default function NavbarMinimal() {
             {/* Logo */}
             <Link
               href="/"
-              className="text-lg sm:text-xl md:text-2xl lg:text-2xl font-black tracking-tight text-slate-900 transition-all duration-300 hover:scale-105 hover:text-indigo-600"
+              className="text-h4-sm sm:text-h3-xs md:text-h2-sm font-black tracking-tight text-slate-900 transition-all duration-300 hover:scale-105 hover:text-indigo-600"
             >
               IDENTIQO
             </Link>
@@ -96,7 +99,7 @@ export default function NavbarMinimal() {
                   <Link
                     key={link.name}
                     href={link.href}
-                    className="relative text-xs xl:text-sm 2xl:text-base font-medium text-slate-600 transition-all duration-300 hover:text-indigo-600 group whitespace-nowrap py-2"
+                    className="relative text-p-xs xl:text-p-sm font-medium text-slate-600 transition-all duration-300 hover:text-indigo-600 group whitespace-nowrap py-2"
                   >
                     {link.name}
                     {/* Underline indicator - always visible on active page */}
@@ -114,16 +117,15 @@ export default function NavbarMinimal() {
 
             {/* Desktop Button - Attractive Sign In Button with Icon */}
             <div className="hidden lg:flex items-center gap-2 xl:gap-3">
-              <Link
-                href="/signin"
-                className="group relative overflow-hidden rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 px-5 py-2 text-xs xl:text-sm 2xl:text-base font-semibold text-white shadow-md transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-indigo-300 whitespace-nowrap flex items-center gap-2"
+              <Button
+                href="/login"
+                variant="primary"
+                size="md"
+                className="whitespace-nowrap"
+                icon={FiLogIn}
               >
-                <span className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-500 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></span>
-                <FiLogIn className="relative z-10 w-4 h-4 transition-transform duration-300 group-hover:translate-x-0.5" />
-                <span className="relative z-10">
-                  Sign In
-                </span>
-              </Link>
+                Sign In
+              </Button>
             </div>
 
             {/* Tablet Menu Button - Shows on md to lg */}
@@ -133,9 +135,9 @@ export default function NavbarMinimal() {
                 className="rounded-lg p-1.5 transition-all duration-300 hover:bg-slate-100 active:scale-95"
               >
                 {isOpen ? (
-                  <HiXMark className="w-4 h-4 transition-transform duration-300" />
+                  <HiXMark className="w-5 h-5 transition-transform duration-300" />
                 ) : (
-                  <HiBars3 className="w-4 h-4 transition-transform duration-300" />
+                  <HiBars3 className="w-5 h-5 transition-transform duration-300" />
                 )}
               </button>
             </div>
@@ -146,9 +148,9 @@ export default function NavbarMinimal() {
               className="md:hidden rounded-lg p-1.5 transition-all duration-300 hover:bg-slate-100 active:scale-95"
             >
               {isOpen ? (
-                <HiXMark className="w-4 h-4 sm:w-5 sm:h-5 transition-transform duration-300" />
+                <HiXMark className="w-5 h-5 transition-transform duration-300" />
               ) : (
-                <HiBars3 className="w-4 h-4 sm:w-5 sm:h-5 transition-transform duration-300" />
+                <HiBars3 className="w-5 h-5 transition-transform duration-300" />
               )}
             </button>
           </div>
@@ -179,7 +181,7 @@ export default function NavbarMinimal() {
               <Link
                 href="/" 
                 onClick={() => setIsOpen(false)}
-                className="text-xl font-black tracking-tight text-slate-900"
+                className="text-h4-sm font-black tracking-tight text-slate-900"
               >
                 IDENTIQO
               </Link>
@@ -200,7 +202,7 @@ export default function NavbarMinimal() {
                     key={link.name}
                     href={link.href}
                     onClick={() => setIsOpen(false)}
-                    className={`block px-4 py-3 text-base transition-all duration-300 ${
+                    className={`block px-4 py-3 text-p-sm transition-all duration-300 ${
                       active 
                         ? "bg-indigo-50 text-indigo-600 font-semibold border-r-4 border-indigo-600" 
                         : "text-slate-600 hover:bg-indigo-50 hover:text-indigo-600"
@@ -217,14 +219,15 @@ export default function NavbarMinimal() {
 
             {/* Menu Footer - Attractive Sign In Button with Icon */}
             <div className="border-t border-slate-100 p-4">
-              <Link
-                href="/signin"
+              <Button
+                href="/login"
+                variant="primary"
+                size="md"
+                className="w-full"
                 onClick={() => setIsOpen(false)}
-                className="group relative w-full flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-2.5 text-base font-semibold text-white shadow-md transition-all duration-300 hover:scale-[1.02] hover:shadow-lg"
               >
-                <FiLogIn className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-0.5" />
-                <span>Sign In</span>
-              </Link>
+                Sign In
+              </Button>
             </div>
           </div>
         </div>

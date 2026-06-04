@@ -6,10 +6,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { 
   FiMail, FiLock, FiEye, FiEyeOff, FiArrowRight, 
-   FiBriefcase,
-  FiTrendingUp, FiUsers, FiShield, FiAlertCircle
+  FiBriefcase, FiTrendingUp, FiUsers, FiShield, FiAlertCircle
 } from "react-icons/fi";
 import { FaGoogle, FaMicrosoft, FaStar } from "react-icons/fa";
+import Button from '@/components/Common/Button';
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -24,14 +24,12 @@ export default function Login() {
   const validateForm = () => {
     const newErrors = {};
     
-    // Email validation
     if (!email) {
       newErrors.email = "Email is required";
     } else if (!/\S+@\S+\.\S+/.test(email)) {
       newErrors.email = "Please enter a valid email address";
     }
     
-    // Password validation
     if (!password) {
       newErrors.password = "Password is required";
     } else if (password.length < 6) {
@@ -66,7 +64,6 @@ export default function Login() {
     { icon: <FiShield className="w-5 h-5" />, value: "99.99%", label: "Uptime" },
   ];
 
-  // Direct navigation to signup page
   const handleCreateAccountClick = () => {
     router.push("/signup");
   };
@@ -79,7 +76,7 @@ export default function Login() {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
           <div className="bg-white rounded-2xl p-8 text-center shadow-2xl">
             <div className="w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-slate-600 font-medium">Signing you in...</p>
+            <p className="text-slate-600 text-p-sm font-medium">Signing you in...</p>
           </div>
         </div>
       )}
@@ -93,8 +90,8 @@ export default function Login() {
           </div>
           
           {/* Floating Elements */}
-          <div className="absolute top-20 right-20 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-20 left-20 w-80 h-80 bg-purple-500/20 rounded-full blur-3xl animate-pulse delay-1000" />
+          <div className="absolute top-20 right-20 w-64 h-64 bg-indigo-500/20 rounded-full blur-100px animate-pulse" />
+          <div className="absolute bottom-20 left-20 w-80 h-80 bg-purple-500/20 rounded-full blur-100px animate-pulse delay-1000" />
           
           {/* Animated Cards Background */}
           <div className="absolute top-1/4 left-1/4 w-48 h-32 bg-white/5 rounded-2xl rotate-12 backdrop-blur-sm border border-white/10" />
@@ -104,7 +101,6 @@ export default function Login() {
             {/* Logo */}
             <div>
               <div className="flex items-center gap-3 mb-20">
-               
                 <span className="text-2xl font-bold tracking-tight">IDENTIQO</span>
               </div>
             </div>
@@ -114,13 +110,13 @@ export default function Login() {
               {/* Badge */}
               <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 mb-8 border border-white/20">
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                <span className="text-sm font-medium">Trusted by 10,000+ companies</span>
+                <span className="text-p-xs font-medium">Trusted by 10,000+ companies</span>
               </div>
 
-              <h2 className="text-4xl font-bold mb-4 leading-tight">
+              <h2 className="text-h2-lg font-bold mb-4 leading-tight">
                 Create professional ID cards
               </h2>
-              <p className="text-indigo-200 text-lg mb-8 leading-relaxed">
+              <p className="text-indigo-200 text-p-md mb-8 leading-relaxed">
                 The modern way to manage employee identification. Beautiful templates, 
                 real-time editing, and enterprise-grade security.
               </p>
@@ -131,9 +127,9 @@ export default function Login() {
                   <div key={idx} className="text-center">
                     <div className="flex items-center justify-center gap-2 mb-1">
                       <div className="text-indigo-300">{stat.icon}</div>
-                      <span className="text-2xl font-bold">{stat.value}</span>
+                      <span className="text-h4-sm font-bold">{stat.value}</span>
                     </div>
-                    <p className="text-indigo-300 text-xs">{stat.label}</p>
+                    <p className="text-indigo-300 text-p-xs">{stat.label}</p>
                   </div>
                 ))}
               </div>
@@ -145,16 +141,16 @@ export default function Login() {
                     <FaStar key={i} className="w-4 h-4 text-yellow-400" />
                   ))}
                 </div>
-                <p className="text-white/80 text-sm italic leading-relaxed">
+                <p className="text-white/80 text-p-xs italic leading-relaxed">
                   "CardStudio transformed our ID card process. We created 500+ cards 
                   in under 10 minutes. The templates are stunning and the support is amazing."
                 </p>
                 <div className="flex items-center gap-3 mt-4">
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center">
-                    <span className="text-white font-bold text-sm">JD</span>
+                    <span className="text-white font-bold text-p-xs">JD</span>
                   </div>
                   <div>
-                    <p className="font-semibold text-sm">Sarah Johnson</p>
+                    <p className="font-semibold text-p-xs">Sarah Johnson</p>
                     <p className="text-indigo-300 text-xs">HR Director, TechCorp</p>
                   </div>
                 </div>
@@ -162,7 +158,7 @@ export default function Login() {
             </div>
 
             {/* Footer */}
-            <div className="mt-16 text-indigo-300 text-sm">
+            <div className="mt-16 text-indigo-300 text-p-xs">
               © 2026 CardStudio. All rights reserved.
             </div>
           </div>
@@ -175,9 +171,9 @@ export default function Login() {
             <div className="lg:hidden text-center mb-8">
               <div className="inline-flex items-center gap-2">
                 <div className="w-10 h-10 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center">
-                  <span className="text-white font-bold text-xl">C</span>
+                  <span className="text-white font-bold text-h4-xs">C</span>
                 </div>
-                <span className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                <span className="text-h3-xs font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                   CardStudio
                 </span>
               </div>
@@ -187,20 +183,22 @@ export default function Login() {
             <>
               {/* Social Login Buttons */}
               <div className="grid grid-cols-2 gap-3 mb-6">
-                <button
+                <Button
                   onClick={() => handleSocialLogin("Google")}
-                  className="flex items-center justify-center gap-2 py-3 px-4 border border-slate-200 rounded-xl hover:bg-slate-50 hover:border-indigo-300 hover:shadow-md transition-all duration-300"
+                  variant="social"
+                  size="md"
+                  icon={FaGoogle}
                 >
-                  <FaGoogle className="w-5 h-5 text-red-500" />
-                  <span className="text-sm font-medium text-slate-600">Google</span>
-                </button>
-                <button
+                  Google
+                </Button>
+                <Button
                   onClick={() => handleSocialLogin("Microsoft")}
-                  className="flex items-center justify-center gap-2 py-3 px-4 border border-slate-200 rounded-xl hover:bg-slate-50 hover:border-indigo-300 hover:shadow-md transition-all duration-300"
+                  variant="social"
+                  size="md"
+                  icon={FaMicrosoft}
                 >
-                  <FaMicrosoft className="w-5 h-5 text-blue-600" />
-                  <span className="text-sm font-medium text-slate-600">Microsoft</span>
-                </button>
+                  Microsoft
+                </Button>
               </div>
 
               {/* Divider */}
@@ -208,7 +206,7 @@ export default function Login() {
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-slate-200" />
                 </div>
-                <div className="relative flex justify-center text-sm">
+                <div className="relative flex justify-center text-p-xs">
                   <span className="px-4 bg-white text-slate-400">Or continue with email</span>
                 </div>
               </div>
@@ -216,7 +214,7 @@ export default function Login() {
               {/* Login Form */}
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  <label className="block text-p-xs font-semibold text-slate-700 mb-2">
                     Email address
                   </label>
                   <div className="relative">
@@ -229,7 +227,7 @@ export default function Login() {
                         if (errors.email) setErrors({...errors, email: ""});
                       }}
                       placeholder="hello@cardstudio.com"
-                      className={`w-full pl-12 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-4 transition-all ${
+                      className={`w-full pl-12 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-4 transition-all text-p-xs ${
                         errors.email 
                           ? "border-red-300 focus:border-red-400 focus:ring-red-100" 
                           : "border-slate-200 focus:border-indigo-400 focus:ring-indigo-100"
@@ -244,7 +242,7 @@ export default function Login() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  <label className="block text-p-xs font-semibold text-slate-700 mb-2">
                     Password
                   </label>
                   <div className="relative">
@@ -257,7 +255,7 @@ export default function Login() {
                         if (errors.password) setErrors({...errors, password: ""});
                       }}
                       placeholder="Enter your password"
-                      className={`w-full pl-12 pr-12 py-3 border rounded-xl focus:outline-none focus:ring-4 transition-all ${
+                      className={`w-full pl-12 pr-12 py-3 border rounded-xl focus:outline-none focus:ring-4 transition-all text-p-xs ${
                         errors.password 
                           ? "border-red-300 focus:border-red-400 focus:ring-red-100" 
                           : "border-slate-200 focus:border-indigo-400 focus:ring-indigo-100"
@@ -286,25 +284,26 @@ export default function Login() {
                       onChange={(e) => setRememberMe(e.target.checked)}
                       className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                     />
-                    <span className="text-sm text-slate-600">Remember me</span>
+                    <span className="text-p-xs text-slate-600">Remember me</span>
                   </label>
-                  <Link href="/forgot-password" className="text-sm text-indigo-600 hover:text-indigo-700 font-medium">
+                  <Link href="/forgot-password" className="text-p-xs text-indigo-600 hover:text-indigo-700 font-medium">
                     Forgot password?
                   </Link>
                 </div>
 
-                <button
+                <Button
                   type="submit"
-                  className="w-full py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg shadow-indigo-200 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 flex items-center justify-center gap-2"
+                  variant="primary"
+                  size="lg"
+                  className="w-full"
                 >
                   Sign in
-                  <FiArrowRight className="w-4 h-4" />
-                </button>
+                </Button>
               </form>
             </>
 
             {/* Sign Up Link */}
-            <p className="text-center text-sm text-slate-600 mt-6">
+            <p className="text-center text-p-xs text-slate-600 mt-6">
               Don't have an account?{" "}
               <button
                 onClick={handleCreateAccountClick}
@@ -328,6 +327,22 @@ export default function Login() {
           </div>
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 0.3; }
+          50% { opacity: 0.6; }
+        }
+        .animate-pulse {
+          animation: pulse 3s ease-in-out infinite;
+        }
+        .delay-1000 {
+          animation-delay: 1s;
+        }
+        .blur-100px {
+          filter: blur(100px);
+        }
+      `}</style>
     </div>
   );
 }

@@ -1,8 +1,8 @@
 "use client";
 import Link from "next/link";
+import Button from "@/components/Common/Button";
 import Container from "@/components/Common/Container";
 import { useState, useEffect } from "react";
-import Image from "next/image";
 
 export default function Hero() {
   const [animatedText, setAnimatedText] = useState({
@@ -28,35 +28,35 @@ export default function Hero() {
   const barcodePattern = [4, 8, 12, 6, 10, 14, 5, 9, 11, 7, 13, 8, 6, 10, 12, 4, 9, 11, 7, 13, 8, 6, 10, 14, 5, 9, 11, 7, 13, 8];
 
   return (
-    <section className="relative min-h-screen overflow-hidden bg-gradient-to-br from-[#f8f9ff] via-white to-[#eef1ff] flex items-center py-12 sm:py-16 lg:py-20 px-4 sm:px-6">
+    <section className="relative min-h-screen overflow-hidden bg-gradient-to-br from-indigo-50/50 via-white to-purple-50/50 flex items-center py-12 sm:py-16 lg:py-20 px-4 sm:px-6">
       {/* Background Blur Effects */}
-      <div className="absolute top-[-120px] right-[-120px] w-[250px] h-[250px] sm:w-[320px] sm:h-[320px] lg:w-[420px] lg:h-[420px] bg-indigo-300/20 rounded-full blur-3xl" />
-      <div className="absolute bottom-[-120px] left-[-120px] w-[250px] h-[250px] sm:w-[320px] sm:h-[320px] lg:w-[420px] lg:h-[420px] bg-purple-300/20 rounded-full blur-3xl" />
+      <div className="absolute -top-[120px] -right-[120px] w-[250px] h-[250px] sm:w-[320px] sm:h-[320px] lg:w-[420px] lg:h-[420px] bg-indigo-300/20 rounded-full blur-80px" />
+      <div className="absolute -bottom-[120px] -left-[120px] w-[250px] h-[250px] sm:w-[320px] sm:h-[320px] lg:w-[420px] lg:h-[420px] bg-purple-300/20 rounded-full blur-80px" />
 
-      <Container className="relative z-10 px-4 sm:px-6 lg:px-8">
+      <Container className="relative z-10">
         <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 items-center">
           {/* LEFT CONTENT - Text */}
           <div className="text-left order-1 lg:order-none">
             <div className={`transition-all duration-700 ease-out ${animatedText.badge ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-8'}`}>
               <div className="inline-flex items-center gap-2 px-3 sm:px-4 md:px-5 py-2 md:py-2.5 rounded-full bg-white/80 backdrop-blur-sm border border-indigo-100 mb-4 sm:mb-6 shadow-sm">
                 <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-indigo-600 animate-pulse" />
-                <span className="text-indigo-600 font-semibold text-xs sm:text-sm tracking-wide">
+                <span className="text-indigo-600 font-semibold text-p-xs tracking-wide">
                   ✨ Smart ID Card Creator
                 </span>
               </div>
             </div>
 
             <div className={`transition-all duration-700 delay-100 ease-out ${animatedText.heading ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10'}`}>
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold leading-[1.15] tracking-[-0.02em]">
-                <span className="text-slate-900">Smart Employee</span>
-                <span className="block mt-1 sm:mt-2 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 bg-clip-text text-transparent">
+              <h1 className="text-slate-900 text-h2-sm sm:text-h1-sm md:text-h1-lg lg:text-h1-xl font-extrabold leading-[1.15] tracking-[-0.02em]">
+                Smart Employee
+                <span className="block mt-1 sm:mt-2 text-transparent bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 bg-clip-text">
                   ID Card Generator
                 </span>
               </h1>
             </div>
 
             <div className={`transition-all duration-700 delay-200 ease-out ${animatedText.description ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-10'}`}>
-              <p className="mt-4 sm:mt-5 md:mt-6 text-sm sm:text-base md:text-lg text-slate-500 leading-relaxed max-w-lg">
+              <p className="mt-4 sm:mt-5 md:mt-6 text-slate-600 text-p-xs sm:text-p-sm leading-relaxed max-w-lg">
                 50+ premium templates, real-time editing, and instant bulk generation
                 for startups, agencies, schools, and enterprise teams.
               </p>
@@ -64,29 +64,38 @@ export default function Hero() {
 
             <div className={`transition-all duration-700 delay-300 ease-out ${animatedText.buttons ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}>
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-2.5 mt-6 sm:mt-7 md:mt-8">
-                <Link href="/customize" className="group relative px-5 sm:px-4 md:px-8 py-3 sm:py-2 md:py-3.5 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold text-sm sm:text-xs md:text-base shadow-lg shadow-indigo-300/40 hover:shadow-xl hover:scale-105 transition-all duration-300 overflow-hidden w-full sm:w-auto inline-flex items-center justify-center">
-                  <span className="relative z-10 flex items-center justify-center gap-1">Customize your card →</span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                </Link>
-                <Link href="/templates" className="w-full sm:w-auto px-5 sm:px-4 md:px-8 py-3 sm:py-2 md:py-3.5 rounded-full border-2 border-slate-200 bg-white text-slate-700 font-bold text-sm sm:text-xs md:text-base hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50/30 transition-all duration-300 inline-flex items-center justify-center">
+                <Button
+                  href="/customize"
+                  variant="primary"
+                  size="lg"
+                  className="w-full sm:w-auto"
+                >
+                  Customize your card
+                </Button>
+                <Button
+                  href="/templates"
+                  variant="secondary"
+                  size="lg"
+                  className="w-full sm:w-auto"
+                >
                   View Templates
-                </Link>
+                </Button>
               </div>
             </div>
 
             <div className={`transition-all duration-700 delay-500 ease-out ${animatedText.trust ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
               <div className="flex flex-wrap justify-center sm:justify-start gap-4 sm:gap-6 md:gap-8 mt-8 sm:mt-10 pt-4 sm:pt-6 border-t border-slate-200">
                 <div className="text-center sm:text-left">
-                  <div className="text-xl sm:text-2xl md:text-3xl font-black bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">10K+</div>
-                  <div className="text-xs font-semibold text-slate-500 mt-1">HAPPY TEAMS</div>
+                  <div className="text-slate-800 text-h4-sm sm:text-h3-xs md:text-h3-sm font-black">10K+</div>
+                  <div className="text-slate-500 text-p-xs font-semibold mt-1">HAPPY TEAMS</div>
                 </div>
                 <div className="text-center sm:text-left">
-                  <div className="text-xl sm:text-2xl md:text-3xl font-black bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">4.9</div>
-                  <div className="text-xs font-semibold text-slate-500 mt-1">⭐ USER RATING</div>
+                  <div className="text-slate-800 text-h4-sm sm:text-h3-xs md:text-h3-sm font-black">4.9</div>
+                  <div className="text-slate-500 text-p-xs font-semibold mt-1">⭐ USER RATING</div>
                 </div>
                 <div className="text-center sm:text-left">
-                  <div className="text-xl sm:text-2xl md:text-3xl font-black bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">50K+</div>
-                  <div className="text-xs font-semibold text-slate-500 mt-1">CARDS CREATED</div>
+                  <div className="text-slate-800 text-h4-sm sm:text-h3-xs md:text-h3-sm font-black">50K+</div>
+                  <div className="text-slate-500 text-p-xs font-semibold mt-1">CARDS CREATED</div>
                 </div>
               </div>
             </div>
@@ -105,12 +114,11 @@ export default function Hero() {
                     <span className="text-white text-lg">👑</span>
                   </div>
                   <div>
-                    <span className="font-bold text-amber-700 text-sm">PREMIUM</span>
+                    <span className="font-bold text-amber-700 text-p-xs">PREMIUM</span>
                     <div className="text-[10px] text-amber-500">Gold Member</div>
                   </div>
                 </div>
                 
-                {/* Real Photo */}
                 <div className="flex justify-center mb-4">
                   <div className="relative">
                     <div className="absolute inset-0 bg-gradient-to-r from-amber-400 to-orange-500 rounded-2xl blur-xl opacity-60" />
@@ -125,8 +133,8 @@ export default function Hero() {
                 </div>
                 
                 <div className="text-center">
-                  <div className="font-bold text-xl text-slate-800">John Anderson</div>
-                  <div className="text-xs text-amber-600 mt-1 font-semibold">Elite Member</div>
+                  <div className="font-bold text-slate-800 text-h4-xs">John Anderson</div>
+                  <div className="text-[10px] text-amber-600 mt-1 font-semibold">Elite Member</div>
                   <div className="mt-4 space-y-2">
                     <div className="flex items-center justify-center gap-2 text-xs text-slate-600">
                       <span className="w-1.5 h-1.5 rounded-full bg-amber-500" /> Priority Support
@@ -146,7 +154,6 @@ export default function Hero() {
               <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 rounded-bl-3xl" />
               
               <div className="p-6">
-                {/* Header */}
                 <div className="flex items-center justify-between mb-5">
                   <div className="flex items-center gap-3">
                     <div className="relative">
@@ -156,7 +163,7 @@ export default function Hero() {
                       </div>
                     </div>
                     <div>
-                      <h3 className="font-extrabold text-xl bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                      <h3 className="font-extrabold text-slate-800 text-h4-sm">
                         BORCELLE
                       </h3>
                       <p className="text-[10px] text-slate-400">Enterprise Platinum</p>
@@ -167,7 +174,6 @@ export default function Hero() {
                   </div>
                 </div>
 
-                {/* Real Photo with Premium Ring */}
                 <div className="relative flex justify-center mb-5">
                   <div className="absolute w-28 h-28 rounded-full bg-gradient-to-r from-indigo-400 to-purple-400 blur-2xl opacity-60 animate-pulse" />
                   <div className="relative">
@@ -185,21 +191,19 @@ export default function Hero() {
                   </div>
                 </div>
 
-                {/* Employee Info */}
                 <div className="text-center">
-                  <h2 className="text-2xl font-black text-slate-900 tracking-tight">SAMIRA HADID</h2>
-                  <p className="text-indigo-500 text-sm font-semibold mt-1">Senior Creative Director</p>
+                  <h2 className="text-slate-900 text-h3-xs font-black tracking-tight">SAMIRA HADID</h2>
+                  <p className="text-indigo-600 text-p-xs font-semibold mt-1">Senior Creative Director</p>
                   <div className="mt-5 space-y-2.5">
-                    <div className="flex items-center justify-center gap-2 text-xs text-slate-600 bg-gradient-to-r from-indigo-50 to-purple-50 py-2.5 rounded-xl">
+                    <div className="flex items-center justify-center gap-2 text-p-xs text-slate-600 bg-gradient-to-r from-indigo-50 to-purple-50 py-2.5 rounded-xl">
                       <span className="text-indigo-500">📧</span> samira.hadid@borcelle.com
                     </div>
-                    <div className="flex items-center justify-center gap-2 text-xs text-slate-600 bg-gradient-to-r from-indigo-50 to-purple-50 py-2.5 rounded-xl">
+                    <div className="flex items-center justify-center gap-2 text-p-xs text-slate-600 bg-gradient-to-r from-indigo-50 to-purple-50 py-2.5 rounded-xl">
                       <span className="text-indigo-500">📱</span> +1 (234) 567-8900
                     </div>
                   </div>
                 </div>
 
-                {/* Footer with Barcode */}
                 <div className="mt-5 pt-3 border-t border-slate-100">
                   <div className="flex justify-between items-center text-[9px] font-mono text-slate-400 mb-2">
                     <span>EMP-2024-042</span>
@@ -230,12 +234,11 @@ export default function Hero() {
                     <span className="text-white text-lg">🎯</span>
                   </div>
                   <div>
-                    <span className="font-bold text-rose-600 text-sm">EVENT</span>
+                    <span className="font-bold text-rose-600 text-p-xs">EVENT</span>
                     <div className="text-[10px] text-rose-400">VIP Pass</div>
                   </div>
                 </div>
                 
-                {/* Real Photo */}
                 <div className="flex justify-center mb-4">
                   <div className="relative">
                     <div className="absolute inset-0 bg-gradient-to-r from-rose-400 to-purple-500 rounded-2xl blur-xl opacity-60" />
@@ -250,8 +253,8 @@ export default function Hero() {
                 </div>
                 
                 <div className="text-center">
-                  <div className="font-bold text-xl text-slate-800">Tech Summit</div>
-                  <div className="text-xs text-rose-500 mt-1 font-semibold">Keynote Speaker</div>
+                  <div className="font-bold text-slate-800 text-h4-xs">Tech Summit</div>
+                  <div className="text-[10px] text-rose-500 mt-1 font-semibold">Keynote Speaker</div>
                   <div className="mt-4 space-y-2">
                     <div className="flex items-center justify-center gap-2 text-xs text-slate-600">
                       <span className="w-1.5 h-1.5 rounded-full bg-rose-500" /> 📍 Hall A • Stage 1
@@ -298,6 +301,7 @@ export default function Hero() {
         @media (min-width: 640px) {
           .card-main { animation: floatMain 5s ease-in-out infinite; }
         }
+        .blur-80px { filter: blur(80px); }
       `}</style>
     </section>
   );

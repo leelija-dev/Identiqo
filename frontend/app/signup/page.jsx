@@ -6,10 +6,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { 
   FiMail, FiLock, FiEye, FiEyeOff, FiArrowRight, FiUser, 
-   FiCheck, FiTrendingUp, FiUsers, FiShield,
-  
+  FiCheck, FiTrendingUp, FiUsers, FiShield,
 } from "react-icons/fi";
 import { FaGoogle, FaMicrosoft, FaStar } from "react-icons/fa";
+import Button from '@/components/Common/Button';
 
 export default function Signup() {
   const [name, setName] = useState("");
@@ -70,7 +70,7 @@ export default function Signup() {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
           <div className="bg-white rounded-2xl p-8 text-center shadow-2xl">
             <div className="w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-slate-600 font-medium">Creating your account...</p>
+            <p className="text-slate-600 text-p-sm font-medium">Creating your account...</p>
           </div>
         </div>
       )}
@@ -84,34 +84,32 @@ export default function Signup() {
           </div>
           
           {/* Floating Elements */}
-          <div className="absolute top-20 right-20 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-20 left-20 w-80 h-80 bg-purple-500/20 rounded-full blur-3xl animate-pulse delay-1000" />
+          <div className="absolute top-20 right-20 w-64 h-64 bg-indigo-500/20 rounded-full blur-100px animate-pulse" />
+          <div className="absolute bottom-20 left-20 w-80 h-80 bg-purple-500/20 rounded-full blur-100px animate-pulse delay-1000" />
           
           {/* Animated Cards Background */}
           <div className="absolute top-1/4 left-1/4 w-48 h-32 bg-white/5 rounded-2xl rotate-12 backdrop-blur-sm border border-white/10" />
           <div className="absolute bottom-1/3 right-1/4 w-56 h-36 bg-white/5 rounded-2xl -rotate-6 backdrop-blur-sm border border-white/10" />
           
-          <div className="relative z-10 flex flex-col justify-between p-12 w-full">
+          <div className="relative z-10 flex flex-col justify-between p-12 w-full h-full">
             {/* Logo */}
             <div>
-              <div className="flex items-center gap-3 mb-20">
-               
+              <div className="flex items-center gap-3">
                 <span className="text-2xl font-bold tracking-tight">IDENTIQO</span>
               </div>
             </div>
 
             {/* Main Content */}
-            <div className="max-w-md">
-              {/* Badge */}
+            <div className="max-w-md mx-auto">
               <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 mb-8 border border-white/20">
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                <span className="text-sm font-medium">Join 10,000+ companies</span>
+                <span className="text-p-xs font-medium">Join 10,000+ companies</span>
               </div>
 
-              <h2 className="text-4xl font-bold mb-4 leading-tight">
+              <h2 className="text-h2-lg font-bold mb-4 leading-tight">
                 Start creating professional ID cards today
               </h2>
-              <p className="text-indigo-200 text-lg mb-8 leading-relaxed">
+              <p className="text-indigo-200 text-p-md mb-8 leading-relaxed">
                 No credit card required. Free forever plan available.
               </p>
               
@@ -121,9 +119,9 @@ export default function Signup() {
                   <div key={idx} className="text-center">
                     <div className="flex items-center justify-center gap-2 mb-1">
                       <div className="text-indigo-300">{stat.icon}</div>
-                      <span className="text-2xl font-bold">{stat.value}</span>
+                      <span className="text-h4-sm font-bold">{stat.value}</span>
                     </div>
-                    <p className="text-indigo-300 text-xs">{stat.label}</p>
+                    <p className="text-indigo-300 text-p-xs">{stat.label}</p>
                   </div>
                 ))}
               </div>
@@ -135,16 +133,16 @@ export default function Signup() {
                     <FaStar key={i} className="w-4 h-4 text-yellow-400" />
                   ))}
                 </div>
-                <p className="text-white/80 text-sm italic leading-relaxed">
+                <p className="text-white/80 text-p-xs italic leading-relaxed">
                   "CardStudio transformed our ID card process. We created 500+ cards 
                   in under 10 minutes. The templates are stunning and the support is amazing."
                 </p>
                 <div className="flex items-center gap-3 mt-4">
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center">
-                    <span className="text-white font-bold text-sm">JD</span>
+                    <span className="text-white font-bold text-p-xs">JD</span>
                   </div>
                   <div>
-                    <p className="font-semibold text-sm">Sarah Johnson</p>
+                    <p className="font-semibold text-p-xs">Sarah Johnson</p>
                     <p className="text-indigo-300 text-xs">HR Director, TechCorp</p>
                   </div>
                 </div>
@@ -152,7 +150,7 @@ export default function Signup() {
             </div>
 
             {/* Footer */}
-            <div className="mt-16 text-indigo-300 text-sm">
+            <div className="text-indigo-300 text-p-xs">
               © 2026 CardStudio. All rights reserved.
             </div>
           </div>
@@ -165,9 +163,9 @@ export default function Signup() {
             <div className="lg:hidden text-center mb-8">
               <div className="inline-flex items-center gap-2">
                 <div className="w-10 h-10 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center">
-                  <span className="text-white font-bold text-xl">C</span>
+                  <span className="text-white font-bold text-h4-xs">C</span>
                 </div>
-                <span className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                <span className="text-h3-xs font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                   CardStudio
                 </span>
               </div>
@@ -175,26 +173,28 @@ export default function Signup() {
 
             {/* Header */}
             <div className="text-center mb-6">
-              <h1 className="text-3xl font-bold text-slate-900 mb-2">Create an account</h1>
-              <p className="text-slate-500">Start your free trial today</p>
+              <h1 className="text-h3-sm font-bold text-slate-900 mb-2">Create an account</h1>
+              <p className="text-slate-500 text-p-xs">Start your free trial today</p>
             </div>
 
             {/* Social Signup Buttons */}
             <div className="grid grid-cols-2 gap-3 mb-6">
-              <button
+              <Button
                 onClick={() => handleSocialSignup("Google")}
-                className="flex items-center justify-center gap-2 py-3 px-4 border border-slate-200 rounded-xl hover:bg-slate-50 hover:border-indigo-300 hover:shadow-md transition-all duration-300"
+                variant="social"
+                size="md"
+                icon={FaGoogle}
               >
-                <FaGoogle className="w-5 h-5 text-red-500" />
-                <span className="text-sm font-medium text-slate-600">Google</span>
-              </button>
-              <button
+                Google
+              </Button>
+              <Button
                 onClick={() => handleSocialSignup("Microsoft")}
-                className="flex items-center justify-center gap-2 py-3 px-4 border border-slate-200 rounded-xl hover:bg-slate-50 hover:border-indigo-300 hover:shadow-md transition-all duration-300"
+                variant="social"
+                size="md"
+                icon={FaMicrosoft}
               >
-                <FaMicrosoft className="w-5 h-5 text-blue-600" />
-                <span className="text-sm font-medium text-slate-600">Microsoft</span>
-              </button>
+                Microsoft
+              </Button>
             </div>
 
             {/* Divider */}
@@ -202,7 +202,7 @@ export default function Signup() {
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-slate-200" />
               </div>
-              <div className="relative flex justify-center text-sm">
+              <div className="relative flex justify-center text-p-xs">
                 <span className="px-4 bg-white text-slate-400">Or sign up with email</span>
               </div>
             </div>
@@ -210,7 +210,7 @@ export default function Signup() {
             {/* Signup Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                <label className="block text-p-xs font-semibold text-slate-700 mb-2">
                   Full Name
                 </label>
                 <div className="relative">
@@ -220,13 +220,13 @@ export default function Signup() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="John Doe"
-                    className="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl focus:border-indigo-400 focus:outline-none focus:ring-4 focus:ring-indigo-100 transition-all"
+                    className="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl focus:border-indigo-400 focus:outline-none focus:ring-4 focus:ring-indigo-100 transition-all text-p-xs"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                <label className="block text-p-xs font-semibold text-slate-700 mb-2">
                   Email address
                 </label>
                 <div className="relative">
@@ -236,13 +236,13 @@ export default function Signup() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="hello@cardstudio.com"
-                    className="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl focus:border-indigo-400 focus:outline-none focus:ring-4 focus:ring-indigo-100 transition-all"
+                    className="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl focus:border-indigo-400 focus:outline-none focus:ring-4 focus:ring-indigo-100 transition-all text-p-xs"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                <label className="block text-p-xs font-semibold text-slate-700 mb-2">
                   Password
                 </label>
                 <div className="relative">
@@ -252,7 +252,7 @@ export default function Signup() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Create a password"
-                    className="w-full pl-12 pr-12 py-3 border border-slate-200 rounded-xl focus:border-indigo-400 focus:outline-none focus:ring-4 focus:ring-indigo-100 transition-all"
+                    className="w-full pl-12 pr-12 py-3 border border-slate-200 rounded-xl focus:border-indigo-400 focus:outline-none focus:ring-4 focus:ring-indigo-100 transition-all text-p-xs"
                   />
                   <button
                     type="button"
@@ -261,11 +261,11 @@ export default function Signup() {
                   >
                     {showPassword ? <FiEyeOff className="w-5 h-5" /> : <FiEye className="w-5 h-5" />}
                   </button>
-                </div> 
+                </div>
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                <label className="block text-p-xs font-semibold text-slate-700 mb-2">
                   Confirm Password
                 </label>
                 <div className="relative">
@@ -275,7 +275,7 @@ export default function Signup() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Confirm your password"
-                    className="w-full pl-12 pr-12 py-3 border border-slate-200 rounded-xl focus:border-indigo-400 focus:outline-none focus:ring-4 focus:ring-indigo-100 transition-all"
+                    className="w-full pl-12 pr-12 py-3 border border-slate-200 rounded-xl focus:border-indigo-400 focus:outline-none focus:ring-4 focus:ring-indigo-100 transition-all text-p-xs"
                   />
                   <button
                     type="button"
@@ -294,7 +294,7 @@ export default function Signup() {
                   onChange={(e) => setAgreeTerms(e.target.checked)}
                   className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                 />
-                <label className="text-sm text-slate-600">
+                <label className="text-p-xs text-slate-600">
                   I agree to the{" "}
                   <Link href="/terms" className="text-indigo-600 hover:text-indigo-700">
                     Terms of Service
@@ -306,19 +306,20 @@ export default function Signup() {
                 </label>
               </div>
 
-              <button
+              <Button
                 type="submit"
-                className="w-full py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg shadow-indigo-200 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 flex items-center justify-center gap-2"
+                variant="primary"
+                size="lg"
+                className="w-full"
               >
                 Create free account
-                <FiArrowRight className="w-4 h-4" />
-              </button>
+              </Button>
             </form>
 
             {/* Login Link */}
-            <p className="text-center text-sm text-slate-500 mt-6">
+            <p className="text-center text-p-xs text-slate-500 mt-6">
               Already have an account?{" "}
-              <Link href="/signin" className="text-indigo-600 font-semibold hover:text-indigo-700">
+              <Link href="/login" className="text-indigo-600 font-semibold hover:text-indigo-700">
                 Sign in
               </Link>
             </p>
@@ -342,6 +343,22 @@ export default function Signup() {
           </div>
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 0.3; }
+          50% { opacity: 0.6; }
+        }
+        .animate-pulse {
+          animation: pulse 3s ease-in-out infinite;
+        }
+        .delay-1000 {
+          animation-delay: 1s;
+        }
+        .blur-100px {
+          filter: blur(100px);
+        }
+      `}</style>
     </div>
   );
 }

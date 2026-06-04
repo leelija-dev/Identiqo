@@ -20,6 +20,7 @@ import {
   FiHeart,
   FiStar,
 } from "react-icons/fi";
+import Button from '@/components/Common/Button';
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -114,13 +115,13 @@ export default function ContactPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
       
       {/* Animated Background Blobs */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 right-10 w-96 h-96 bg-gradient-to-r from-rose-200 to-pink-200 rounded-full blur-3xl opacity-30 animate-pulse" />
-        <div className="absolute bottom-20 left-10 w-80 h-80 bg-gradient-to-r from-blue-200 to-cyan-200 rounded-full blur-3xl opacity-30 animate-pulse delay-1000" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-to-r from-purple-200 to-indigo-200 rounded-full blur-3xl opacity-20" />
+        <div className="absolute top-20 right-10 w-96 h-96 bg-rose-200/30 rounded-full blur-100px animate-pulse" />
+        <div className="absolute bottom-20 left-10 w-80 h-80 bg-blue-200/30 rounded-full blur-100px animate-pulse delay-1000" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-purple-200/20 rounded-full blur-120px" />
       </div>
       
       {/* Hero Section */}
@@ -128,14 +129,14 @@ export default function ContactPage() {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="inline-flex items-center gap-2 bg-gradient-to-r from-rose-500 to-pink-500 rounded-full px-5 py-2 mb-6 shadow-lg">
             <FiMail className="text-white w-4 h-4" />
-            <span className="text-white text-sm font-semibold">GET IN TOUCH</span>
+            <span className="text-white text-p-xs font-semibold">GET IN TOUCH</span>
           </div>
           
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-4">
-            <span className="text-slate-900">Let's</span>
+          <h1 className="text-h1-sm sm:text-h1-md lg:text-h1-lg font-bold mb-4">
+            <span className="text-slate-800">Let's</span>
             <span className="bg-gradient-to-r from-rose-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent"> talk</span>
           </h1>
-          <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+          <p className="text-p-sm text-slate-500 max-w-2xl mx-auto">
             Have a question or want to work with us? Fill out the form and our team will get back to you within 24 hours.
           </p>
         </div>
@@ -144,25 +145,25 @@ export default function ContactPage() {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
         
-        {/* Contact Cards - Colorful */}
+        {/* Contact Cards */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
           {contactInfo.map((item, index) => {
             const Icon = item.icon;
             return (
               <div 
                 key={index} 
-                className={`bg-gradient-to-br ${item.bgGradient} rounded-2xl p-6 shadow-lg border border-white/50 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group`}
+                className={`bg-gradient-to-br ${item.bgGradient} rounded-2xl p-6 shadow-md border border-white/50 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group`}
               >
                 <div className={`w-12 h-12 rounded-xl ${item.iconBg} flex items-center justify-center mb-4 shadow-md group-hover:scale-110 transition-transform`}>
                   <Icon className="w-5 h-5 text-white" />
                 </div>
-                <h3 className="font-semibold text-slate-900 mb-1">{item.title}</h3>
-                <p className="text-slate-700 font-medium text-sm">{item.value}</p>
+                <h3 className="font-semibold text-slate-800 text-p-sm mb-1">{item.title}</h3>
+                <p className="text-slate-700 font-medium text-p-xs">{item.value}</p>
                 <p className="text-xs text-slate-500 mt-1">{item.sub}</p>
                 {item.action && (
                   <a 
                     href={item.action}
-                    className={`inline-flex items-center gap-1 text-sm font-medium mt-2 transition-all group-hover:gap-2 bg-gradient-to-r ${item.gradient} bg-clip-text text-transparent`}
+                    className={`inline-flex items-center gap-1 text-p-xs font-medium mt-2 transition-all group-hover:gap-2 bg-gradient-to-r ${item.gradient} bg-clip-text text-transparent`}
                   >
                     Contact Now <FiArrowRight className="w-3 h-3" />
                   </a>
@@ -174,11 +175,11 @@ export default function ContactPage() {
 
         <div className="grid lg:grid-cols-2 gap-8">
           
-          {/* Contact Form - Colorful */}
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
+          {/* Contact Form */}
+          <div className="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
             <div className="bg-gradient-to-r from-rose-500 via-purple-500 to-indigo-500 px-8 py-6">
-              <h2 className="text-2xl font-bold text-white">Send us a message</h2>
-              <p className="text-white/80 mt-1">Fill out the form and we'll get back to you within 24 hours.</p>
+              <h2 className="text-h4-sm font-bold text-white">Send us a message</h2>
+              <p className="text-white/80 text-p-xs mt-1">Fill out the form and we'll get back to you within 24 hours.</p>
             </div>
 
             <form onSubmit={handleSubmit} className="p-8 space-y-5">
@@ -188,14 +189,14 @@ export default function ContactPage() {
                     <FiCheckCircle className="text-white w-4 h-4" />
                   </div>
                   <div>
-                    <p className="text-emerald-800 font-medium">Message sent successfully!</p>
-                    <p className="text-emerald-600 text-sm">We'll get back to you soon.</p>
+                    <p className="text-emerald-800 font-medium text-p-xs">Message sent successfully!</p>
+                    <p className="text-emerald-600 text-xs">We'll get back to you soon.</p>
                   </div>
                 </div>
               )}
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-p-xs font-medium text-slate-700 mb-2">
                   Full name <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
@@ -207,7 +208,7 @@ export default function ContactPage() {
                     onChange={handleChange}
                     className={`w-full pl-10 pr-3 py-3 rounded-xl border ${
                       errors.name ? 'border-rose-300 bg-rose-50' : 'border-slate-200 focus:border-purple-400'
-                    } focus:outline-none focus:ring-2 focus:ring-purple-200 transition`}
+                    } focus:outline-none focus:ring-2 focus:ring-purple-200 transition text-p-xs`}
                     placeholder="John Doe"
                   />
                 </div>
@@ -219,7 +220,7 @@ export default function ContactPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-p-xs font-medium text-slate-700 mb-2">
                   Email address <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
@@ -231,7 +232,7 @@ export default function ContactPage() {
                     onChange={handleChange}
                     className={`w-full pl-10 pr-3 py-3 rounded-xl border ${
                       errors.email ? 'border-rose-300 bg-rose-50' : 'border-slate-200 focus:border-purple-400'
-                    } focus:outline-none focus:ring-2 focus:ring-purple-200 transition`}
+                    } focus:outline-none focus:ring-2 focus:ring-purple-200 transition text-p-xs`}
                     placeholder="john@example.com"
                   />
                 </div>
@@ -243,7 +244,7 @@ export default function ContactPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-p-xs font-medium text-slate-700 mb-2">
                   Message <span className="text-rose-500">*</span>
                 </label>
                 <textarea
@@ -253,7 +254,7 @@ export default function ContactPage() {
                   rows={5}
                   className={`w-full px-4 py-3 rounded-xl border ${
                     errors.message ? 'border-rose-300 bg-rose-50' : 'border-slate-200 focus:border-purple-400'
-                  } focus:outline-none focus:ring-2 focus:ring-purple-200 transition resize-none`}
+                  } focus:outline-none focus:ring-2 focus:ring-purple-200 transition resize-none text-p-xs`}
                   placeholder="Tell us about your project or question..."
                 />
                 {errors.message && (
@@ -263,23 +264,16 @@ export default function ContactPage() {
                 )}
               </div>
 
-              <button
+              <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-gradient-to-r from-rose-500 via-purple-500 to-indigo-500 text-white py-3.5 rounded-xl font-semibold hover:shadow-xl transition-all hover:scale-[1.02] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                variant="primary"
+                size="lg"
+                className="w-full"
+                loading={isSubmitting}
               >
-                {isSubmitting ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Sending...
-                  </>
-                ) : (
-                  <>
-                    Send Message
-                    <FiSend className="w-4 h-4" />
-                  </>
-                )}
-              </button>
+                Send Message
+              </Button>
 
               <p className="text-xs text-slate-500 text-center">
                 By submitting, you agree to our <a href="#" className="text-purple-600 hover:underline">Privacy Policy</a>.
@@ -287,27 +281,26 @@ export default function ContactPage() {
             </form>
           </div>
 
-          {/* Map & Social Section - Colorful */}
+          {/* Map & Social Section */}
           <div className="space-y-6">
             
             {/* Map Card */}
-            <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100">
+            <div className="bg-white rounded-2xl shadow-md overflow-hidden border border-slate-100">
               <div className="bg-gradient-to-r from-blue-500 to-cyan-500 px-6 py-4">
                 <div className="flex items-center gap-2">
                   <FiCompass className="text-white w-5 h-5" />
-                  <h3 className="text-white font-semibold">Find us here</h3>
+                  <h3 className="text-white font-semibold text-p-sm">Find us here</h3>
                 </div>
               </div>
               
-              {/* Map Container */}
               <div className="relative h-80 bg-gradient-to-br from-blue-50 to-cyan-50">
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-center">
                     <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 shadow-lg flex items-center justify-center mb-3">
                       <FiMapPin className="w-8 h-8 text-white" />
                     </div>
-                    <p className="text-slate-700 font-medium">123 Innovation Street</p>
-                    <p className="text-slate-500 text-sm">San Francisco, CA 94105</p>
+                    <p className="text-slate-700 font-medium text-p-sm">123 Innovation Street</p>
+                    <p className="text-slate-500 text-p-xs">San Francisco, CA 94105</p>
                     <div className="mt-3 flex gap-2 justify-center">
                       <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></div>
                       <span className="text-xs text-slate-400">Interactive Map</span>
@@ -321,7 +314,7 @@ export default function ContactPage() {
               </div>
               
               <div className="px-6 py-4 border-t border-slate-100">
-                <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center justify-between text-p-xs">
                   <span className="text-slate-600">📍 Global Headquarters</span>
                   <a href="#" className="text-blue-600 hover:text-cyan-600 font-medium">
                     Get directions →
@@ -330,26 +323,26 @@ export default function ContactPage() {
               </div>
             </div>
 
-            {/* Business Hours Card - Colorful */}
-            <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl shadow-lg p-6 border border-purple-100">
+            {/* Business Hours Card */}
+            <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl shadow-md p-6 border border-purple-100">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 flex items-center justify-center shadow-md">
                   <FiClock className="w-4 h-4 text-white" />
                 </div>
-                <h3 className="font-semibold text-slate-900">Business Hours</h3>
+                <h3 className="font-semibold text-slate-800 text-p-sm">Business Hours</h3>
               </div>
               <div className="space-y-3">
                 <div className="flex justify-between py-2 border-b border-purple-100">
-                  <span className="text-slate-600">Monday - Friday</span>
-                  <span className="font-medium text-slate-900">9:00 AM - 6:00 PM</span>
+                  <span className="text-slate-600 text-p-xs">Monday - Friday</span>
+                  <span className="font-medium text-slate-800 text-p-xs">9:00 AM - 6:00 PM</span>
                 </div>
                 <div className="flex justify-between py-2 border-b border-purple-100">
-                  <span className="text-slate-600">Saturday</span>
-                  <span className="font-medium text-slate-900">10:00 AM - 4:00 PM</span>
+                  <span className="text-slate-600 text-p-xs">Saturday</span>
+                  <span className="font-medium text-slate-800 text-p-xs">10:00 AM - 4:00 PM</span>
                 </div>
                 <div className="flex justify-between py-2">
-                  <span className="text-slate-600">Sunday</span>
-                  <span className="font-medium text-slate-400">Closed</span>
+                  <span className="text-slate-600 text-p-xs">Sunday</span>
+                  <span className="font-medium text-slate-400 text-p-xs">Closed</span>
                 </div>
               </div>
               <div className="mt-4 pt-4 border-t border-purple-100">
@@ -359,9 +352,9 @@ export default function ContactPage() {
               </div>
             </div>
 
-            {/* Social Links - Colorful */}
-            <div className="bg-gradient-to-br from-rose-50 to-pink-50 rounded-2xl shadow-lg p-6 border border-rose-100">
-              <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
+            {/* Social Links */}
+            <div className="bg-gradient-to-br from-rose-50 to-pink-50 rounded-2xl shadow-md p-6 border border-rose-100">
+              <h3 className="font-semibold text-slate-800 text-p-sm mb-4 flex items-center gap-2">
                 <FiStar className="text-rose-500 w-4 h-4" />
                 Follow us for updates
               </h3>
@@ -384,6 +377,25 @@ export default function ContactPage() {
           </div>
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 0.3; }
+          50% { opacity: 0.6; }
+        }
+        .animate-pulse {
+          animation: pulse 3s ease-in-out infinite;
+        }
+        .delay-1000 {
+          animation-delay: 1s;
+        }
+        .blur-100px {
+          filter: blur(100px);
+        }
+        .blur-120px {
+          filter: blur(120px);
+        }
+      `}</style>
     </div>
   );
 }

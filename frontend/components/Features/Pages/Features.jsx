@@ -141,7 +141,7 @@ const FeatureCard = ({ feature, index }) => {
         <motion.div 
           className={`w-14 h-14 rounded-xl bg-gradient-to-r ${feature.color} flex items-center justify-center text-white shadow-lg mb-5`}
           whileHover={{ scale: 1.1, rotate: [0, -5, 5, 0] }}
-          transition={{ type: "spring", stiffness: 400 }}
+          transition={{ type: "tween", duration: 0.4, ease: "easeInOut" }}
         >
           {feature.icon}
         </motion.div>
