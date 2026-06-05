@@ -83,14 +83,12 @@ export default function NavbarMinimal() {
         <Container>
           <div className="flex items-center justify-between h-12 sm:h-14 md:h-16 lg:h-20">
             
-            {/* Logo */}
-            <Link
-              href="/"
-              className="text-h4-sm sm:text-h3-xs md:text-h2-sm font-black tracking-tight text-slate-900 transition-all duration-300 hover:scale-105 hover:text-indigo-600"
-            >
-              IDENTIQO
-            </Link>
-
+<Link
+  href="/"
+  className="text-h4-sm sm:text-h4-md md:text-h3-sm font-black tracking-tight text-slate-900 transition-all duration-300 hover:scale-105 hover:text-indigo-600"
+>
+  IDENTIQO
+</Link>
             {/* Desktop Menu - Hidden on mobile/tablet */}
             <div className="hidden lg:flex items-center gap-3 xl:gap-4 2xl:gap-6">
               {navLinks.map((link) => {
@@ -118,7 +116,7 @@ export default function NavbarMinimal() {
             {/* Desktop Button - Attractive Sign In Button with Icon */}
             <div className="hidden lg:flex items-center gap-2 xl:gap-3">
               <Button
-                href="/login"
+                href="/signin"
                 variant="primary"
                 size="md"
                 className="whitespace-nowrap"
@@ -220,7 +218,7 @@ export default function NavbarMinimal() {
             {/* Menu Footer - Attractive Sign In Button with Icon */}
             <div className="border-t border-slate-100 p-4">
               <Button
-                href="/login"
+                href="/signin"
                 variant="primary"
                 size="md"
                 className="w-full"

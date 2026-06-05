@@ -11,7 +11,7 @@ import {
 import { FaGoogle, FaMicrosoft, FaStar } from "react-icons/fa";
 import Button from '@/components/Common/Button';
 
-export default function Login() {
+export default function signin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -170,12 +170,8 @@ export default function Login() {
             {/* Mobile Logo */}
             <div className="lg:hidden text-center mb-8">
               <div className="inline-flex items-center gap-2">
-                <div className="w-10 h-10 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center">
-                  <span className="text-white font-bold text-h4-xs">C</span>
-                </div>
-                <span className="text-h3-xs font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                  CardStudio
-                </span>
+               
+                
               </div>
             </div>
 
@@ -183,22 +179,25 @@ export default function Login() {
             <>
               {/* Social Login Buttons */}
               <div className="grid grid-cols-2 gap-3 mb-6">
-                <Button
+                <button
                   onClick={() => handleSocialLogin("Google")}
-                  variant="social"
-                  size="md"
-                  icon={FaGoogle}
+                  className="flex items-center justify-center gap-3 px-4 py-3 border border-slate-200 rounded-xl hover:shadow-lg hover:border-slate-300 transition-all duration-300 text-p-xs font-medium text-slate-700 bg-white hover:bg-gray-50 group relative overflow-hidden"
                 >
-                  Google
-                </Button>
-                <Button
+                  <FaGoogle className="w-5 h-5" style={{ color: '#4285F4' }} />
+                  <span>Google</span>
+                </button>
+                <button
                   onClick={() => handleSocialLogin("Microsoft")}
-                  variant="social"
-                  size="md"
-                  icon={FaMicrosoft}
+                  className="flex items-center justify-center gap-3 px-4 py-3 border border-slate-200 rounded-xl hover:shadow-lg hover:border-slate-300 transition-all duration-300 text-p-xs font-medium text-slate-700 bg-white hover:bg-gray-50 group relative overflow-hidden"
                 >
-                  Microsoft
-                </Button>
+                  <svg className="w-5 h-5" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="1" y="1" width="9" height="9" fill="#F25022"/>
+                    <rect x="11" y="1" width="9" height="9" fill="#7FBA00"/>
+                    <rect x="1" y="11" width="9" height="9" fill="#00A4EF"/>
+                    <rect x="11" y="11" width="9" height="9" fill="#FFB900"/>
+                  </svg>
+                  <span>Microsoft</span>
+                </button>
               </div>
 
               {/* Divider */}

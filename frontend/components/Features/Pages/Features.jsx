@@ -38,7 +38,7 @@ export default function FeatureFlow() {
     {
       id: "01",
       title: "Smart ID Templates",
-      description: "50+ professionally designed templates for corporate, education, healthcare, and events. Fully customizable with your branding.",
+      description: "  50+  professionally designed templates for corporate,  healthcare, and events.   Fully customizable with your branding.",
       gradient: "from-orange-500 to-pink-500",
       image: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=600&h=400&fit=crop",
       stats: "50+",

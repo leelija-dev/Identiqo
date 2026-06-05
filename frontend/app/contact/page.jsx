@@ -2,400 +2,360 @@
 "use client";
 
 import { useState } from "react";
-import {
-  FiMail,
-  FiPhone,
-  FiMapPin,
-  FiClock,
-  FiUser,
-  FiSend,
-  FiCheckCircle,
-  FiAlertCircle,
-  FiTwitter,
-  FiLinkedin,
-  FiInstagram,
-  FiFacebook,
-  FiArrowRight,
-  FiCompass,
-  FiHeart,
-  FiStar,
-} from "react-icons/fi";
-import Button from '@/components/Common/Button';
+import Link from "next/link";
+import { motion } from "framer-motion";
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    phone: "",
+    company: "",
     message: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [errors, setErrors] = useState({});
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
-    if (errors[e.target.name]) {
-      setErrors({
-        ...errors,
-        [e.target.name]: "",
-      });
-    }
-  };
-
-  const validateForm = () => {
-    const newErrors = {};
-    if (!formData.name.trim()) newErrors.name = "Name is required";
-    if (!formData.email.trim()) newErrors.email = "Email is required";
-    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = "Email is invalid";
-    if (!formData.message.trim()) newErrors.message = "Message is required";
-    return newErrors;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const newErrors = validateForm();
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
-
     setIsSubmitting(true);
     setTimeout(() => {
       setIsSubmitting(false);
       setIsSubmitted(true);
-      setFormData({ name: "", email: "", message: "" });
+      setFormData({ name: "", email: "", phone: "", company: "", message: "" });
       setTimeout(() => setIsSubmitted(false), 5000);
     }, 1500);
   };
 
-  const contactInfo = [
-    {
-      icon: FiMail,
-      title: "Email",
-      value: "hello@cardstudio.com",
-      sub: "support@cardstudio.com",
-      action: "mailto:hello@cardstudio.com",
-      gradient: "from-rose-500 to-pink-500",
-      bgGradient: "from-rose-50 to-pink-50",
-      iconBg: "bg-gradient-to-r from-rose-500 to-pink-500",
-    },
-    {
-      icon: FiPhone,
-      title: "Phone",
-      value: "+1 (555) 123-4567",
-      sub: "Mon-Fri, 9am-6pm",
-      action: "tel:+15551234567",
-      gradient: "from-blue-500 to-cyan-500",
-      bgGradient: "from-blue-50 to-cyan-50",
-      iconBg: "bg-gradient-to-r from-blue-500 to-cyan-500",
-    },
-    {
-      icon: FiMapPin,
-      title: "Address",
-      value: "123 Innovation Street",
-      sub: "San Francisco, CA 94105",
-      action: "https://maps.google.com",
-      gradient: "from-emerald-500 to-teal-500",
-      bgGradient: "from-emerald-50 to-teal-50",
-      iconBg: "bg-gradient-to-r from-emerald-500 to-teal-500",
-    },
-    {
-      icon: FiClock,
-      title: "Hours",
-      value: "Monday - Friday",
-      sub: "9:00 AM - 6:00 PM",
-      action: null,
-      gradient: "from-purple-500 to-indigo-500",
-      bgGradient: "from-purple-50 to-indigo-50",
-      iconBg: "bg-gradient-to-r from-purple-500 to-indigo-500",
-    },
-  ];
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
+    <div className="min-h-screen bg-white">
       
-      {/* Animated Background Blobs */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 right-10 w-96 h-96 bg-rose-200/30 rounded-full blur-100px animate-pulse" />
-        <div className="absolute bottom-20 left-10 w-80 h-80 bg-blue-200/30 rounded-full blur-100px animate-pulse delay-1000" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-purple-200/20 rounded-full blur-120px" />
-      </div>
-      
-      {/* Hero Section */}
-      <section className="relative overflow-hidden pt-20 pb-12">
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-rose-500 to-pink-500 rounded-full px-5 py-2 mb-6 shadow-lg">
-            <FiMail className="text-white w-4 h-4" />
-            <span className="text-white text-p-xs font-semibold">GET IN TOUCH</span>
-          </div>
-          
-          <h1 className="text-h1-sm sm:text-h1-md lg:text-h1-lg font-bold mb-4">
-            <span className="text-slate-800">Let's</span>
-            <span className="bg-gradient-to-r from-rose-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent"> talk</span>
-          </h1>
-          <p className="text-p-sm text-slate-500 max-w-2xl mx-auto">
-            Have a question or want to work with us? Fill out the form and our team will get back to you within 24 hours.
-          </p>
-        </div>
-      </section>
-
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+      {/* Hero Section - Premium */}
+      <div className="relative overflow-hidden bg-gradient-to-b from-slate-50 to-white pt-20 pb-16">
+        {/* Decorative Lines */}
+        <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
+        <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
         
-        {/* Contact Cards */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
-          {contactInfo.map((item, index) => {
-            const Icon = item.icon;
-            return (
-              <div 
-                key={index} 
-                className={`bg-gradient-to-br ${item.bgGradient} rounded-2xl p-6 shadow-md border border-white/50 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group`}
-              >
-                <div className={`w-12 h-12 rounded-xl ${item.iconBg} flex items-center justify-center mb-4 shadow-md group-hover:scale-110 transition-transform`}>
-                  <Icon className="w-5 h-5 text-white" />
-                </div>
-                <h3 className="font-semibold text-slate-800 text-p-sm mb-1">{item.title}</h3>
-                <p className="text-slate-700 font-medium text-p-xs">{item.value}</p>
-                <p className="text-xs text-slate-500 mt-1">{item.sub}</p>
-                {item.action && (
-                  <a 
-                    href={item.action}
-                    className={`inline-flex items-center gap-1 text-p-xs font-medium mt-2 transition-all group-hover:gap-2 bg-gradient-to-r ${item.gradient} bg-clip-text text-transparent`}
-                  >
-                    Contact Now <FiArrowRight className="w-3 h-3" />
-                  </a>
-                )}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="inline-block mb-4">
+              <span className="text-xs font-medium tracking-wider text-indigo-600 uppercase bg-indigo-50 px-4 py-1.5 rounded-full">
+                Contact Us
+              </span>
+            </div>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-light text-slate-800 mb-4">
+              Let's start a{" "}
+              <span className="font-semibold bg-gradient-to-r from-indigo-600 to-slate-800 bg-clip-text text-transparent">
+                conversation
+              </span>
+            </h1>
+            <p className="text-slate-500 text-lg max-w-2xl mx-auto font-light">
+              Whether you have a question about our platform or need assistance, 
+              our team is ready to help you create exceptional ID solutions.
+            </p>
+          </motion.div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        
+        {/* Three Column Contact Cards - Premium */}
+        <div className="grid md:grid-cols-3 gap-8 mb-20">
+          {/* Card 1 - Email */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="group text-center"
+          >
+            <div className="bg-white border border-slate-100 rounded-2xl p-8 hover:shadow-xl transition-all duration-300">
+              <div className="w-16 h-16 mx-auto rounded-full bg-indigo-50 flex items-center justify-center mb-5 group-hover:bg-indigo-600 transition-colors duration-300">
+                <svg className="w-7 h-7 text-indigo-600 group-hover:text-white transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
               </div>
-            );
-          })}
+              <h3 className="text-lg font-semibold text-slate-800 mb-2">Email Us</h3>
+              <p className="text-slate-500 text-sm mb-3">Our team typically responds within hours</p>
+              <a href="mailto:hello@cardstudio.com" className="text-indigo-600 font-medium hover:text-indigo-700 transition">
+                hello@cardstudio.com
+              </a>
+            </div>
+          </motion.div>
+
+          {/* Card 2 - Phone */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="group text-center"
+          >
+            <div className="bg-white border border-slate-100 rounded-2xl p-8 hover:shadow-xl transition-all duration-300">
+              <div className="w-16 h-16 mx-auto rounded-full bg-indigo-50 flex items-center justify-center mb-5 group-hover:bg-indigo-600 transition-colors duration-300">
+                <svg className="w-7 h-7 text-indigo-600 group-hover:text-white transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-slate-800 mb-2">Call Us</h3>
+              <p className="text-slate-500 text-sm mb-3">Mon-Fri, 9am - 6pm PST</p>
+              <a href="tel:+15551234567" className="text-indigo-600 font-medium hover:text-indigo-700 transition">
+                +1 (555) 123-4567
+              </a>
+            </div>
+          </motion.div>
+
+          {/* Card 3 - Office */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="group text-center"
+          >
+            <div className="bg-white border border-slate-100 rounded-2xl p-8 hover:shadow-xl transition-all duration-300">
+              <div className="w-16 h-16 mx-auto rounded-full bg-indigo-50 flex items-center justify-center mb-5 group-hover:bg-indigo-600 transition-colors duration-300">
+                <svg className="w-7 h-7 text-indigo-600 group-hover:text-white transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-slate-800 mb-2">Visit Us</h3>
+              <p className="text-slate-500 text-sm mb-3">Global headquarters</p>
+              <p className="text-indigo-600 font-medium">San Francisco, CA</p>
+            </div>
+          </motion.div>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-8">
+        {/* Main Contact Section - Split Layout */}
+        <div className="grid lg:grid-cols-2 gap-12">
           
-          {/* Contact Form */}
-          <div className="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
-            <div className="bg-gradient-to-r from-rose-500 via-purple-500 to-indigo-500 px-8 py-6">
-              <h2 className="text-h4-sm font-bold text-white">Send us a message</h2>
-              <p className="text-white/80 text-p-xs mt-1">Fill out the form and we'll get back to you within 24 hours.</p>
+          {/* Left Side - Form */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="mb-8">
+              <h2 className="text-2xl font-semibold text-slate-800 mb-2">Send a message</h2>
+              <p className="text-slate-500">Fill out the form and we'll respond within 24 hours.</p>
+              <div className="w-12 h-px bg-indigo-600 mt-4" />
             </div>
 
-            <form onSubmit={handleSubmit} className="p-8 space-y-5">
-              {isSubmitted && (
-                <div className="bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-xl p-4 flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-emerald-500 to-green-500 flex items-center justify-center">
-                    <FiCheckCircle className="text-white w-4 h-4" />
-                  </div>
-                  <div>
-                    <p className="text-emerald-800 font-medium text-p-xs">Message sent successfully!</p>
-                    <p className="text-emerald-600 text-xs">We'll get back to you soon.</p>
-                  </div>
-                </div>
-              )}
+            {isSubmitted && (
+              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-6">
+                <p className="text-emerald-800 font-medium">✓ Message sent successfully</p>
+                <p className="text-emerald-600 text-sm">We'll get back to you shortly.</p>
+              </div>
+            )}
 
-              <div>
-                <label className="block text-p-xs font-medium text-slate-700 mb-2">
-                  Full name <span className="text-rose-500">*</span>
-                </label>
-                <div className="relative">
-                  <FiUser className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid sm:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Full name</label>
                   <input
                     type="text"
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
-                    className={`w-full pl-10 pr-3 py-3 rounded-xl border ${
-                      errors.name ? 'border-rose-300 bg-rose-50' : 'border-slate-200 focus:border-purple-400'
-                    } focus:outline-none focus:ring-2 focus:ring-purple-200 transition text-p-xs`}
+                    required
+                    className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none transition bg-slate-50/30"
                     placeholder="John Doe"
                   />
                 </div>
-                {errors.name && (
-                  <p className="text-rose-500 text-xs mt-1 flex items-center gap-1">
-                    <FiAlertCircle className="w-3 h-3" /> {errors.name}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-p-xs font-medium text-slate-700 mb-2">
-                  Email address <span className="text-rose-500">*</span>
-                </label>
-                <div className="relative">
-                  <FiMail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Email address</label>
                   <input
                     type="email"
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
-                    className={`w-full pl-10 pr-3 py-3 rounded-xl border ${
-                      errors.email ? 'border-rose-300 bg-rose-50' : 'border-slate-200 focus:border-purple-400'
-                    } focus:outline-none focus:ring-2 focus:ring-purple-200 transition text-p-xs`}
+                    required
+                    className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none transition bg-slate-50/30"
                     placeholder="john@example.com"
                   />
                 </div>
-                {errors.email && (
-                  <p className="text-rose-500 text-xs mt-1 flex items-center gap-1">
-                    <FiAlertCircle className="w-3 h-3" /> {errors.email}
-                  </p>
-                )}
+              </div>
+
+              <div className="grid sm:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Phone number</label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none transition bg-slate-50/30"
+                    placeholder="+1 (555) 000-0000"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Company</label>
+                  <input
+                    type="text"
+                    name="company"
+                    value={formData.company}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none transition bg-slate-50/30"
+                    placeholder="Your company"
+                  />
+                </div>
               </div>
 
               <div>
-                <label className="block text-p-xs font-medium text-slate-700 mb-2">
-                  Message <span className="text-rose-500">*</span>
-                </label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Message</label>
                 <textarea
                   name="message"
                   value={formData.message}
                   onChange={handleChange}
+                  required
                   rows={5}
-                  className={`w-full px-4 py-3 rounded-xl border ${
-                    errors.message ? 'border-rose-300 bg-rose-50' : 'border-slate-200 focus:border-purple-400'
-                  } focus:outline-none focus:ring-2 focus:ring-purple-200 transition resize-none text-p-xs`}
-                  placeholder="Tell us about your project or question..."
+                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none transition resize-none bg-slate-50/30"
+                  placeholder="Tell us about your project..."
                 />
-                {errors.message && (
-                  <p className="text-rose-500 text-xs mt-1 flex items-center gap-1">
-                    <FiAlertCircle className="w-3 h-3" /> {errors.message}
-                  </p>
-                )}
               </div>
 
-              <Button
+              <button
                 type="submit"
                 disabled={isSubmitting}
-                variant="primary"
-                size="lg"
-                className="w-full"
-                loading={isSubmitting}
+                className="w-full bg-indigo-600 text-white py-3.5 rounded-lg font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Send Message
-              </Button>
+                {isSubmitting ? "Sending..." : "Send Message"}
+              </button>
 
-              <p className="text-xs text-slate-500 text-center">
-                By submitting, you agree to our <a href="#" className="text-purple-600 hover:underline">Privacy Policy</a>.
+              <p className="text-xs text-slate-400 text-center">
+                By submitting, you agree to our Privacy Policy and Terms of Service.
               </p>
             </form>
-          </div>
+          </motion.div>
 
-          {/* Map & Social Section */}
-          <div className="space-y-6">
-            
-            {/* Map Card */}
-            <div className="bg-white rounded-2xl shadow-md overflow-hidden border border-slate-100">
-              <div className="bg-gradient-to-r from-blue-500 to-cyan-500 px-6 py-4">
-                <div className="flex items-center gap-2">
-                  <FiCompass className="text-white w-5 h-5" />
-                  <h3 className="text-white font-semibold text-p-sm">Find us here</h3>
-                </div>
-              </div>
-              
-              <div className="relative h-80 bg-gradient-to-br from-blue-50 to-cyan-50">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 shadow-lg flex items-center justify-center mb-3">
-                      <FiMapPin className="w-8 h-8 text-white" />
-                    </div>
-                    <p className="text-slate-700 font-medium text-p-sm">123 Innovation Street</p>
-                    <p className="text-slate-500 text-p-xs">San Francisco, CA 94105</p>
-                    <div className="mt-3 flex gap-2 justify-center">
-                      <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></div>
-                      <span className="text-xs text-slate-400">Interactive Map</span>
-                    </div>
+          {/* Right Side - Premium Content */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            {/* Why Choose Us */}
+            <div className="bg-slate-50 rounded-2xl p-8 mb-8">
+              <h3 className="text-xl font-semibold text-slate-800 mb-6">Why choose CardStudio</h3>
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-5 h-5 rounded-full bg-indigo-100 flex items-center justify-center mt-0.5">
+                    <svg className="w-3 h-3 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="font-medium text-slate-800">Fast response time</p>
+                    <p className="text-sm text-slate-500">Average 4-hour response for enterprise</p>
                   </div>
                 </div>
-                
-                <div className="absolute bottom-4 right-4 bg-white/90 backdrop-blur rounded-lg shadow-md px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-white transition">
-                  View larger map →
+                <div className="flex items-start gap-3">
+                  <div className="w-5 h-5 rounded-full bg-indigo-100 flex items-center justify-center mt-0.5">
+                    <svg className="w-3 h-3 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="font-medium text-slate-800">Dedicated support team</p>
+                    <p className="text-sm text-slate-500">Technical experts ready to assist</p>
+                  </div>
                 </div>
-              </div>
-              
-              <div className="px-6 py-4 border-t border-slate-100">
-                <div className="flex items-center justify-between text-p-xs">
-                  <span className="text-slate-600">📍 Global Headquarters</span>
-                  <a href="#" className="text-blue-600 hover:text-cyan-600 font-medium">
-                    Get directions →
-                  </a>
+                <div className="flex items-start gap-3">
+                  <div className="w-5 h-5 rounded-full bg-indigo-100 flex items-center justify-center mt-0.5">
+                    <svg className="w-3 h-3 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="font-medium text-slate-800">Custom solutions</p>
+                    <p className="text-sm text-slate-500">Tailored for enterprise needs</p>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Business Hours Card */}
-            <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl shadow-md p-6 border border-purple-100">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 flex items-center justify-center shadow-md">
-                  <FiClock className="w-4 h-4 text-white" />
+            {/* FAQ Preview */}
+            <div className="border border-slate-100 rounded-2xl p-8">
+              <h3 className="text-xl font-semibold text-slate-800 mb-6">Frequently asked</h3>
+              <div className="space-y-5">
+                <div>
+                  <p className="font-medium text-slate-800 mb-1">How quickly do you respond?</p>
+                  <p className="text-sm text-slate-500">We respond within 24 hours, often sooner for enterprise inquiries.</p>
                 </div>
-                <h3 className="font-semibold text-slate-800 text-p-sm">Business Hours</h3>
-              </div>
-              <div className="space-y-3">
-                <div className="flex justify-between py-2 border-b border-purple-100">
-                  <span className="text-slate-600 text-p-xs">Monday - Friday</span>
-                  <span className="font-medium text-slate-800 text-p-xs">9:00 AM - 6:00 PM</span>
+                <div>
+                  <p className="font-medium text-slate-800 mb-1">Do you offer custom solutions?</p>
+                  <p className="text-sm text-slate-500">Yes, we provide custom ID solutions for enterprise clients.</p>
                 </div>
-                <div className="flex justify-between py-2 border-b border-purple-100">
-                  <span className="text-slate-600 text-p-xs">Saturday</span>
-                  <span className="font-medium text-slate-800 text-p-xs">10:00 AM - 4:00 PM</span>
-                </div>
-                <div className="flex justify-between py-2">
-                  <span className="text-slate-600 text-p-xs">Sunday</span>
-                  <span className="font-medium text-slate-400 text-p-xs">Closed</span>
+                <div>
+                  <p className="font-medium text-slate-800 mb-1">Is there a free trial?</p>
+                  <p className="text-sm text-slate-500">Start with a 14-day free trial, no credit card required.</p>
                 </div>
               </div>
-              <div className="mt-4 pt-4 border-t border-purple-100">
-                <p className="text-xs text-purple-600 flex items-center gap-1">
-                  <FiHeart className="w-3 h-3" /> 24/7 emergency support for enterprise customers
-                </p>
+              <Link href="/faq" className="inline-block mt-6 text-indigo-600 text-sm font-medium hover:text-indigo-700 transition">
+                View all FAQs →
+              </Link>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Map Section - Minimal */}
+        <div className="mt-20 pt-8 border-t border-slate-100">
+          <div className="grid md:grid-cols-2 gap-8 items-center">
+            <div>
+              <h3 className="text-2xl font-semibold text-slate-800 mb-2">Visit our headquarters</h3>
+              <p className="text-slate-500 mb-4">Come say hello at our office in the heart of San Francisco.</p>
+              <div className="space-y-2">
+                <p className="text-slate-700">📍 123 Innovation Street</p>
+                <p className="text-slate-700">San Francisco, CA 94105</p>
+                <p className="text-slate-700">United States</p>
               </div>
             </div>
-
-            {/* Social Links */}
-            <div className="bg-gradient-to-br from-rose-50 to-pink-50 rounded-2xl shadow-md p-6 border border-rose-100">
-              <h3 className="font-semibold text-slate-800 text-p-sm mb-4 flex items-center gap-2">
-                <FiStar className="text-rose-500 w-4 h-4" />
-                Follow us for updates
-              </h3>
-              <div className="flex gap-3">
-                <button className="w-10 h-10 rounded-full bg-gradient-to-r from-rose-500 to-pink-500 flex items-center justify-center text-white hover:scale-110 transition-transform shadow-md">
-                  <FiTwitter className="w-4 h-4" />
-                </button>
-                <button className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center text-white hover:scale-110 transition-transform shadow-md">
-                  <FiLinkedin className="w-4 h-4" />
-                </button>
-                <button className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white hover:scale-110 transition-transform shadow-md">
-                  <FiInstagram className="w-4 h-4" />
-                </button>
-                <button className="w-10 h-10 rounded-full bg-gradient-to-r from-indigo-500 to-blue-500 flex items-center justify-center text-white hover:scale-110 transition-transform shadow-md">
-                  <FiFacebook className="w-4 h-4" />
-                </button>
+            <div className="bg-slate-100 rounded-xl h-48 relative overflow-hidden">
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="w-12 h-12 rounded-full bg-indigo-600 mx-auto flex items-center justify-center mb-2">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    </svg>
+                  </div>
+                  <p className="text-sm text-slate-600">Interactive map preview</p>
+                </div>
               </div>
-              <p className="text-xs text-slate-500 mt-4">Join 10,000+ followers</p>
             </div>
           </div>
         </div>
-      </div>
 
-      <style jsx>{`
-        @keyframes pulse {
-          0%, 100% { opacity: 0.3; }
-          50% { opacity: 0.6; }
-        }
-        .animate-pulse {
-          animation: pulse 3s ease-in-out infinite;
-        }
-        .delay-1000 {
-          animation-delay: 1s;
-        }
-        .blur-100px {
-          filter: blur(100px);
-        }
-        .blur-120px {
-          filter: blur(120px);
-        }
-      `}</style>
+        {/* Trust Indicators */}
+        <div className="mt-12 pt-8 border-t border-slate-100">
+          <div className="flex flex-wrap justify-center gap-12">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-slate-800">10,000+</div>
+              <p className="text-sm text-slate-500">Active customers</p>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-slate-800">99.9%</div>
+              <p className="text-sm text-slate-500">Satisfaction rate</p>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-slate-800">24/7</div>
+              <p className="text-sm text-slate-500">Support available</p>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-slate-800">50+</div>
+              <p className="text-sm text-slate-500">Countries served</p>
+            </div>
+          </div>
+        </div>
+      </div> 
     </div>
   );
 }

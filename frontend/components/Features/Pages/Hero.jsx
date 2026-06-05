@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import Button from "@/components/Common/Button";
+
 import Container from "@/components/Common/Container";
 import { useState, useEffect } from "react";
 
@@ -47,7 +47,7 @@ export default function Hero() {
             </div>
 
             <div className={`transition-all duration-700 delay-100 ease-out ${animatedText.heading ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10'}`}>
-              <h1 className="text-slate-900 text-h2-sm sm:text-h1-sm md:text-h1-lg lg:text-h1-xl font-extrabold leading-[1.15] tracking-[-0.02em]">
+          <h1 className="text-h1-sm sm:text-h1-md md:text-h1-xl lg:text-h1-2xl font-extrabold leading-[1.15] tracking-[-0.02em]">
                 Smart Employee
                 <span className="block mt-1 sm:mt-2 text-transparent bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 bg-clip-text">
                   ID Card Generator
