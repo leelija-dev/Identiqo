@@ -98,19 +98,6 @@ export default function EditorSidebar({
         onMouseDown={onResizeStart} 
       />
 
-      {/* Header */}
-      <div className="px-5 py-4 border-b border-slate-100">
-        <h2 className="text-p-md font-semibold text-slate-800 flex items-center gap-2 flex-wrap">
-          <FiEdit2 className="text-indigo-500" /> Customize Card
-          <span className="text-[10px] font-bold bg-indigo-50 text-indigo-600 px-2 py-1 rounded-full uppercase">
-            {currentOrientation}
-          </span>
-          <span className="text-[10px] font-bold bg-amber-50 text-amber-600 px-2 py-1 rounded-full uppercase">
-            {currentTemplate?.category || ''}
-          </span>
-        </h2>
-      </div>
-
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-4 py-4 min-h-0">
         
@@ -194,9 +181,9 @@ export default function EditorSidebar({
   );
 }
 
-// Sub-components for better organization
-
+// Sub-components (unchanged, keep them as they were)
 function BackgroundEditor({ backgroundBlocks, onModeChange, onSolidColorChange, onGradientChange, onImageUpload, refreshBackgrounds, triggerUpdate }) {
+  // ... same code as before ...
   return (
     <div className="mb-3 p-3.5 border border-slate-100 rounded-2xl bg-white shadow-sm">
       <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
@@ -233,6 +220,7 @@ function BackgroundEditor({ backgroundBlocks, onModeChange, onSolidColorChange, 
 }
 
 function BackgroundBlock({ block, onModeChange, onSolidColorChange, onGradientChange, onImageUpload, triggerUpdate }) {
+  // ... same code as before ...
   return (
     <div className="mb-3">
       <span className="text-[10px] text-slate-400 mb-1 block">{block.label}</span>
@@ -323,6 +311,7 @@ function ColorThemeSection({
   onApplyTheme, onCustomPrimaryChange, onCustomSecondaryChange, onCustomAccentChange, 
   onCustomCardBgChange, previewCanvasRef, triggerUpdate 
 }) {
+  // ... same code as before ...
   const themes = [
     { name: 'Default', primary: '#ff7e5f', secondary: '#6a11cb', accent: '#2575fc' },
     { name: 'Sunset', primary: '#ff6b35', secondary: '#f7931e', accent: '#ff2d55' },
@@ -338,7 +327,6 @@ function ColorThemeSection({
         <FiDroplet /> Color Theme & Background
       </div>
       
-      {/* Card Background */}
       <div className="mb-3">
         <label className="text-[10px] text-slate-400 block mb-1">Card Background</label>
         <div className="flex gap-2 items-center">
@@ -368,7 +356,6 @@ function ColorThemeSection({
       
       <div className="border-t border-slate-100 pt-3 mb-3" />
       
-      {/* Theme Presets */}
       <div className="grid grid-cols-3 gap-2 mb-3">
         {themes.map(theme => (
           <button
@@ -426,6 +413,7 @@ function ImagesSection({
   barcodeValue, qrValue, onBarcodeValueChange, onQrValueChange,
   onApplyBarcode, onApplyQR, triggerUpdate
 }) {
+  // ... same code as before ...
   return (
     <div className="mb-3 p-3.5 border border-slate-100 rounded-2xl bg-white shadow-sm">
       <div className="flex items-center gap-2 mb-3 text-slate-700 font-semibold text-xs uppercase tracking-wider">
@@ -507,6 +495,7 @@ function ImagesSection({
 }
 
 function ImageUploadBlock({ label, type, image, onUpload, onRemove, icon }) {
+  // ... same code as before ...
   return (
     <div>
       <div 

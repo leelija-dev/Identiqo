@@ -4,28 +4,31 @@ export default function SectionTitle({
   title,
   subtitle,
   className = "",
-  gradient = true,
-  centered = true,
 }) {
-  const TitleElement = gradient ? (
-    <span className="bg-gradient-tertiary bg-clip-text text-transparent animate-gradient">
-      {title}
-    </span>
-  ) : (
-    <span className="text-slate-800">{title}</span>
-  );
-
   return (
-    <div className={`${centered ? 'text-center' : 'text-left'} ${className}`}>
-      <h1 className="text-h1-md sm:text-h1-lg md:text-h1-xl font-bold leading-tight">
-        {TitleElement}
-        {subtitle && (
-          <>
-            <br />
-            <span className="text-slate-600">{subtitle}</span>
-          </>
-        )}
-      </h1>
-    </div>
+    <h1
+     className={`text-4xl sm:text-5xl md:text-6xl font-bold mb-6 leading-tight ${className}`}
+    >
+     <span
+  className="
+    bg-gradient-to-r
+    from-blue-600
+    via-purple-600
+    to-pink-600
+    bg-clip-text
+    text-transparent
+    animate-gradient-x
+  "
+>
+  {title}
+</span>
+
+      {subtitle && (
+        <>
+          <br />
+          <span className="text-gray-800">{subtitle}</span>
+        </>
+      )}
+    </h1>
   );
 }

@@ -9,11 +9,13 @@ import { useRef, useState, useEffect } from "react";
 export const CARD_DIMENSIONS = {
   landscape: {
     designSize: { width: 550, height: 348 },
-    containerClass: "w-full aspect-[550/348]",
+    containerClass:
+      "w-full max-w-[360px] mx-auto aspect-[550/348] max-h-[240px]",
   },
   portrait: {
     designSize: { width: 350, height: 550 },
-    containerClass: "w-full aspect-[350/550]",
+    containerClass:
+      "w-full max-w-[240px] mx-auto aspect-[350/550] max-h-[400px]",
   },
 };
 
@@ -32,7 +34,7 @@ export function CardContainer({
   return (
     <div
       onClick={onClick}
-      className={`w-full ${config.containerClass} ${className} ${
+      className={`${config.containerClass} ${className} ${
         onClick
           ? "cursor-pointer transition-all duration-300 hover:-translate-y-2"
           : ""
@@ -44,7 +46,7 @@ export function CardContainer({
 }
 
 /* =========================================================
-   CARD GRID (LIST VIEW)
+   CARD GRID (LIST VIEW) – tighter gaps for portrait
 ========================================================= */
 
 export function CardGrid({
@@ -52,11 +54,12 @@ export function CardGrid({
   orientation = "landscape",
   className = "",
 }) {
-  const isLandscape = orientation === "landscape";
+  const gapClass =
+    orientation === "portrait"
+      ? "gap-1 sm:gap-1.5 lg:gap-2"
+      : "gap-1.5 sm:gap-2 lg:gap-3";
 
-  const gridClasses = isLandscape
-    ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8"
-    : "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 justify-items-center";
+  const gridClasses = `grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 ${gapClass} justify-items-center items-start`;
 
   return <div className={`${gridClasses} ${className}`}>{children}</div>;
 }
@@ -65,7 +68,7 @@ export function CardGrid({
    CARD SKELETON (LOADING UI)
 ========================================================= */
 
-export function CardSkeleton({ orientation = "landscape", count = 6 }) {
+export function CardSkeleton({ orientation = "landscape", count = 8 }) {
   const config = CARD_DIMENSIONS[orientation];
 
   return (
@@ -73,7 +76,7 @@ export function CardSkeleton({ orientation = "landscape", count = 6 }) {
       {Array.from({ length: count }).map((_, i) => (
         <div
           key={i}
-          className={`w-full ${config.containerClass} animate-pulse rounded-xl bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200`}
+          className={`${config.containerClass} animate-pulse rounded-xl bg-gradient-to-r from-slate-200/50 via-slate-100/50 to-slate-200/50`}
         />
       ))}
     </CardGrid>
@@ -100,7 +103,7 @@ function useFitScale(orientation, containerRef) {
       if (!w || !h) return;
 
       const next = Math.min(w / designSize.width, h / designSize.height);
-      setScale(Math.max(0.3, Math.min(next, 1)));
+      setScale(Math.max(0.2, Math.min(next, 1)));
     };
 
     updateScale();
@@ -125,7 +128,48 @@ function useFitScale(orientation, containerRef) {
 }
 
 /* =========================================================
-   CARD PREVIEW (READ ONLY)
+   FLIP CARD WRAPPER (Adds flip functionality to any card)
+========================================================= */
+
+export function FlipCardWrapper({ children, className = "", onClick }) {
+  const [isFlipped, setIsFlipped] = useState(false);
+
+  const handleFlip = (e) => {
+    e.stopPropagation();
+    setIsFlipped(!isFlipped);
+    if (onClick) onClick(e);
+  };
+
+  return (
+    <div
+      className={`flip-card ${className} ${isFlipped ? 'flipped' : ''}`}
+      style={{
+        width: '100%',
+        height: '100%',
+        perspective: '1000px'
+      }}
+      onClick={handleFlip}
+    >
+      <div
+        className="flip-card-inner"
+        style={{
+          position: 'relative',
+          width: '100%',
+          height: '100%',
+          textAlign: 'center',
+          transition: 'transform 0.6s',
+          transformStyle: 'preserve-3d',
+          transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)'
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================
+   CARD PREVIEW (READ ONLY) - NO WHITE BACKGROUND
 ========================================================= */
 
 export default function CardPreview({
@@ -133,6 +177,7 @@ export default function CardPreview({
   orientation = "landscape",
   className = "",
   onClick,
+  enableFlip = false,
 }) {
   const frameRef = useRef(null);
   const { scale, designSize, scaledWidth, scaledHeight } = useFitScale(
@@ -140,16 +185,55 @@ export default function CardPreview({
     frameRef
   );
 
-  if (!html || !html.trim()) {
+  const hasValidHtml = html && typeof html === 'string' && html.trim().length > 0;
+
+  const renderCardContent = () => (
+    <div
+      ref={frameRef}
+      className="relative flex items-center justify-center w-full h-full overflow-hidden rounded-xl shadow-lg hover:shadow-xl transition-shadow bg-transparent"
+    >
+      <div
+        className="relative shrink-0"
+        style={{
+          width: scaledWidth,
+          height: scaledHeight,
+        }}
+      >
+        <div
+          className="absolute top-0 left-0 overflow-hidden rounded-xl"
+          style={{
+            width: designSize.width,
+            height: designSize.height,
+            transform: `scale(${scale})`,
+            transformOrigin: "top left",
+          }}
+          dangerouslySetInnerHTML={{ __html: html }}
+        />
+      </div>
+    </div>
+  );
+
+  if (!hasValidHtml) {
     return (
       <CardContainer
         orientation={orientation}
         onClick={onClick}
         className={className}
       >
-        <div className="flex items-center justify-center w-full h-full rounded-xl border border-dashed border-slate-200 bg-slate-50 text-sm text-slate-400">
-          No preview
+        <div className="flex flex-col items-center justify-center w-full h-full rounded-xl border border-dashed border-slate-300 bg-slate-50/50 backdrop-blur-sm text-sm text-slate-500">
+          <span className="text-2xl mb-2">🃟</span>
+          <span>No preview</span>
         </div>
+      </CardContainer>
+    );
+  }
+
+  if (enableFlip) {
+    return (
+      <CardContainer orientation={orientation} className={className}>
+        <FlipCardWrapper onClick={onClick}>
+          {renderCardContent()}
+        </FlipCardWrapper>
       </CardContainer>
     );
   }
@@ -160,29 +244,7 @@ export default function CardPreview({
       onClick={onClick}
       className={className}
     >
-      <div
-        ref={frameRef}
-        className="relative flex items-center justify-center w-full h-full overflow-hidden rounded-xl"
-      >
-        <div
-          className="relative shrink-0"
-          style={{
-            width: scaledWidth,
-            height: scaledHeight,
-          }}
-        >
-          <div
-            className="absolute top-0 left-0 overflow-hidden rounded-xl shadow-sm"
-            style={{
-              width: designSize.width,
-              height: designSize.height,
-              transform: `scale(${scale})`,
-              transformOrigin: "top left",
-            }}
-            dangerouslySetInnerHTML={{ __html: html }}
-          />
-        </div>
-      </div>
+      {renderCardContent()}
     </CardContainer>
   );
 }

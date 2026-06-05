@@ -270,7 +270,7 @@ export default function PricingPage() {
          
                    <SectionTitle
                      title="Choose the perfect plan"
-                     subtitle="for your team"
+                     
                    />
           
           <div className="text-slate-800 text-h3-sm sm:text-h3-lg md:text-h2-xl font-extrabold tracking-tight animate-fade-in-up">
