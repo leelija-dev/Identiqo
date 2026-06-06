@@ -23,4 +23,5 @@ urlpatterns = [
     path('admin-api/', include('admin_api.urls')),
     path('super-admin/', include('admin_api.dashboard_urls')),
     path('', RedirectView.as_view(url='/super-admin/', permanent=False)),
+    path('web-api/', include('web_api.urls')),
 ]

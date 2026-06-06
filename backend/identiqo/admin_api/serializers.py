@@ -43,8 +43,32 @@ class AdminLoginSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True)
 
 
-class SubscriptionPlanSerializer(serializers.ModelSerializer):
+# class SubscriptionPlanSerializer(serializers.ModelSerializer):
 
+#     class Meta:
+#         model = SubscriptionPlan
+#         fields = '__all__'
+
+
+class SubscriptionPlanSerializer(serializers.ModelSerializer):
     class Meta:
         model = SubscriptionPlan
         fields = '__all__'
+        read_only_fields = ['id', 'created_at', 'updated_at']
+    
+    def validate_code(self, value):
+        """Ensure unique plan code"""
+        if self.instance is None:  # Only check for create operations
+            if SubscriptionPlan.objects.filter(code=value).exists():
+                raise serializers.ValidationError(f"Plan with code '{value}' already exists.")
+        return value
+    
+    def validate_price(self, value):
+        if value <= 0:
+            raise serializers.ValidationError("Price must be greater than zero.")
+        return value
+    
+    def validate_duration_days(self, value):
+        if value <= 0:
+            raise serializers.ValidationError("Duration days must be greater than zero.")
+        return value

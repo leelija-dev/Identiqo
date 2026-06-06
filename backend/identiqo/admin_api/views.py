@@ -1,16 +1,17 @@
-# from rest_framework import status
-# from rest_framework.decorators import api_view
-# from rest_framework.response import Response
-# from .serializers import AdminRegistrationSerializer, AdminLoginSerializer
-# from .models import AdminUser
-# from django.contrib.auth.hashers import check_password
-# from .models import SubscriptionPlan
-# from .serializers import SubscriptionPlanSerializer
-# import json
+from rest_framework import status
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from .serializers import AdminRegistrationSerializer, AdminLoginSerializer
+from .models import AdminUser
+from django.contrib.auth.hashers import check_password
+from .models import SubscriptionPlan
+from .serializers import SubscriptionPlanSerializer
+import json
 
 
-# @api_view(['POST'])
-# def admin_register(request):
+@api_view(['POST'])
+def admin_register(request):
+     return Response({"message": "success"})
 #     """
 #     API endpoint for admin registration
 #     """
@@ -27,8 +28,9 @@
 #         }, status=status.HTTP_201_CREATED)
 #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# @api_view(['POST'])
-# def admin_login(request):
+@api_view(['POST'])
+def admin_login(request):
+    pass
 #     """
 #     API endpoint for admin login
 #     """
@@ -74,9 +76,9 @@
 #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# # @api_view(['POST'])
-# # def add_subscription_plan(request):
-
+@api_view(['POST'])
+def add_subscription_plan(request):
+ return Response({"message": "success"})
 # #     serializer = SubscriptionPlanSerializer(data=request.data)
 
 # #     if serializer.is_valid():
@@ -90,8 +92,9 @@
 # #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# @api_view(['POST'])
-# def add_subscription_plan(request):
+@api_view(['POST'])
+def add_subscription_plan(request):
+     return Response({"message": "success"})
 
 #     data = request.data.copy()
 
@@ -134,6 +137,7 @@ def add_subscription_plan(request):
 
 @api_view(['GET'])
 def subscription_plan_list(request):
+    pass
 
 #     plans = SubscriptionPlan.objects.all().order_by('-id')
 
