@@ -6,6 +6,11 @@ from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from admin_api.models import SubscriptionPlan, AdminUser
 from admin_api.serializers import SubscriptionPlanSerializer
+from django.contrib.auth import logout
+from rest_framework.views import APIView
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from rest_framework import status
 from .models import Users
 from .serializers import (
     UserRegisterSerializer, UserLoginSerializer, UserProfileSerializer,
@@ -139,30 +144,44 @@ class LoginView(APIView):
             'user': {
                 'id': user.id,
                 'email': user.email,
-                'full_name': user.full_name,
+                'name': user.name,
                 'phone': user.phone
             },
             # 'token': token.key  # Uncomment if using token auth
         }, status=status.HTTP_200_OK)
 
 
-class LogoutView(APIView):
-    """
-    API endpoint for user logout
-    URL: /api/logout/
-    Method: POST
-    """
-    permission_classes = [IsAuthenticated]
+# class LogoutView(APIView):
+#     """
+#     API endpoint for user logout
+#     URL: /api/logout/
+#     Method: POST
+#     """
+#     permission_classes = [IsAuthenticated]
     
+#     def post(self, request):
+#         from django.contrib.auth import logout
+#         logout(request)
+        
+#         # If using token authentication
+#         # request.user.auth_token.delete()
+        
+#         return Response({
+#             'message': 'Logout successful'
+#         }, status=status.HTTP_200_OK)
+
+class LogoutView(APIView):
+    # permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
+
     def post(self, request):
-        from django.contrib.auth import logout
+        print("User:", request.user)
+        print("Authenticated:", request.user.is_authenticated)
+
         logout(request)
-        
-        # If using token authentication
-        # request.user.auth_token.delete()
-        
+
         return Response({
-            'message': 'Logout successful'
+            "message": "Logout successful"
         }, status=status.HTTP_200_OK)
 
 
