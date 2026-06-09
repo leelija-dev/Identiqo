@@ -1,12 +1,11 @@
-// app/gallery/page.jsx
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import CardPreview, { CardGrid, CardSkeleton } from '@/components/Common/Card';
 import Button from '@/components/Common/Button';
-import { FiMenu, FiX, FiDownload, FiStar, FiTrash2, FiEdit2, FiChevronLeft } from 'react-icons/fi';
-import { SidebarSkeleton } from '@/components/Common/Skeleton';
+import { FiDownload, FiStar, FiTrash2, FiEdit2, FiChevronLeft } from 'react-icons/fi';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function GalleryPage() {
   const router = useRouter();
@@ -19,17 +18,14 @@ export default function GalleryPage() {
   const [toastType, setToastType] = useState('success');
   const [totalItems, setTotalItems] = useState(0);
   const [isClient, setIsClient] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);  // ← YEH IMPORTANT HAI
-  const [isMobile, setIsMobile] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const modalCardRef = useRef(null);
 
+  // Direction for horizontal slide animation (1 = from right, -1 = from left)
+  const [categoryDirection, setCategoryDirection] = useState(0);
+
   useEffect(() => {
     setIsClient(true);
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   useEffect(() => {
@@ -348,20 +344,6 @@ export default function GalleryPage() {
     }
   };
 
-  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
-
-  const categoryTitles = {
-    wishlist: 'Wishlist',
-    drafts: 'Drafts',
-    downloads: 'Downloads'
-  };
-
-  const categoryDescriptions = {
-    wishlist: 'Your favorite saved designs',
-    drafts: 'Work in progress designs',
-    downloads: 'Cards you have downloaded as PNG'
-  };
-
   // Separate items by orientation - ALWAYS use stored orientation first
   const landscapeItems = galleryItems.filter(item => 
     getOrientationFromHTML(item.fullHTML, item.orientation) === 'landscape'
@@ -370,115 +352,71 @@ export default function GalleryPage() {
     getOrientationFromHTML(item.fullHTML, item.orientation) === 'portrait'
   );
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 font-['Inter'] overflow-x-hidden">
-      {/* Mobile Header */}
-      <div className="md:hidden fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-md border-b border-slate-200 z-40 px-4 py-3 flex items-center shadow-sm">
-        <button 
-          onClick={toggleSidebar} 
-          className="p-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl shadow-lg active:scale-95 transition-transform"
-        >
-          <FiMenu size={20} />
-        </button>
-        <div className="flex-1 text-center">
-          <h2 className="font-bold text-h4-sm text-slate-800">My Gallery</h2>
-        </div>
-        <div className="w-10" />
-      </div>
+  // Dynamic background gradient per category
+  const categoryBackgrounds = {
+    wishlist: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 50%, #fde68a 100%)',
+    drafts: 'linear-gradient(135deg, #f5f3ff 0%, #ede9fe 50%, #ddd6fe 100%)',
+    downloads: 'linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%)',
+  };
 
-      <div className="flex min-h-screen md:min-h-[calc(100vh-72px)]">
-        {/* Sidebar - Show skeleton while loading */}
-        {isLoading ? (
-          <SidebarSkeleton />
-        ) : (
-          <aside className={`fixed md:sticky md:top-0 left-0 h-screen w-[280px] max-w-[85vw] bg-white shadow-2xl flex flex-col flex-shrink-0 overflow-y-auto transition-transform duration-300 ease-in-out z-50 md:shadow-md ${
-            isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-          }`}>
-            {/* Sidebar Header */}
-            <div className="p-5 border-b border-slate-200 bg-gradient-to-r from-indigo-50 to-purple-50">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="font-bold text-h3-sm bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                    My Gallery
-                  </h2>
-                  <p className="text-xs text-slate-500 mt-1">Manage your designs</p>
-                </div>
-                <button 
-                  onClick={toggleSidebar} 
-                  className="md:hidden p-2 bg-white rounded-full shadow-md hover:bg-slate-50 transition-colors"
-                >
-                  <FiX size={18} />
-                </button>
-              </div>
+  // Category order for slide direction
+  const categoryOrder = ['wishlist', 'drafts', 'downloads'];
+
+  const handleCategoryChange = (newCategory) => {
+    const oldIndex = categoryOrder.indexOf(currentCategory);
+    const newIndex = categoryOrder.indexOf(newCategory);
+    if (newIndex > oldIndex) setCategoryDirection(1);  // slide from right
+    else if (newIndex < oldIndex) setCategoryDirection(-1); // slide from left
+    else setCategoryDirection(0);
+    setCurrentCategory(newCategory);
+  };
+
+  return (
+    <div
+      className="min-h-screen overflow-x-hidden font-['Inter']"
+      style={{
+        background: categoryBackgrounds[currentCategory],
+        transition: 'background 0.5s ease',
+      }}
+    >
+      <div className="min-h-screen overflow-y-auto p-4 sm:p-6 md:p-8">
+        <div className="max-w-[1400px] mx-auto">
+          <div className="flex flex-col gap-4 mb-6">
+            <div>
+              <h1 className="text-slate-800 text-xl sm:text-2xl font-bold">
+                My Gallery
+              </h1>
+              <p className="text-slate-500 text-sm mt-1">
+                Manage wishlist, drafts, and downloaded cards
+              </p>
             </div>
 
-            {/* Navigation */}
-            <nav className="flex-1 py-4 px-3 space-y-1.5">
-              {['wishlist', 'drafts', 'downloads'].map(key => (
-                <div
-                  key={key}
-                  onClick={() => {
-                    setCurrentCategory(key);
-                    if (isMobile) setIsSidebarOpen(false);
-                  }}
-                  className={`cursor-pointer transition-all rounded-xl py-3 px-4 flex items-center gap-3 group ${
-                    currentCategory === key 
-                      ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/30' 
-                      : 'hover:bg-slate-100 text-slate-600 hover:text-slate-900'
+            <div className="flex flex-wrap gap-2">
+              {[
+                { key: 'wishlist', icon: '⭐', label: 'Wishlist' },
+                { key: 'drafts', icon: '✏️', label: 'Drafts' },
+                { key: 'downloads', icon: '⬇️', label: 'Downloads' },
+              ].map((item) => (
+                <button
+                  key={item.key}
+                  onClick={() => handleCategoryChange(item.key)}
+                  className={`px-4 py-2 rounded-xl font-semibold transition-all duration-300 text-sm whitespace-nowrap ${
+                    currentCategory === item.key
+                      ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md'
+                      : 'bg-white/60 backdrop-blur-sm border border-slate-200 text-slate-600 hover:border-indigo-300 hover:text-indigo-600'
                   }`}
                 >
-                  <span className="text-xl">
-                    {key === 'wishlist' ? '⭐' : key === 'drafts' ? '✏️' : '⬇️'}
-                  </span>
-                  <span className="font-medium flex-1">
-                    {key === 'wishlist' ? 'Wishlist' : key === 'drafts' ? 'Drafts' : 'Downloads'}
-                  </span>
-                  {currentCategory === key && (
-                    <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">
-                      {galleryItems.length}
-                    </span>
-                  )}
-                </div>
+                  {item.icon} {item.label}
+                </button>
               ))}
-            </nav>
-
-            {/* Footer Stats */}
-            <div className="p-4 border-t border-slate-200 bg-slate-50/50">
-              <div className="text-xs text-slate-500 text-center">
-                <p>Total Items: {totalItems}</p>
-                <p className="text-[11px] text-slate-400 mt-1">Tap to select category</p>
-              </div>
             </div>
-          </aside>
-        )}
 
-        {/* Overlay for mobile */}
-        {isSidebarOpen && (
-          <div 
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden transition-opacity duration-300" 
-            onClick={toggleSidebar}
-          />
-        )}
-
-        {/* Main Content */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 pt-16 md:pt-8">
-          {/* Header Section - Desktop */}
-          <div className="hidden md:block mb-8">
-            <h1 className="text-h2-md bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">
-              {categoryTitles[currentCategory]}
-            </h1>
-            <p className="text-slate-500 text-p-xs mt-2">{categoryDescriptions[currentCategory]}</p>
+            <div className="text-xs text-slate-500">
+              Total items: {totalItems}
+            </div>
           </div>
 
-          {/* Header Section - Mobile */}
-          <div className="md:hidden mb-6">
-            <h1 className="text-h3-sm bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">
-              {categoryTitles[currentCategory]}
-            </h1>
-            <p className="text-slate-500 text-xs mt-1">{categoryDescriptions[currentCategory]}</p>
-          </div>
-
-          {/* Content */}
+          {/* Content with directional slide animation */}
           {!isClient ? (
             <div className="flex items-center justify-center py-20">
               <div className="text-center">
@@ -487,7 +425,7 @@ export default function GalleryPage() {
               </div>
             </div>
           ) : isLoading ? (
-            <div className="max-w-[1400px] mx-auto space-y-8">
+            <div className="space-y-8">
               <CardSkeleton orientation="landscape" count={3} />
               <CardSkeleton orientation="portrait" count={4} />
             </div>
@@ -498,121 +436,88 @@ export default function GalleryPage() {
               <p className="text-slate-400 text-xs">Your {currentCategory} will appear here</p>
             </div>
           ) : (
-            <div className="max-w-[1400px] mx-auto space-y-8">
-              {/* Landscape Cards Section */}
-              {landscapeItems.length > 0 && (
-                <div>
-                  {portraitItems.length > 0 && (
-                    <div className="mb-4">
-                      <h3 className="text-h4-sm font-semibold text-slate-700 flex items-center gap-2">
-                        <span>🌄</span> Landscape Cards
-                        <span className="text-xs font-normal text-slate-400">
-                          ({landscapeItems.length} {landscapeItems.length === 1 ? 'card' : 'cards'})
-                        </span>
-                      </h3>
-                    </div>
-                  )}
-                  <CardGrid orientation="landscape" className="w-full">
-                    {landscapeItems.map(item => (
-                      <div 
-                        key={item.id} 
-                        onClick={(e) => handleCardClick(e, item)} 
-                        className="group relative flex cursor-pointer flex-col items-center overflow-visible transition-all duration-300 hover:-translate-y-2 w-full"
-                      >
-                        {/* Action Buttons */}
-                        <div className="absolute -top-2 right-2 flex gap-2 z-10 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 opacity-100">
-                          <button 
-                            data-action="edit" 
-                            data-id={item.id} 
-                            className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-indigo-500 text-white flex items-center justify-center hover:bg-indigo-600 transition-all hover:scale-110 shadow-lg text-sm active:scale-95"
-                          >
-                            <FiEdit2 size={14} />
-                          </button>
-                          <button 
-                            data-action="delete" 
-                            data-id={item.id} 
-                            className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-rose-500 text-white flex items-center justify-center hover:bg-rose-600 transition-all hover:scale-110 shadow-lg text-sm active:scale-95"
-                          >
-                            <FiTrash2 size={14} />
-                          </button>
-                        </div>
-
-                        <CardPreview 
-                          html={item.fullHTML} 
-                          orientation="landscape"
-                          className="w-full transition-all duration-300 group-hover:shadow-2xl group-hover:shadow-black/10" 
-                        />
-                        
-                        <p className="mt-3 text-p-xs font-medium text-slate-700 md:hidden truncate max-w-[200px]">
-                          {item.name || 'Untitled Card'}
-                        </p>
-                      </div>
-                    ))}
-                  </CardGrid>
-                </div>
-              )}
-
-              {/* Portrait Cards Section */}
-              {portraitItems.length > 0 && (
-                <div>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentCategory}
+                initial={{ opacity: 0, x: categoryDirection * 200 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: categoryDirection * -200 }}
+                transition={{ duration: 0.35, ease: 'easeInOut' }}
+              >
+                <div className="max-w-[1400px] mx-auto space-y-8">
+                  {/* Landscape Cards Section */}
                   {landscapeItems.length > 0 && (
-                    <div className="mb-4">
-                      <h3 className="text-h4-sm font-semibold text-slate-700 flex items-center gap-2">
-                        <span>📱</span> Portrait Cards
-                        <span className="text-xs font-normal text-slate-400">
-                          ({portraitItems.length} {portraitItems.length === 1 ? 'card' : 'cards'})
-                        </span>
-                      </h3>
+                    <div>
+                      {portraitItems.length > 0 && (
+                        <div className="mb-4">
+                          <h3 className="text-h4-sm font-semibold text-slate-700 flex items-center gap-2">
+                            <span>🌄</span> Landscape Cards
+                            <span className="text-xs font-normal text-slate-400">
+                              ({landscapeItems.length} {landscapeItems.length === 1 ? 'card' : 'cards'})
+                            </span>
+                          </h3>
+                        </div>
+                      )}
+                      <CardGrid orientation="landscape" className="w-full">
+                        {landscapeItems.map(item => (
+                          <div 
+                            key={item.id} 
+                            onClick={(e) => handleCardClick(e, item)} 
+                            className="group relative flex cursor-pointer flex-col items-center overflow-visible transition-all duration-300 hover:-translate-y-2 w-full"
+                          >
+                            <div className="absolute -top-2 right-2 flex gap-2 z-10 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 opacity-100">
+                              <button data-action="edit" data-id={item.id} className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-indigo-500 text-white flex items-center justify-center hover:bg-indigo-600 transition-all hover:scale-110 shadow-lg text-sm active:scale-95"><FiEdit2 size={14} /></button>
+                              <button data-action="delete" data-id={item.id} className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-rose-500 text-white flex items-center justify-center hover:bg-rose-600 transition-all hover:scale-110 shadow-lg text-sm active:scale-95"><FiTrash2 size={14} /></button>
+                            </div>
+                            <CardPreview html={item.fullHTML} orientation="landscape" className="w-full transition-all duration-300 group-hover:shadow-2xl group-hover:shadow-black/10" />
+                            <p className="mt-3 text-p-xs font-medium text-slate-700 md:hidden truncate max-w-[200px]">{item.name || 'Untitled Card'}</p>
+                          </div>
+                        ))}
+                      </CardGrid>
                     </div>
                   )}
-                  <CardGrid orientation="portrait" className="w-full">
-                    {portraitItems.map(item => (
-                      <div 
-                        key={item.id} 
-                        onClick={(e) => handleCardClick(e, item)} 
-                        className="group relative flex cursor-pointer flex-col items-center overflow-visible transition-all duration-300 hover:-translate-y-2 w-full"
-                      >
-                        {/* Action Buttons */}
-                        <div className="absolute -top-2 right-2 flex gap-2 z-10 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 opacity-100">
-                          <button 
-                            data-action="edit" 
-                            data-id={item.id} 
-                            className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-indigo-500 text-white flex items-center justify-center hover:bg-indigo-600 transition-all hover:scale-110 shadow-lg text-sm active:scale-95"
-                          >
-                            <FiEdit2 size={14} />
-                          </button>
-                          <button 
-                            data-action="delete" 
-                            data-id={item.id} 
-                            className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-rose-500 text-white flex items-center justify-center hover:bg-rose-600 transition-all hover:scale-110 shadow-lg text-sm active:scale-95"
-                          >
-                            <FiTrash2 size={14} />
-                          </button>
+
+                  {/* Portrait Cards Section */}
+                  {portraitItems.length > 0 && (
+                    <div>
+                      {landscapeItems.length > 0 && (
+                        <div className="mb-4">
+                          <h3 className="text-h4-sm font-semibold text-slate-700 flex items-center gap-2">
+                            <span>📱</span> Portrait Cards
+                            <span className="text-xs font-normal text-slate-400">
+                              ({portraitItems.length} {portraitItems.length === 1 ? 'card' : 'cards'})
+                            </span>
+                          </h3>
                         </div>
+                      )}
+                      <CardGrid orientation="portrait" className="w-full">
+                        {portraitItems.map(item => (
+                          <div 
+                            key={item.id} 
+                            onClick={(e) => handleCardClick(e, item)} 
+                            className="group relative flex cursor-pointer flex-col items-center overflow-visible transition-all duration-300 hover:-translate-y-2 w-full"
+                          >
+                            <div className="absolute -top-2 right-2 flex gap-2 z-10 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 opacity-100">
+                              <button data-action="edit" data-id={item.id} className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-indigo-500 text-white flex items-center justify-center hover:bg-indigo-600 transition-all hover:scale-110 shadow-lg text-sm active:scale-95"><FiEdit2 size={14} /></button>
+                              <button data-action="delete" data-id={item.id} className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-rose-500 text-white flex items-center justify-center hover:bg-rose-600 transition-all hover:scale-110 shadow-lg text-sm active:scale-95"><FiTrash2 size={14} /></button>
+                            </div>
+                            <CardPreview html={item.fullHTML} orientation="portrait" className="w-full transition-all duration-300 group-hover:shadow-2xl group-hover:shadow-black/10" />
+                            <p className="mt-3 text-p-xs font-medium text-slate-700 md:hidden truncate max-w-[200px]">{item.name || 'Untitled Card'}</p>
+                          </div>
+                        ))}
+                      </CardGrid>
+                    </div>
+                  )}
 
-                        <CardPreview 
-                          html={item.fullHTML} 
-                          orientation="portrait"
-                          className="w-full transition-all duration-300 group-hover:shadow-2xl group-hover:shadow-black/10" 
-                        />
-                        
-                        <p className="mt-3 text-p-xs font-medium text-slate-700 md:hidden truncate max-w-[200px]">
-                          {item.name || 'Untitled Card'}
-                        </p>
-                      </div>
-                    ))}
-                  </CardGrid>
+                  <div className="text-center text-xs text-slate-400 pb-8">
+                    Showing {galleryItems.length} item{galleryItems.length !== 1 ? 's' : ''}
+                    {landscapeItems.length > 0 && portraitItems.length > 0 && (
+                      <span> ({landscapeItems.length} landscape, {portraitItems.length} portrait)</span>
+                    )}
+                  </div>
                 </div>
-              )}
-
-              {/* Items Count */}
-              <div className="text-center text-xs text-slate-400 pb-8">
-                Showing {galleryItems.length} item{galleryItems.length !== 1 ? 's' : ''}
-                {landscapeItems.length > 0 && portraitItems.length > 0 && (
-                  <span> ({landscapeItems.length} landscape, {portraitItems.length} portrait)</span>
-                )}
-              </div>
-            </div>
+              </motion.div>
+            </AnimatePresence>
           )}
         </div>
       </div>
@@ -636,54 +541,15 @@ export default function GalleryPage() {
               <div className="w-full h-full" dangerouslySetInnerHTML={{ __html: selectedItem.fullHTML || '' }} />
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex flex-row lg:flex-col gap-2 sm:gap-3 w-full lg:w-auto justify-center flex-wrap animate-fade-in-up">
-              <Button
-                onClick={() => handleModalAction('customize')}
-                variant="primary"
-                size="md"
-                icon={FiEdit2}
-              >
-                Customize
-              </Button>
-              
+            {/* Action Buttons - stacked on mobile, row on desktop */}
+            <div className="flex flex-col sm:flex-row lg:flex-col gap-2 sm:gap-3 w-full lg:w-auto justify-center animate-fade-in-up">
+              <Button onClick={() => handleModalAction('customize')} variant="primary" size="md" icon={FiEdit2} className="w-full lg:w-auto">Customize</Button>
               {(currentCategory === 'drafts' || currentCategory === 'downloads') && (
-                <Button
-                  onClick={() => handleModalAction('wishlist')}
-                  variant="warning"
-                  size="md"
-                  icon={FiStar}
-                >
-                  Save
-                </Button>
+                <Button onClick={() => handleModalAction('wishlist')} variant="warning" size="md" icon={FiStar} className="w-full lg:w-auto">Save</Button>
               )}
-              
-              <Button
-                onClick={() => handleModalAction('download')}
-                variant="success"
-                size="md"
-                icon={FiDownload}
-              >
-                Download
-              </Button>
-              
-              <Button
-                onClick={() => handleModalAction('delete')}
-                variant="danger"
-                size="md"
-                icon={FiTrash2}
-              >
-                Delete
-              </Button>
-              
-              <Button
-                onClick={() => handleModalAction('close')}
-                variant="secondary"
-                size="md"
-                icon={FiChevronLeft}
-              >
-                Close
-              </Button>
+              <Button onClick={() => handleModalAction('download')} variant="success" size="md" icon={FiDownload} className="w-full lg:w-auto">Download</Button>
+              <Button onClick={() => handleModalAction('delete')} variant="danger" size="md" icon={FiTrash2} className="w-full lg:w-auto">Delete</Button>
+              <Button onClick={() => handleModalAction('close')} variant="secondary" size="md" icon={FiChevronLeft} className="w-full lg:w-auto">Close</Button>
             </div>
           </div>
         </div>
