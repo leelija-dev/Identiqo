@@ -1,11 +1,13 @@
+// app/gallery/page.jsx
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import CardPreview, { CardGrid, CardSkeleton } from '@/components/Common/Card';
+import CardPreview, { CardGrid } from '@/components/Common/Card';
 import Button from '@/components/Common/Button';
 import { FiDownload, FiStar, FiTrash2, FiEdit2, FiChevronLeft } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
+import { TemplateGridSkeleton, SidebarSkeleton } from '@/components/Common/Skeleton';
 
 export default function GalleryPage() {
   const router = useRouter();
@@ -371,6 +373,24 @@ export default function GalleryPage() {
     setCurrentCategory(newCategory);
   };
 
+  // Custom skeleton for gallery (matching the layout)
+  const GallerySkeleton = () => (
+    <div className="space-y-8">
+      <div>
+        <div className="mb-4">
+          <div className="h-7 bg-slate-200 rounded w-48 animate-pulse"></div>
+        </div>
+        <TemplateGridSkeleton count={3} orientation="landscape" />
+      </div>
+      <div>
+        <div className="mb-4">
+          <div className="h-7 bg-slate-200 rounded w-48 animate-pulse"></div>
+        </div>
+        <TemplateGridSkeleton count={4} orientation="portrait" />
+      </div>
+    </div>
+  );
+
   return (
     <div
       className="min-h-screen overflow-x-hidden font-['Inter']"
@@ -425,10 +445,7 @@ export default function GalleryPage() {
               </div>
             </div>
           ) : isLoading ? (
-            <div className="space-y-8">
-              <CardSkeleton orientation="landscape" count={3} />
-              <CardSkeleton orientation="portrait" count={4} />
-            </div>
+            <GallerySkeleton />
           ) : galleryItems.length === 0 ? (
             <div className="text-center py-16 md:py-24 animate-fade-in-up">
               <div className="text-6xl mb-4">✨</div>

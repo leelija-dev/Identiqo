@@ -1,4 +1,3 @@
-// app/customize/hooks/useCustomizeEditor.js
 'use client';
 
 import { useState, useCallback, useRef } from 'react';
@@ -7,6 +6,7 @@ import { rgbToHex, simpleHash, getFieldLabel, DEFAULT_TEXT_CLASSES, DEFAULT_IMAG
 export function useCustomizeEditor(previewCanvasRef) {
   const textCacheRef = useRef({ hash: null, items: [] });
   const resetCooldownRef = useRef({ index: null, active: false });
+  const buildSidebarTimeoutRef = useRef(null);
 
   // State
   const [textFields, setTextFields] = useState([]);
@@ -188,21 +188,22 @@ export function useCustomizeEditor(previewCanvasRef) {
     setDetectedFeatures(features);
   }, [getCurrentCardElement]);
 
-  // Build sidebar (all sections)
+  // Throttled buildSidebar – prevents freezing on rapid updates
   const buildSidebar = useCallback(() => {
-    buildTextList();
-    buildBackgroundBlocks();
-    detectFeatures();
-  }, [buildTextList, buildBackgroundBlocks, detectFeatures]);
+    // Clear any pending build to avoid stacking
+    if (buildSidebarTimeoutRef.current) clearTimeout(buildSidebarTimeoutRef.current);
+    buildSidebarTimeoutRef.current = setTimeout(() => {
+      if (!previewCanvasRef.current) return;
+      buildTextList();
+      buildBackgroundBlocks();
+      detectFeatures();
+      buildSidebarTimeoutRef.current = null;
+    }, 50);
+  }, [buildTextList, buildBackgroundBlocks, detectFeatures, previewCanvasRef]);
 
   // Unsaved changes management
-  const markUnsaved = useCallback(() => {
-    setHasUnsavedChanges(true);
-  }, []);
-
-  const clearUnsaved = useCallback(() => {
-    setHasUnsavedChanges(false);
-  }, []);
+  const markUnsaved = useCallback(() => setHasUnsavedChanges(true), []);
+  const clearUnsaved = useCallback(() => setHasUnsavedChanges(false), []);
 
   return {
     // State
