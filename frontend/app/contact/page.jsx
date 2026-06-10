@@ -20,7 +20,7 @@ export default function ContactPage() {
     });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => { 
     e.preventDefault();
     setIsSubmitting(true);
     setTimeout(() => {
@@ -30,6 +30,7 @@ export default function ContactPage() {
       setTimeout(() => setIsSubmitted(false), 5000);
     }, 1500);
   };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50/30">
@@ -250,7 +251,7 @@ export default function ContactPage() {
           </motion.div>
         </div>
 
-        {/* Map Section */}
+        {/* Map Section with Real Google Maps */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -265,9 +266,14 @@ export default function ContactPage() {
                   <p className="text-slate-500 text-sm mt-1">Visit my workspace or send mail</p>
                 </div>
                 <div className="flex gap-2">
-                  <button className="px-3 py-1.5 text-xs bg-purple-50 text-purple-600 rounded-lg hover:bg-purple-100 transition">
+                  <a 
+                    href="https://maps.google.com/?q=San+Francisco+CA" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="px-3 py-1.5 text-xs bg-purple-50 text-purple-600 rounded-lg hover:bg-purple-100 transition"
+                  >
                     Directions
-                  </button>
+                  </a>
                   <button className="px-3 py-1.5 text-xs bg-purple-50 text-purple-600 rounded-lg hover:bg-purple-100 transition">
                     Share
                   </button>
@@ -275,25 +281,25 @@ export default function ContactPage() {
               </div>
             </div>
             
-            {/* Map Container */}
+            {/* Real Google Maps Container */}
             <div className="relative w-full h-[400px] bg-gradient-to-br from-purple-100 to-indigo-100">
-              {/* Embedded Map - Using OpenStreetMap / Leaflet style */}
               <iframe
-                src="https://www.openstreetmap.org/export/embed.html?bbox=-122.4194%2C37.7749%2C-122.3894%2C37.8049&layer=mapnik&marker=37.7749%2C-122.4194"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d100939.98555017613!2d-122.5200!3d37.7577!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x80859a6d00690021%3A0x4a501367f076adff!2sSan%20Francisco%2C%20CA!5e0!3m2!1sen!2sus!4v1700000000000!5m2!1sen!2sus"
                 width="100%"
                 height="100%"
                 style={{ border: 0 }}
                 allowFullScreen
                 loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
                 className="rounded-b-xl"
-                title="Office Location Map"
+                title="Office Location Map - San Francisco"
               ></iframe>
               
-              {/* Optional: Overlay pin indicator */}
+              {/* Overlay pin indicator */}
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none">
                 <div className="relative">
                   <div className="w-6 h-6 bg-purple-600 rounded-full animate-ping absolute"></div>
-                  <div className="w-6 h-6 bg-purple-600 rounded-full relative flex items-center justify-center">
+                  <div className="w-6 h-6 bg-purple-600 rounded-full relative flex items-center justify-center shadow-lg">
                     <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                     </svg>
@@ -314,6 +320,7 @@ export default function ContactPage() {
                     <p className="font-medium text-slate-800 text-sm">Studio Address</p>
                     <p className="text-slate-500 text-xs">123 Creative Street</p>
                     <p className="text-slate-500 text-xs">San Francisco, CA 94105</p>
+                    <p className="text-slate-500 text-xs">United States</p>
                   </div>
                 </div>
                 
@@ -324,7 +331,7 @@ export default function ContactPage() {
                   <div>
                     <p className="font-medium text-slate-800 text-sm">Call Direct</p>
                     <p className="text-slate-500 text-xs">+1 (555) 123-4567</p>
-                    <p className="text-slate-500 text-xs">Mon-Fri, 9am - 6pm</p>
+                    <p className="text-slate-500 text-xs">Mon-Fri, 9am - 6pm PST</p>
                   </div>
                 </div>
                 
@@ -335,7 +342,7 @@ export default function ContactPage() {
                   <div>
                     <p className="font-medium text-slate-800 text-sm">Email Me</p>
                     <p className="text-slate-500 text-xs">debasmita@example.com</p>
-                    <p className="text-slate-500 text-xs">Response within 24h</p>
+                    <p className="text-slate-500 text-xs">Response within 24 hours</p>
                   </div>
                 </div>
               </div>
