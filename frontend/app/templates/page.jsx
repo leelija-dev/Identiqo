@@ -47,7 +47,7 @@ const MemoizedCardPreview = memo(CardPreview);
 MemoizedCardPreview.displayName = 'MemoizedCardPreview';
 
 const Sidebar = memo(({ category, industryFilter, onCategoryChange, onIndustryChange }) => (
-  <aside className="hidden md:block w-[280px] bg-white/60 backdrop-blur-md border-r border-white/20 overflow-y-auto flex-shrink-0">
+  <aside className="w-[280px] bg-white/60 backdrop-blur-md border-r border-white/20 overflow-y-auto h-full flex-shrink-0">
     {/* Category Section */}
     <div className="mb-8">
       <h2 className="text-lg uppercase tracking-[1.5px] text-slate-500 font-semibold px-5 pb-3">
@@ -251,12 +251,14 @@ export default function TemplatesPage() {
     setSelectedTemplate(template);
     setShowModal(true);
     document.body.style.overflow = 'hidden';
+    document.body.classList.add('modal-open');
   }, []);
 
   const closeModal = useCallback(() => {
     setShowModal(false);
     setSelectedTemplate(null);
-    document.body.style.overflow = 'unset';
+    document.body.style.overflow = '';
+    document.body.classList.remove('modal-open');
   }, []);
 
   const handleOverlayClick = useCallback(
@@ -566,75 +568,79 @@ export default function TemplatesPage() {
   };
 
   // ==========================================================================
-  // Main Render
+  // Main Render - FIXED SCROLLING BEHAVIOR
   // ==========================================================================
 
   return (
-    <div className="h-screen flex flex-col md:flex-row overflow-hidden bg-[#faf9f8]">
-      {/* Sidebar - Always visible, independently scrollable */}
-      {isLoading ? (
-        <SidebarSkeleton />
-      ) : (
-        <Sidebar
-          category={category}
-          industryFilter={industryFilter}
-          onCategoryChange={setCategory}
-          onIndustryChange={setIndustryFilter}
-        />
-      )}
-
-      {/* Main Content - Scrollable area */}
-      <main className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 lg:p-10">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center items-start gap-4 mb-6 w-full">
-          <div className="flex-shrink-0">
-            <h1 className="text-slate-800 text-xl font-bold">{categoryTitles[category]}</h1>
-          </div>
-          {renderOrientationTabs()}
-        </div>
-
-        {/* Mobile Filters */}
-        {renderMobileFilters()}
-
-        {/* Templates Grid */}
+    <div className="h-screen flex flex-col md:flex-row bg-[#faf9f8] overflow-hidden">
+      {/* Sidebar - Only visible on desktop, independent scroll */}
+      <div className="hidden md:block h-full flex-shrink-0">
         {isLoading ? (
-          <TemplateGridSkeleton count={8} orientation={orientation} />
-        ) : filteredTemplates.length === 0 ? (
-          <div className="text-center py-16 text-slate-400 text-sm">No templates found</div>
+          <SidebarSkeleton />
         ) : (
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={orientation}
-              initial={{ opacity: 0, x: slideDirection * 300 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: slideDirection * -300 }}
-              transition={{ duration: 0.35, ease: 'easeInOut' }}
-            >
-              <div
-                className={`
-                grid gap-5 sm:gap-6
-                ${
-                  orientation === 'landscape'
-                    ? 'grid-cols-2 md:grid-cols-3'
-                    : 'grid-cols-3 md:grid-cols-4'
-                }
-              `}
-              >
-                {filteredTemplates.map((template) => (
-                  <div key={template.id} className="w-full flex justify-center">
-                    <MemoizedCardPreview
-                      html={template.htmlContent}
-                      orientation={orientation}
-                      onClick={() => openModal(template)}
-                      enableFlip={false}
-                    />
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          </AnimatePresence>
+          <Sidebar
+            category={category}
+            industryFilter={industryFilter}
+            onCategoryChange={setCategory}
+            onIndustryChange={setIndustryFilter}
+          />
         )}
-      </main>
+      </div>
+
+      {/* Main Content Area - Takes remaining space and scrolls independently */}
+      <div className="flex-1 h-full overflow-y-auto">
+        <main className="p-4 sm:p-6 md:p-8 lg:p-10">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center items-start gap-4 mb-6 w-full">
+            <div className="flex-shrink-0">
+              <h1 className="text-slate-800 text-xl font-bold">{categoryTitles[category]}</h1>
+            </div>
+            {renderOrientationTabs()}
+          </div>
+
+          {/* Mobile Filters */}
+          {renderMobileFilters()}
+
+          {/* Templates Grid */}
+          {isLoading ? (
+            <TemplateGridSkeleton count={8} orientation={orientation} />
+          ) : filteredTemplates.length === 0 ? (
+            <div className="text-center py-16 text-slate-400 text-sm">No templates found</div>
+          ) : (
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={orientation}
+                initial={{ opacity: 0, x: slideDirection * 300 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: slideDirection * -300 }}
+                transition={{ duration: 0.35, ease: 'easeInOut' }}
+              >
+                <div
+                  className={`
+                  grid gap-5 sm:gap-6
+                  ${
+                    orientation === 'landscape'
+                      ? 'grid-cols-2 md:grid-cols-3'
+                      : 'grid-cols-3 md:grid-cols-4'
+                  }
+                `}
+                >
+                  {filteredTemplates.map((template) => (
+                    <div key={template.id} className="w-full flex justify-center">
+                      <MemoizedCardPreview
+                        html={template.htmlContent}
+                        orientation={orientation}
+                        onClick={() => openModal(template)}
+                        enableFlip={false}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          )}
+        </main>
+      </div>
 
       {/* Modal */}
       {renderModal()}
@@ -656,9 +662,11 @@ export default function TemplatesPage() {
       <style
         dangerouslySetInnerHTML={{
           __html: `
+        /* Hide scrollbars for mobile filters */
         .scrollbar-none::-webkit-scrollbar { display: none; }
         .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
 
+        /* Animations */
         @keyframes fade-in {
           from { opacity: 0; }
           to { opacity: 1; }

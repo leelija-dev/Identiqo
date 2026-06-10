@@ -14,11 +14,8 @@ import {
   FiAward,
   FiShield,
   FiZap,
-  FiUsers,
+
   FiBookOpen,
-  FiVideo,
-  FiDownload,
-  FiChevronRight,
 } from "react-icons/fi";
 
 export default function FAQ() {
@@ -119,47 +116,14 @@ export default function FAQ() {
             <span className="text-indigo-600 font-semibold text-p-xs">KNOWLEDGE BASE</span>
           </div>
 
-          <div className="text-center animate-fade-in-up">
-            <h1 className="text-slate-800 text-h1-md sm:text-h1-lg font-extrabold mb-2">
-              How can we{" "}
-              <span className="text-transparent bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 bg-clip-text">
-                help
-              </span>{" "}
-              you?
-            </h1>
-          </div>
+                   <SectionTitle
+                     title="Employee ID Card "
+                     subtitle="Help Center"
+                   />
 
-          <p className="text-slate-500 text-p-sm mt-4 max-w-2xl mx-auto animate-fade-in-up">
-            Find answers to common questions about CardStudio, features, pricing, and more.
-          </p>
+      
 
-          {/* Search Bar */}
-          <div className="relative max-w-xl mx-auto mt-8 animate-fade-in-up">
-            <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
-            <input
-              type="text"
-              placeholder="Search your question..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 rounded-xl bg-white/90 backdrop-blur-sm border border-slate-200 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition-all text-p-xs"
-            />
-          </div>
-
-          {/* Popular Tags */}
-          {searchTerm === "" && (
-            <div className="flex flex-wrap gap-2 justify-center mt-6">
-              <span className="text-slate-500 text-xs">Popular:</span>
-              {popularFaqs.slice(0, 3).map((faq, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setSearchTerm(faq.question.split(" ").slice(0, 3).join(" "))}
-                  className="text-xs px-3 py-1 rounded-full bg-white/60 backdrop-blur-sm text-slate-600 border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50 transition-all"
-                >
-                  {faq.question.split(" ").slice(0, 4).join(" ")}...
-                </button>
-              ))}
-            </div>
-          )}
+      
         </div>
       
         {/* Main Content Grid */}

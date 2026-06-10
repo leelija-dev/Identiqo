@@ -3,139 +3,22 @@
 
 import { useState, useEffect, useRef, useCallback, startTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { allTemplates, normalizeTemplateHtml } from '@/templatesdata';
-import { CardEditorStage, CardContainer } from '@/components/Common/Card';
-import {
-  FiLoader, FiCheckCircle, FiArrowLeft, FiDownload, FiLayers, FiBox,
-  FiRefreshCcw, FiChevronLeft, FiChevronRight
-} from 'react-icons/fi';
+import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
+import { FiArrowLeft, FiDownload, FiLayers, FiBox, FiRefreshCcw, FiChevronLeft, FiChevronRight, FiCheckCircle, FiLoader } from 'react-icons/fi';
+import { allTemplates, normalizeTemplateHtml } from '@/templatesdata';
 import { useCustomizeEditor } from './hooks/useCustomizeEditor';
-import EditorSidebar from './components/EditorSidebar';
-import { jsPDF } from 'jspdf';
+import { generateBarcode, generateQR } from './lib/barcodeQrGenerator';
+import { generatePDF } from './lib/pdfGenerator';
+import { loadHtml2Canvas } from './lib/html2canvasLoader';
 
-// ----------------------------------------------------------------------------
-// Tile Wall Background Component
-// ----------------------------------------------------------------------------
-const TileWallBackground = () => {
-  const wallRef = useRef(null);
-  const resizeTimerRef = useRef(null);
+// Lazy-loaded components
+const EditorSidebar = dynamic(() => import('@/components/Customize_Layout/EditorSidebar'), { ssr: false });
+const MobileLayout = dynamic(() => import('@/components/Customize_Layout/MobileLayout'), { ssr: false });
+const CardPreview = dynamic(() => import('@/components/Customize_Layout/CardPreview'), { ssr: false });
 
-  const ASPECT_RATIO = 1.6;
-  const MIN_LIGHTNESS = 93;
-  const MAX_LIGHTNESS = 97;
-  const PATTERN_EVEN = ['landscape', 'portrait', 'landscape', 'portrait', 'landscape', 'portrait'];
-  const PATTERN_ODD  = ['portrait', 'landscape', 'portrait', 'landscape', 'portrait', 'landscape'];
-  const MIN_ROW_HEIGHT_PX = 88;
-  const MAX_ROW_HEIGHT_PX = 180;
-
-  const getTileBackground = (seed) => {
-    const variation = (seed * 131) % 7;
-    let lightness = MIN_LIGHTNESS + (variation / 6) * (MAX_LIGHTNESS - MIN_LIGHTNESS);
-    lightness = Math.min(MAX_LIGHTNESS, Math.max(MIN_LIGHTNESS, lightness));
-    return `hsl(42, 8%, ${lightness.toFixed(1)}%)`;
-  };
-
-  const buildWall = useCallback(() => {
-    if (!wallRef.current) return;
-    const containerWidth = window.innerWidth;
-    const containerHeight = window.innerHeight;
-    const ratio = ASPECT_RATIO;
-    const invRatio = 1 / ratio;
-    const patternLen = PATTERN_EVEN.length;
-    const totalCoeff = (patternLen / 2) * ratio + (patternLen / 2) * invRatio;
-
-    let rowHeight = containerWidth / totalCoeff;
-    let needsWidthScaling = false;
-    let widthScale = 1;
-
-    if (rowHeight < MIN_ROW_HEIGHT_PX) {
-      rowHeight = MIN_ROW_HEIGHT_PX;
-      needsWidthScaling = true;
-      widthScale = rowHeight / (containerWidth / totalCoeff);
-    } else if (rowHeight > MAX_ROW_HEIGHT_PX) {
-      rowHeight = MAX_ROW_HEIGHT_PX;
-      needsWidthScaling = true;
-      widthScale = rowHeight / (containerWidth / totalCoeff);
-    }
-
-    let landWidth = rowHeight * ratio;
-    let portWidth = rowHeight * invRatio;
-
-    if (needsWidthScaling) {
-      const targetRawSum = rowHeight * totalCoeff;
-      const finalScale = containerWidth / targetRawSum;
-      landWidth = (ratio * rowHeight) * finalScale;
-      portWidth = (invRatio * rowHeight) * finalScale;
-    } else {
-      const sumCheck = (patternLen / 2) * landWidth + (patternLen / 2) * portWidth;
-      if (Math.abs(sumCheck - containerWidth) > 0.5) {
-        const delta = containerWidth - sumCheck;
-        portWidth += delta / (patternLen / 2);
-      }
-    }
-
-    const finalRowHeight = rowHeight;
-    const rowsNeeded = Math.ceil(containerHeight / finalRowHeight) + 1;
-
-    wallRef.current.innerHTML = '';
-    const fragment = document.createDocumentFragment();
-
-    for (let rowIdx = 0; rowIdx < rowsNeeded; rowIdx++) {
-      const pattern = rowIdx % 2 === 0 ? PATTERN_EVEN : PATTERN_ODD;
-      const rowDiv = document.createElement('div');
-      rowDiv.className = 'tile-row';
-      rowDiv.style.height = `${finalRowHeight}px`;
-
-      for (let colIdx = 0; colIdx < pattern.length; colIdx++) {
-        const orientation = pattern[colIdx];
-        const tileWidth = orientation === 'landscape' ? landWidth : portWidth;
-
-        const tile = document.createElement('div');
-        tile.className = 'tile';
-        tile.style.width = `${tileWidth}px`;
-        tile.style.height = `${finalRowHeight}px`;
-
-        const colorSeed = rowIdx * 127 + colIdx * 53;
-        tile.style.backgroundColor = getTileBackground(colorSeed);
-        tile.style.boxShadow = 'inset 0 1px 0 rgba(255,255,245,0.3), 0 1px 2px rgba(0,0,0,0.02)';
-
-        rowDiv.appendChild(tile);
-      }
-      fragment.appendChild(rowDiv);
-    }
-
-    wallRef.current.appendChild(fragment);
-  }, []);
-
-  useEffect(() => {
-    buildWall();
-    const handleResize = () => {
-      if (resizeTimerRef.current) clearTimeout(resizeTimerRef.current);
-      resizeTimerRef.current = setTimeout(() => buildWall(), 80);
-    };
-    window.addEventListener('resize', handleResize);
-    window.addEventListener('orientationchange', () => setTimeout(() => buildWall(), 20));
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      if (resizeTimerRef.current) clearTimeout(resizeTimerRef.current);
-    };
-  }, [buildWall]);
-
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      <div ref={wallRef} className="wall absolute inset-0" />
-    </div>
-  );
-};
-
-// ----------------------------------------------------------------------------
-// Main Component
-// ----------------------------------------------------------------------------
 export default function CustomizePage() {
   const router = useRouter();
-
-  // ---- REFS ----
   const previewCanvasRef = useRef(null);
   const cardScaleWrapRef = useRef(null);
   const sidebarRef = useRef(null);
@@ -144,7 +27,6 @@ export default function CustomizePage() {
   const downloadMenuRef = useRef(null);
   const captureTimeoutRef = useRef(null);
 
-  // ---- STATE ----
   const [currentTemplate, setCurrentTemplate] = useState(null);
   const [currentOrientation, setCurrentOrientation] = useState('landscape');
   const [originalHTML, setOriginalHTML] = useState(null);
@@ -160,11 +42,9 @@ export default function CustomizePage() {
   const [bothSidesImages, setBothSidesImages] = useState({ front: null, back: null });
   const [isDesktopLayout, setIsDesktopLayout] = useState(false);
   const [editorStageToken, setEditorStageToken] = useState(0);
-  const [isMobileEditorOpen, setIsMobileEditorOpen] = useState(true);
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [cardFlipped, setCardFlipped] = useState(false);
 
-  // ---- CUSTOM HOOK ----
   const {
     textFields, setTextFields,
     backgroundBlocks, setBackgroundBlocks,
@@ -189,40 +69,32 @@ export default function CustomizePage() {
     clearUnsaved,
   } = useCustomizeEditor(previewCanvasRef);
 
-  // ---- TOAST ----
   const showToastMessage = useCallback((msg) => {
     setToastMessage(msg);
     setShowToast(true);
     setTimeout(() => setShowToast(false), 2000);
   }, []);
 
-  // ---- CAPTURE BOTH SIDES AS IMAGES (stable, with back side fix) ----
+  // Capture both sides for displayMode = 'both'
   const captureBothSides = useCallback(async () => {
     if (!isMountedRef.current || displayMode !== 'both') return;
-
     const frontFace = getFrontFace();
     const backFace = getBackFace();
     if (!frontFace || !backFace) return;
-
     try {
-      const html2canvas = (await import('html2canvas')).default;
+      const html2canvas = (await loadHtml2Canvas()).default;
       const design = currentOrientation === 'portrait'
         ? { width: 350, height: 550 }
         : { width: 550, height: 348 };
-
       const captureFace = async (faceEl, isBack = false) => {
         const wrapper = document.createElement('div');
         wrapper.style.cssText = `position:fixed; top:-9999px; left:-9999px; width:${design.width}px; height:${design.height}px; border-radius:24px; overflow:hidden; background:#fff;`;
         const clone = faceEl.cloneNode(true);
-        
-        // Fix for back face: remove the rotateY(180deg) transform that causes mirrored text
         if (isBack) {
           clone.style.transform = 'none';
           clone.style.setProperty('transform', 'none', 'important');
           clone.style.backfaceVisibility = 'visible';
         }
-        
-        // Replace any canvas elements with images (preserve barcode/qr)
         const liveCanvases = faceEl.querySelectorAll('canvas');
         const cloneCanvases = clone.querySelectorAll('canvas');
         liveCanvases.forEach((liveCanvas, idx) => {
@@ -234,7 +106,6 @@ export default function CustomizePage() {
             cloneCanvas.replaceWith(img);
           }
         });
-        
         wrapper.appendChild(clone);
         document.body.appendChild(wrapper);
         await new Promise(r => setTimeout(r, 100));
@@ -242,12 +113,10 @@ export default function CustomizePage() {
         document.body.removeChild(wrapper);
         return canvas.toDataURL('image/png');
       };
-
       const [frontUrl, backUrl] = await Promise.all([
         captureFace(frontFace, false),
         captureFace(backFace, true)
       ]);
-      
       if (isMountedRef.current && displayMode === 'both') {
         setBothSidesImages({ front: frontUrl, back: backUrl });
       }
@@ -256,28 +125,17 @@ export default function CustomizePage() {
     }
   }, [getFrontFace, getBackFace, currentOrientation, displayMode]);
 
-  // ---- AUTO-CAPTURE WHEN CHANGES OCCUR (while in 'both' mode) ----
   useEffect(() => {
     if (displayMode !== 'both') return;
     if (captureTimeoutRef.current) clearTimeout(captureTimeoutRef.current);
-    captureTimeoutRef.current = setTimeout(() => {
-      captureBothSides();
-    }, 300);
+    captureTimeoutRef.current = setTimeout(() => captureBothSides(), 300);
     return () => clearTimeout(captureTimeoutRef.current);
-  }, [
-    displayMode, textFields, backgroundBlocks, uploadedImages,
-    customPrimary, customSecondary, customAccent, customCardBg,
-    barcodeValue, qrValue, captureBothSides
-  ]);
+  }, [displayMode, textFields, backgroundBlocks, uploadedImages, customPrimary, customSecondary, customAccent, customCardBg, barcodeValue, qrValue, captureBothSides]);
 
-  // Capture immediately when switching to 'both' mode
   useEffect(() => {
-    if (displayMode === 'both') {
-      captureBothSides();
-    }
+    if (displayMode === 'both') captureBothSides();
   }, [displayMode, captureBothSides]);
 
-  // ---- NAVIGATION ----
   const handleBackNavigation = useCallback(() => {
     if (hasUnsavedChanges) {
       if (window.confirm('You have unsaved changes. Are you sure you want to leave?')) {
@@ -289,7 +147,6 @@ export default function CustomizePage() {
     }
   }, [hasUnsavedChanges, clearUnsaved, router]);
 
-  // ---- CARD OPERATIONS ----
   const flipCard = useCallback(() => {
     const card = getCurrentCardElement();
     const front = getFrontFace();
@@ -307,7 +164,7 @@ export default function CustomizePage() {
     }
   }, [getCurrentCardElement, getFrontFace, getBackFace, showToastMessage, cardFlipped]);
 
-  // ---- TEXT FIELD HANDLERS ----
+  // --- Text field handlers (unchanged from original) ---
   const handleTextChange = useCallback((index, newText) => {
     const field = textFields.find(f => f.index === index);
     const element = resolveTextFieldElement(field);
@@ -403,7 +260,7 @@ export default function CustomizePage() {
     }
   }, [textFields, resolveTextFieldElement, setTextFields, showToastMessage, markUnsaved]);
 
-  // ---- BACKGROUND HANDLERS ----
+  // --- Background handlers ---
   const setBackgroundMode = useCallback((blockIndex, mode) => {
     const block = backgroundBlocks.find(b => b.index === blockIndex);
     const element = resolveBackgroundElement(block);
@@ -474,7 +331,7 @@ export default function CustomizePage() {
     }
   }, [currentTemplate, buildBackgroundBlocks, showToastMessage, markUnsaved]);
 
-  // ---- THEME HANDLERS ----
+  // --- Theme handlers ---
   const applyTheme = useCallback((themeName, primary, secondary, accent) => {
     setSelectedTheme(themeName);
     setCustomPrimary(primary);
@@ -488,7 +345,7 @@ export default function CustomizePage() {
     markUnsaved();
   }, [setSelectedTheme, setCustomPrimary, setCustomSecondary, setCustomAccent, markUnsaved]);
 
-  // ---- IMAGE HANDLERS ----
+  // --- Image upload handlers ---
   const uploadImage = useCallback((type) => {
     const input = document.createElement('input');
     input.type = 'file';
@@ -554,37 +411,36 @@ export default function CustomizePage() {
     markUnsaved();
   }, [setUploadedImages, showToastMessage, markUnsaved]);
 
-  // ---- BARCODE / QR ----
+  // --- Barcode / QR handlers using dynamic imports ---
   const applyBarcode = useCallback(() => {
     if (!barcodeValue) { showToastMessage('Please enter text for barcode'); return; }
     const card = getCurrentCardElement();
     const barcodeElements = card?.querySelectorAll('.barcode, .barcode-section');
     if (!barcodeElements?.length) { showToastMessage('No barcode placeholder found'); return; }
-    import('jsbarcode').then(JsBarcode => {
-      barcodeElements.forEach(container => {
-        container.innerHTML = '';
-        const canvas = document.createElement('canvas');
-        canvas.style.cssText = 'width:100%; height:auto; display:block;';
-        container.appendChild(canvas);
-        JsBarcode.default(canvas, barcodeValue, { format: 'CODE128', lineColor: '#000000', width: 2, height: 40, displayValue: false, margin: 5 });
-      });
-      showToastMessage('Barcode generated');
-      markUnsaved();
-    }).catch(() => {
-      barcodeElements.forEach(container => {
-        container.innerHTML = `<canvas style="width:100%;height:auto;"></canvas>`;
-        const canvas = container.querySelector('canvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = 300; canvas.height = 60;
-        ctx.fillStyle = 'white'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = 'black';
-        for (let i = 0; i < barcodeValue.length; i++) {
-          ctx.fillRect(i * 12, 10, (barcodeValue.charCodeAt(i) % 10) + 2, 40);
+    (async () => {
+      try {
+        for (const container of barcodeElements) {
+          await generateBarcode(container, barcodeValue);
         }
-      });
-      showToastMessage('Barcode applied (simple)');
-      markUnsaved();
-    });
+        showToastMessage('Barcode generated');
+        markUnsaved();
+      } catch (err) {
+        // fallback simple barcode
+        barcodeElements.forEach(container => {
+          container.innerHTML = `<canvas style="width:100%;height:auto;"></canvas>`;
+          const canvas = container.querySelector('canvas');
+          const ctx = canvas.getContext('2d');
+          canvas.width = 300; canvas.height = 60;
+          ctx.fillStyle = 'white'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.fillStyle = 'black';
+          for (let i = 0; i < barcodeValue.length; i++) {
+            ctx.fillRect(i * 12, 10, (barcodeValue.charCodeAt(i) % 10) + 2, 40);
+          }
+        });
+        showToastMessage('Barcode applied (simple)');
+        markUnsaved();
+      }
+    })();
   }, [barcodeValue, getCurrentCardElement, showToastMessage, markUnsaved]);
 
   const applyQRCode = useCallback(() => {
@@ -592,26 +448,25 @@ export default function CustomizePage() {
     const card = getCurrentCardElement();
     const qrElements = card?.querySelectorAll('.qr-placeholder');
     if (!qrElements?.length) { showToastMessage('No QR placeholder found'); return; }
-    import('qrcode').then(QRCode => {
-      qrElements.forEach(placeholder => {
-        placeholder.innerHTML = '';
-        const canvas = document.createElement('canvas');
-        canvas.style.cssText = 'width:100%; height:100%;';
-        placeholder.appendChild(canvas);
-        QRCode.toCanvas(canvas, qrValue, { width: 150, margin: 1 });
-      });
-      showToastMessage('QR code applied');
-      markUnsaved();
-    }).catch(() => {
-      qrElements.forEach(placeholder => {
-        placeholder.innerHTML = `<img src="https://quickchart.io/qr?text=${encodeURIComponent(qrValue)}&size=150" style="width:100%;height:100%;object-fit:contain;">`;
-      });
-      showToastMessage('QR code applied (fallback)');
-      markUnsaved();
-    });
+    (async () => {
+      try {
+        for (const placeholder of qrElements) {
+          await generateQR(placeholder, qrValue);
+        }
+        showToastMessage('QR code applied');
+        markUnsaved();
+      } catch (err) {
+        // fallback using quickchart.io
+        qrElements.forEach(placeholder => {
+          placeholder.innerHTML = `<img src="https://quickchart.io/qr?text=${encodeURIComponent(qrValue)}&size=150" style="width:100%;height:100%;object-fit:contain;">`;
+        });
+        showToastMessage('QR code applied (fallback)');
+        markUnsaved();
+      }
+    })();
   }, [qrValue, getCurrentCardElement, showToastMessage, markUnsaved]);
 
-  // ---- DOWNLOAD ----
+  // --- Download both sides (with dynamic imports) ---
   const downloadCardBothSides = useCallback(async (format = 'png') => {
     const card = getCurrentCardElement();
     if (!card) { showToastMessage('No card to download'); return; }
@@ -619,7 +474,7 @@ export default function CustomizePage() {
     const backFace = card.querySelector('.card-back, .face.back');
     if (!frontFace || !backFace) { showToastMessage('Could not find both sides'); return; }
     try {
-      const html2canvas = (await import('html2canvas')).default;
+      const html2canvas = (await loadHtml2Canvas()).default;
       const design = currentOrientation === 'portrait' ? { width: 350, height: 550 } : { width: 550, height: 348 };
       const captureLiveFace = async (faceEl) => {
         const wrapper = document.createElement('div');
@@ -646,14 +501,7 @@ export default function CustomizePage() {
       const frontCanvas = await captureLiveFace(frontFace);
       const backCanvas = await captureLiveFace(backFace);
       if (format === 'pdf') {
-        const pdf = new jsPDF({
-          orientation: currentOrientation === 'portrait' ? 'portrait' : 'landscape',
-          unit: 'px',
-          format: [frontCanvas.width, frontCanvas.height],
-        });
-        pdf.addImage(frontCanvas.toDataURL('image/png'), 'PNG', 0, 0, frontCanvas.width, frontCanvas.height);
-        pdf.addPage([backCanvas.width, backCanvas.height]);
-        pdf.addImage(backCanvas.toDataURL('image/png'), 'PNG', 0, 0, backCanvas.width, backCanvas.height);
+        const pdf = await generatePDF(frontCanvas, backCanvas, currentOrientation);
         pdf.save(`card-${Date.now()}.pdf`);
         showToastMessage('✅ PDF downloaded!');
       } else {
@@ -678,6 +526,7 @@ export default function CustomizePage() {
     } catch (e) { showToastMessage('Download failed: ' + e.message); }
   }, [getCurrentCardElement, currentOrientation, currentTemplate, showToastMessage, clearUnsaved]);
 
+  // --- Save / Reset handlers ---
   const saveToDrafts = useCallback(() => {
     if (!previewCanvasRef.current) { showToastMessage('No template to save'); return; }
     const drafts = JSON.parse(localStorage.getItem('cardstudio_drafts') || '[]');
@@ -705,12 +554,9 @@ export default function CustomizePage() {
     }
   }, [originalHTML, invalidateEditorCaches, currentTemplate, setUploadedImages, setBackgroundBlocks, setCustomPrimary, setCustomSecondary, setCustomAccent, setCustomCardBg, setSelectedTheme, buildSidebar, showToastMessage, clearUnsaved]);
 
-  // ---- SIDEBAR / DISPLAY ----
+  // --- UI helpers ---
   const toggleSidebar = useCallback(() => setIsSidebarOpen(prev => !prev), []);
-  const toggleDisplayMode = useCallback(() => {
-    const next = displayMode === 'flip' ? 'both' : 'flip';
-    setDisplayMode(next);
-  }, [displayMode]);
+  const toggleDisplayMode = useCallback(() => setDisplayMode(prev => prev === 'flip' ? 'both' : 'flip'), []);
 
   const handleResizeStart = useCallback((e) => {
     e.preventDefault();
@@ -729,20 +575,15 @@ export default function CustomizePage() {
     document.addEventListener('mouseup', handleMouseUp);
   }, [sidebarWidth]);
 
-  const handleEditorStageReady = useCallback(() => { setEditorStageToken(token => token + 1); }, []);
+  const handleEditorStageReady = useCallback(() => setEditorStageToken(token => token + 1), []);
 
-  useEffect(() => {
-    if (!showDownloadMenu) return;
-    const handleClick = (e) => {
-      if (downloadMenuRef.current && !downloadMenuRef.current.contains(e.target)) {
-        setShowDownloadMenu(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, [showDownloadMenu]);
+  const getBothSidesCardWidth = useCallback(() => {
+    if (currentOrientation === 'portrait') return '350px';
+    if (displayMode === 'both' && !isSidebarOpen) return '480px';
+    return '550px';
+  }, [currentOrientation, displayMode, isSidebarOpen]);
 
-  // ---- EFFECTS ----
+  // --- Load template on mount ---
   useEffect(() => {
     isMountedRef.current = true;
     loadTimeoutRef.current = setTimeout(() => {
@@ -834,19 +675,19 @@ export default function CustomizePage() {
     if (savedWidth) setSidebarWidth(parseInt(savedWidth));
   }, []);
 
+  useEffect(() => {
+    if (!showDownloadMenu) return;
+    const handleClick = (e) => {
+      if (downloadMenuRef.current && !downloadMenuRef.current.contains(e.target)) {
+        setShowDownloadMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [showDownloadMenu]);
+
   const showImageSection = detectedFeatures.hasProfile || detectedFeatures.hasSignature || detectedFeatures.hasLogo || detectedFeatures.hasBarcode || detectedFeatures.hasQR;
   const showThemeSection = currentTemplate?.category === 'visiting';
-  const cardWidth = currentOrientation === 'portrait' ? '350px' : '550px';
-  
-  // Dynamic card width for both-sides landscape when sidebar closed
-  const getBothSidesCardWidth = useCallback(() => {
-    if (currentOrientation === 'portrait') return '350px';
-    // Landscape
-    if (displayMode === 'both' && !isSidebarOpen) {
-      return '480px'; // Larger when sidebar closed
-    }
-    return '550px';
-  }, [currentOrientation, displayMode, isSidebarOpen]);
 
   if (isLoading) {
     return (
@@ -860,17 +701,13 @@ export default function CustomizePage() {
     );
   }
 
-  // ---- RENDER ----
   return (
     <div className="h-[100dvh] flex flex-col bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 font-['Inter'] overflow-hidden">
-      {/* DESKTOP LAYOUT */}
       {isDesktopLayout ? (
         <div className="hidden lg:flex flex-1 overflow-hidden">
-          {/* PREVIEW AREA WITH TILE WALL BACKGROUND */}
           <div className="flex-1 flex items-center justify-center overflow-y-auto p-6 lg:p-10 relative transition-all duration-300 bg-slate-100">
-            <TileWallBackground />
-
-            {/* Action Buttons */}
+            {/* Simple CSS background instead of TileWallBackground */}
+            <div className="absolute inset-0 bg-[linear-gradient(135deg,#f5f7fa_0%,#e9eef3_100%)] pointer-events-none" />
             <div className="absolute left-5 top-5 flex gap-2 z-30">
               <button onClick={handleBackNavigation} className="w-11 h-11 bg-white rounded-full shadow-lg hover:shadow-xl hover:bg-slate-50 transition-all duration-300 text-slate-600 flex items-center justify-center" title="Back to templates">
                 <FiArrowLeft size={20} />
@@ -901,76 +738,21 @@ export default function CustomizePage() {
                 {isSidebarOpen ? <FiChevronRight size={18} /> : <FiChevronLeft size={18} />}
               </button>
             </div>
-
-            {/* Card Display */}
             <div className="relative z-10 w-full max-w-2xl">
               <AnimatePresence mode="wait">
-                {displayMode === 'flip' ? (
-                  <motion.div
-                    key="single"
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ duration: 0.3 }}
-                    className="w-full max-w-2xl"
-                  >
-                    <div className="relative [perspective:1200px]">
-                      <div className="relative transition-transform duration-500 [transform-style:preserve-3d] hover:[transform:rotateY(2deg)] rounded-2xl shadow-2xl shadow-indigo-500/10">
-                        <CardEditorStage
-                          orientation={currentOrientation}
-                          innerRef={previewCanvasRef}
-                          scaleWrapRef={cardScaleWrapRef}
-                          onReady={handleEditorStageReady}
-                        />
-                      </div>
-                    </div>
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="both"
-                    layout
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ duration: 0.3, layout: { duration: 0.3 } }}
-                    className={`flex ${(() => {
-                      if (currentOrientation === 'landscape') {
-                        return isSidebarOpen ? 'flex-col gap-6' : 'flex-row gap-6';
-                      }
-                      return 'flex-row gap-6';
-                    })()} items-center justify-center max-w-full transition-all duration-300 ease-in-out`}
-                  >
-                    {/* Front side image */}
-                    <div style={{ width: getBothSidesCardWidth(), maxWidth: '100%' }}>
-                      <div className="rounded-2xl overflow-hidden shadow-2xl shadow-indigo-500/10 bg-white">
-                        {bothSidesImages.front ? (
-                          <img src={bothSidesImages.front} alt="Front side" className="w-full h-auto block" />
-                        ) : (
-                          <div className="flex items-center justify-center" style={{ aspectRatio: currentOrientation === 'portrait' ? '350/550' : '550/348' }}>
-                            <FiLoader className="animate-spin text-indigo-500 text-2xl" />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    {/* Back side image */}
-                    <div style={{ width: getBothSidesCardWidth(), maxWidth: '100%' }}>
-                      <div className="rounded-2xl overflow-hidden shadow-2xl shadow-indigo-500/10 bg-white">
-                        {bothSidesImages.back ? (
-                          <img src={bothSidesImages.back} alt="Back side" className="w-full h-auto block" />
-                        ) : (
-                          <div className="flex items-center justify-center" style={{ aspectRatio: currentOrientation === 'portrait' ? '350/550' : '550/348' }}>
-                            <FiLoader className="animate-spin text-indigo-500 text-2xl" />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
+                <CardPreview
+                  displayMode={displayMode}
+                  currentOrientation={currentOrientation}
+                  isSidebarOpen={isSidebarOpen}
+                  bothSidesImages={bothSidesImages}
+                  previewCanvasRef={previewCanvasRef}
+                  cardScaleWrapRef={cardScaleWrapRef}
+                  onEditorStageReady={handleEditorStageReady}
+                  getBothSidesCardWidth={getBothSidesCardWidth}
+                />
               </AnimatePresence>
             </div>
           </div>
-
-          {/* DESKTOP SIDEBAR */}
           <AnimatePresence>
             {isSidebarOpen && (
               <motion.div
@@ -1037,7 +819,6 @@ export default function CustomizePage() {
           </AnimatePresence>
         </div>
       ) : (
-        /* MOBILE LAYOUT */
         <MobileLayout
           currentOrientation={currentOrientation}
           currentTemplate={currentTemplate}
@@ -1086,17 +867,11 @@ export default function CustomizePage() {
           onReset={resetAll}
           triggerUpdate={markUnsaved}
           previewCanvasRef={previewCanvasRef}
-          isEditorOpen={isMobileEditorOpen}
-          onToggleEditor={() => {}}
         />
       )}
-
-      {/* Toast */}
       <div className={`fixed bottom-8 right-8 bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-6 py-3 rounded-full font-semibold transition-all duration-300 z-[1100] pointer-events-none flex items-center gap-2 text-sm shadow-lg ${showToast ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-[100px]'}`}>
         <FiCheckCircle size={14} /> {toastMessage}
       </div>
-
-      {/* Global styles (including tile wall styles) */}
       <style dangerouslySetInnerHTML={{ __html: `
         .card-editor-canvas .flip-card { width: 100%; height: 100%; border-radius: 20px; overflow: hidden; }
         .flip-card { width: 100%; height: 100%; perspective: 1800px; cursor: pointer; }
@@ -1107,182 +882,7 @@ export default function CustomizePage() {
         .qr-placeholder canvas, .qr-placeholder img { width: 100% !important; height: 100% !important; object-fit: contain !important; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .animate-spin { animation: spin 1s linear infinite; }
-        
-        /* Tile wall styles */
-        .wall {
-          position: relative;
-          width: 100%;
-          min-height: 100vh;
-          display: flex;
-          flex-direction: column;
-          background: #eceef0;
-        }
-        .tile-row {
-          display: flex;
-          flex-direction: row;
-          flex-wrap: nowrap;
-          justify-content: flex-start;
-          align-items: stretch;
-          background: inherit;
-          width: 100%;
-        }
-        .tile {
-          position: relative;
-          transition: transform 0.2s cubic-bezier(0.2, 0.9, 0.4, 1.1), 
-                      box-shadow 0.25s ease,
-                      filter 0.2s ease;
-          will-change: transform;
-          backface-visibility: hidden;
-          border: 1px solid rgba(0, 0, 0, 0.08);
-          border-top: none;
-          border-left: none;
-          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02), 0 1px 1px rgba(0, 0, 0, 0.03);
-          background-clip: padding-box;
-        }
-        .tile-row:first-child .tile {
-          border-top: 1px solid rgba(0, 0, 0, 0.08);
-        }
-        .tile-row .tile:first-child {
-          border-left: 1px solid rgba(0, 0, 0, 0.08);
-        }
-        .tile:hover {
-          transform: scale(1.02) translateY(-6px);
-          box-shadow: 0 20px 28px -12px rgba(0, 0, 0, 0.25), 0 6px 12px -6px rgba(0, 0, 0, 0.15);
-          z-index: 10;
-          transition: transform 0.18s cubic-bezier(0.15, 0.85, 0.3, 1.05), box-shadow 0.2s ease;
-        }
-        .tile::after {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          pointer-events: none;
-          background: radial-gradient(circle at 30% 25%, rgba(255,255,240,0.02) 0%, rgba(0,0,0,0.01) 100%);
-          opacity: 0.3;
-        }
-        .wall, .tile-row, .tile {
-          transform: translateZ(0);
-        }
-
-        /* Smooth image resizing */
-        img {
-          transition: width 0.3s ease-in-out;
-        }
       `}} />
-    </div>
-  );
-}
-
-// ---------- MOBILE LAYOUT (unchanged except using markUnsaved) ----------
-function MobileLayout({
-  currentOrientation, currentTemplate,
-  previewCanvasRef, cardScaleWrapRef, onEditorStageReady,
-  onBack, onDownloadFormat, onFlip,
-  textFields, backgroundBlocks, showThemeSection, showImageSection,
-  detectedFeatures, uploadedImages, selectedTheme,
-  customPrimary, customSecondary, customAccent, customCardBg,
-  barcodeValue, qrValue,
-  onTextChange, onColorChange, onFontSizeChange, onFontFamilyChange,
-  onToggleTextFieldStyle, onResetTextField,
-  onBackgroundModeChange, onSolidColorChange, onGradientChange,
-  onBackgroundImageUpload, refreshBackgrounds,
-  onApplyTheme, onCustomPrimaryChange, onCustomSecondaryChange,
-  onCustomAccentChange, onCustomCardBgChange,
-  onImageUpload, onImageRemove,
-  onBarcodeValueChange, onQrValueChange, onApplyBarcode, onApplyQR,
-  onSave, onReset, triggerUpdate,
-  previewCanvasRef: canvasRef,
-  isEditorOpen, onToggleEditor,
-}) {
-  const [showMobileDownloadMenu, setShowMobileDownloadMenu] = useState(false);
-  const mobileDownloadRef = useRef(null);
-  useEffect(() => {
-    if (!showMobileDownloadMenu) return;
-    const handleClick = (e) => {
-      if (mobileDownloadRef.current && !mobileDownloadRef.current.contains(e.target)) {
-        setShowMobileDownloadMenu(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, [showMobileDownloadMenu]);
-  return (
-    <div className="lg:hidden flex flex-col h-full max-h-full overflow-hidden relative">
-      <div className={`flex-shrink-0 bg-gradient-to-br from-indigo-50/30 via-white to-purple-50/30 flex items-start sm:items-center justify-center p-3 relative overflow-y-auto overscroll-contain ${currentOrientation === 'portrait' ? 'h-[55vh] min-h-[400px]' : 'h-[42vh] min-h-[260px] sm:min-h-[300px]'}`}>
-        <div className="absolute top-2 right-2 flex gap-2 z-30">
-          <button onClick={onBack} className="min-w-[44px] min-h-[44px] w-8 h-8 bg-white rounded-full shadow-lg flex items-center justify-center" title="Back"><FiArrowLeft size={14} /></button>
-          <div className="relative" ref={mobileDownloadRef}>
-            <button onClick={() => setShowMobileDownloadMenu(prev => !prev)} className="min-w-[44px] min-h-[44px] w-8 h-8 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-full shadow-lg flex items-center justify-center" title="Download"><FiDownload size={14} /></button>
-            {showMobileDownloadMenu && (
-              <div className="absolute top-10 right-0 bg-white border border-slate-200 rounded-xl shadow-xl py-1 z-50 min-w-[100px]">
-                <button onClick={() => { onDownloadFormat('png'); setShowMobileDownloadMenu(false); }} className="w-full text-left px-3 py-1.5 text-[10px] hover:bg-slate-50">PNG</button>
-                <button onClick={() => { onDownloadFormat('jpg'); setShowMobileDownloadMenu(false); }} className="w-full text-left px-3 py-1.5 text-[10px] hover:bg-slate-50">JPG</button>
-                <button onClick={() => { onDownloadFormat('pdf'); setShowMobileDownloadMenu(false); }} className="w-full text-left px-3 py-1.5 text-[10px] hover:bg-slate-50">PDF</button>
-              </div>
-            )}
-          </div>
-          <button onClick={onFlip} className="min-w-[44px] min-h-[44px] w-8 h-8 bg-white rounded-full shadow-lg text-indigo-600 flex items-center justify-center" title="Flip"><FiRefreshCcw size={14} /></button>
-        </div>
-        <div className={`w-full mx-auto py-2 flex items-start sm:items-center justify-center ${currentOrientation === 'portrait' ? 'max-w-[280px]' : 'max-w-xs sm:max-w-sm'}`}>
-          <CardEditorStage orientation={currentOrientation} innerRef={previewCanvasRef} scaleWrapRef={cardScaleWrapRef} onReady={onEditorStageReady} />
-        </div>
-      </div>
-      <div className="z-30 bg-white rounded-t-2xl shadow-2xl flex flex-col" style={{ maxHeight: '60vh' }}>
-        <div className="flex justify-center pt-2 pb-1 flex-shrink-0"><div className="w-10 h-1 bg-slate-300 rounded-full" /></div>
-        <div className="flex-1 overflow-y-auto px-3 py-2 min-h-0">
-          <EditorSidebar
-            currentTemplate={currentTemplate}
-            currentOrientation={currentOrientation}
-            textFields={textFields}
-            onTextChange={onTextChange}
-            onColorChange={onColorChange}
-            onFontSizeChange={onFontSizeChange}
-            onFontFamilyChange={onFontFamilyChange}
-            onToggleTextFieldStyle={onToggleTextFieldStyle}
-            onResetTextField={onResetTextField}
-            onTextFieldClick={null}
-            backgroundBlocks={backgroundBlocks}
-            onBackgroundModeChange={onBackgroundModeChange}
-            onSolidColorChange={onSolidColorChange}
-            onGradientChange={onGradientChange}
-            onBackgroundImageUpload={onBackgroundImageUpload}
-            refreshBackgrounds={refreshBackgrounds}
-            showThemeSection={showThemeSection}
-            selectedTheme={selectedTheme}
-            customPrimary={customPrimary}
-            customSecondary={customSecondary}
-            customAccent={customAccent}
-            customCardBg={customCardBg}
-            onApplyTheme={onApplyTheme}
-            onCustomPrimaryChange={onCustomPrimaryChange}
-            onCustomSecondaryChange={onCustomSecondaryChange}
-            onCustomAccentChange={onCustomAccentChange}
-            onCustomCardBgChange={onCustomCardBgChange}
-            showImageSection={showImageSection}
-            detectedFeatures={detectedFeatures}
-            uploadedImages={uploadedImages}
-            onImageUpload={onImageUpload}
-            onImageRemove={onImageRemove}
-            barcodeValue={barcodeValue}
-            qrValue={qrValue}
-            onBarcodeValueChange={onBarcodeValueChange}
-            onQrValueChange={onQrValueChange}
-            onApplyBarcode={onApplyBarcode}
-            onApplyQR={onApplyQR}
-            onSave={onSave}
-            onReset={onReset}
-            triggerUpdate={triggerUpdate}
-            previewCanvasRef={canvasRef}
-            isMobileView={true}
-            isSidebarOpen={true}
-            sidebarRef={null}
-            sidebarWidth={600}
-            onToggleSidebar={() => {}}
-          />
-        </div>
-      </div>
     </div>
   );
 }

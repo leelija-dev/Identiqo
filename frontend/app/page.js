@@ -1,9 +1,9 @@
 import Hero from "../components/Features/Pages/Hero";
 import Features from "@/components/Features/Pages/Features";
-// import How_it_works from "@/components/Features/Pages/how_it_works";
 import Demo from "@/components/Features/Pages/Demo";
+import Howitworks from "@/components/Features/Pages/Howitworks";
 import Pricing from "@/components/Features/Pages/Pricing";
-import  Testimonial from "@/components/Features/Pages/Testimonial";
+import Testimonial from "@/components/Features/Pages/Testimonial";
 import FAQ from "@/components/Features/Pages/Faq";
 export default function Page() {
   return (
@@ -11,13 +11,11 @@ export default function Page() {
     <>
       <Hero />
       <Features />
-      {/* <How_it_works /> */}
       <Demo />
+      <Howitworks />
       <Pricing />
       <Testimonial />
       <FAQ />
     </>
   );
-} 
-      
-   
+}

@@ -38,7 +38,7 @@ export default function FeatureFlow() {
     {
       id: "01",
       title: "Smart ID Templates",
-      description: "50+ professionally designed templates for corporate, education, healthcare, and events. Fully customizable with your branding.",
+      description: "50+ professionally designed templates for corporate, healthcare, and events. Fully customizable with your branding.",
       gradient: "from-orange-500 to-pink-500",
       image: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=600&h=400&fit=crop",
       stats: "50+",
@@ -128,10 +128,10 @@ export default function FeatureFlow() {
               <span className="text-orange-600 text-xs font-medium">Professional ID Card Solution</span>
             </motion.div>
             
-             <SectionTitle
-                               title="Employee ID Card "
-                               subtitle="Specifications & Features"
-                             />
+            <SectionTitle
+              title="Employee ID Card"
+              subtitle="Specifications & Features"
+            />
             
             <motion.p 
               className="text-base sm:text-lg text-slate-500 max-w-2xl mx-auto leading-relaxed"
@@ -324,7 +324,7 @@ function FeatureNode({ feature, index, isEven }) {
         </motion.div>
       </div>
 
-      {/* Content Box with Stagger Animation */}
+      {/* Content Box with Stagger Animation - FIXED UNDERLINE */}
       <div className={`w-full md:w-[45%] ${isEven ? 'md:text-right' : ''}`}>
         <motion.div
           initial={{ opacity: 0, x: isEven ? 30 : -30 }}
@@ -341,55 +341,59 @@ function FeatureNode({ feature, index, isEven }) {
             {feature.id}
           </motion.div>
           
-          {/* Title with Underline Animation */}
-          <div className="relative inline-block mb-3">
-            <h2 className={`text-2xl md:text-3xl font-bold text-slate-800 ${isEven ? 'md:text-right' : ''}`}>
+          {/* Title with Separate Underline - FIXED: No line through text */}
+          <div className={`mb-5 ${isEven ? 'md:flex md:flex-col md:items-end' : ''}`}>
+            <h2 className={`text-2xl md:text-3xl font-bold text-slate-800 relative inline-block ${isEven ? 'md:text-right' : ''}`}>
               {feature.title}
             </h2>
-            <motion.div 
-              className={`absolute bottom-0 left-0 h-1 bg-gradient-to-r ${feature.gradient} rounded-full ${isEven ? 'md:right-0 md:left-auto' : ''}`}
-              initial={{ width: 0 }}
-              animate={isInView ? { width: isEven ? '100%' : '50%' } : {}}
-              transition={{ delay: index * 0.1 + 0.5, duration: 0.6 }}
-              style={{ width: isEven ? 'auto' : '50%' }}
-            />
+            {/* Separate underline div - positioned completely below the text */}
+            <div className={`mt-2 ${isEven ? 'md:flex md:justify-end' : ''}`}>
+              <motion.div 
+                className={`h-[3px] bg-gradient-to-r ${feature.gradient} rounded-full`}
+                initial={{ width: 0 }}
+                animate={isInView ? { width: '60px' } : {}}
+                transition={{ delay: index * 0.1 + 0.5, duration: 0.6, ease: "easeOut" }}
+              />
+            </div>
           </div>
           
-          <p className={`text-slate-500 text-sm leading-relaxed mb-4 ${isEven ? 'md:text-right' : ''}`}>
-            {feature.description}
-          </p>
-          
-          {/* Animated Tags */}
-          <div className={`flex flex-wrap gap-2 mb-4 ${isEven ? 'md:justify-end' : ''}`}>
-            {feature.details.map((detail, i) => (
-              <motion.span
-                key={i}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={isInView ? { opacity: 1, scale: 1 } : {}}
-                transition={{ delay: index * 0.1 + 0.4 + (i * 0.05) }}
-                whileHover={{ scale: 1.05, backgroundColor: "#f1f5f9" }}
-                className="text-xs bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full cursor-pointer transition-all"
-              >
-                {detail}
-              </motion.span>
-            ))}
-          </div>
-          
-          {/* Stats Card with Hover Effect */}
-          <motion.div 
-            className={`inline-flex items-center gap-3 px-3 py-2 bg-white rounded-xl shadow-md border border-slate-100 ${isEven ? 'md:justify-end' : ''}`}
-            whileHover={{ y: -3, boxShadow: "0 10px 25px -5px rgba(0,0,0,0.1)" }}
-            transition={{ duration: 0.2 }}
-          >
+          <div className={`${isEven ? 'md:clear-both' : ''}`}>
+            <p className={`text-slate-500 text-sm leading-relaxed mb-4 ${isEven ? 'md:text-right' : ''}`}>
+              {feature.description}
+            </p>
+            
+            {/* Animated Tags */}
+            <div className={`flex flex-wrap gap-2 mb-4 ${isEven ? 'md:justify-end' : ''}`}>
+              {feature.details.map((detail, i) => (
+                <motion.span
+                  key={i}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={isInView ? { opacity: 1, scale: 1 } : {}}
+                  transition={{ delay: index * 0.1 + 0.4 + (i * 0.05) }}
+                  whileHover={{ scale: 1.05, backgroundColor: "#f1f5f9" }}
+                  className="text-xs bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full cursor-pointer transition-all"
+                >
+                  {detail}
+                </motion.span>
+              ))}
+            </div>
+            
+            {/* Stats Card with Hover Effect */}
             <motion.div 
-              className="text-xl font-bold bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent"
-              animate={{ scale: isHovered ? 1.1 : 1 }}
+              className={`inline-flex items-center gap-3 px-3 py-2 bg-white rounded-xl shadow-md border border-slate-100 ${isEven ? 'md:justify-end' : ''}`}
+              whileHover={{ y: -3, boxShadow: "0 10px 25px -5px rgba(0,0,0,0.1)" }}
+              transition={{ duration: 0.2 }}
             >
-              {feature.stats}
+              <motion.div 
+                className="text-xl font-bold bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent"
+                animate={{ scale: isHovered ? 1.1 : 1 }}
+              >
+                {feature.stats}
+              </motion.div>
+              <div className="w-px h-6 bg-slate-200" />
+              <div className="text-xs text-slate-500">{feature.statLabel}</div>
             </motion.div>
-            <div className="w-px h-6 bg-slate-200" />
-            <div className="text-xs text-slate-500">{feature.statLabel}</div>
-          </motion.div>
+          </div>
           
           {/* Mobile Node */}
           <div className="md:hidden flex justify-start mt-5">
