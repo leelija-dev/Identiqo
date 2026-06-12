@@ -1,7 +1,7 @@
 // components/Features/Pages/Howitworks.jsx
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function Howitworks() {
@@ -16,7 +16,7 @@ export default function Howitworks() {
   const [hasStarted, setHasStarted] = useState(false); // Track if user has started
   const welcomeSpokenRef = useRef(false);
 
-  const steps = [
+  const steps = useMemo(() => ([
     {
       id: 1,
       title: "Choose Your Template",
@@ -69,7 +69,7 @@ export default function Howitworks() {
       stats: "Multiple Formats",
       action: "Export Now"
     }
-  ];
+  ]), []);
 
   const [cardData, setCardData] = useState({
     name: "Sarah Johnson",
@@ -88,7 +88,7 @@ export default function Howitworks() {
   const [editData, setEditData] = useState({ ...cardData });
 
   // Voice narration function
-  const speakText = (text) => {
+  const speakText = useCallback((text) => {
     if (isMuted) return;
     
     // Stop any ongoing speech
@@ -118,7 +118,7 @@ export default function Howitworks() {
     utterance.onerror = () => setIsSpeaking(false);
     
     window.speechSynthesis.speak(utterance);
-  };
+  }, [isMuted]);
 
   // Auto-play animation with voice (only when playing)
   useEffect(() => {
@@ -140,7 +140,7 @@ export default function Howitworks() {
     if (isPlaying && hasStarted && !isMuted) {
       speakText(steps[currentStep].voiceText);
     }
-  }, [currentStep, isPlaying, hasStarted, isMuted]);
+  }, [currentStep, isPlaying, hasStarted, isMuted, speakText, steps]);
 
   // Typing animation
   useEffect(() => {
@@ -158,12 +158,12 @@ export default function Howitworks() {
       }, 40);
       return () => clearInterval(interval);
     }
-  }, [currentStep, steps, hasStarted]);
+  }, [currentStep, hasStarted, steps]);
 
   // Update progress on step change
   useEffect(() => {
     setProgressWidth(((currentStep + 1) / steps.length) * 100);
-  }, [currentStep]);
+  }, [currentStep, steps.length]);
 
   const handleStepClick = (index) => {
     setCurrentStep(index);

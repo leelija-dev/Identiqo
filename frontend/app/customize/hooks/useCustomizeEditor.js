@@ -1,14 +1,14 @@
 // app/customize/hooks/useCustomizeEditor.js
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { DEFAULT_TEXT_CLASSES, DEFAULT_IMAGE_CLASSES } from '../lib/constants';
-import { rgbToHex, simpleHash, getFieldLabel } from '../lib/utils';
+import { useState, useCallback, useRef } from 'react';
+import { rgbToHex, simpleHash, getFieldLabel, DEFAULT_TEXT_CLASSES, DEFAULT_IMAGE_CLASSES } from '../utils/customizeHelpers';
 
 export function useCustomizeEditor(previewCanvasRef) {
   const textCacheRef = useRef({ hash: null, items: [] });
-  const buildSidebarTimeoutRef = useRef(null);
+  const resetCooldownRef = useRef({ index: null, active: false });
 
+  // State
   const [textFields, setTextFields] = useState([]);
   const [backgroundBlocks, setBackgroundBlocks] = useState([]);
   const [detectedFeatures, setDetectedFeatures] = useState({
@@ -22,6 +22,7 @@ export function useCustomizeEditor(previewCanvasRef) {
   const [uploadedImages, setUploadedImages] = useState({ profile: null, signature: null, logo: null });
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
+  // Helper to get current card element
   const getCurrentCardElement = useCallback(() => {
     if (!previewCanvasRef.current) return null;
     return previewCanvasRef.current.querySelector('.flip-card') ||
@@ -29,6 +30,7 @@ export function useCustomizeEditor(previewCanvasRef) {
       previewCanvasRef.current.firstElementChild;
   }, [previewCanvasRef]);
 
+  // Get front/back faces
   const getFrontFace = useCallback(() => {
     const card = getCurrentCardElement();
     return card?.querySelector('.card-front, .face.front');
@@ -39,6 +41,7 @@ export function useCustomizeEditor(previewCanvasRef) {
     return card?.querySelector('.card-back, .face.back');
   }, [getCurrentCardElement]);
 
+  // Resolve text field element
   const resolveTextFieldElement = useCallback((field) => {
     if (!field || !previewCanvasRef.current) return null;
     if (field.element && previewCanvasRef.current.contains(field.element)) {
@@ -48,6 +51,7 @@ export function useCustomizeEditor(previewCanvasRef) {
     return card?.querySelector(`[data-element-index="${field.index}"]`) || null;
   }, [getCurrentCardElement, previewCanvasRef]);
 
+  // Resolve background element
   const resolveBackgroundElement = useCallback((block) => {
     if (!block || !previewCanvasRef.current) return null;
     if (block.element && previewCanvasRef.current.contains(block.element)) {
@@ -57,10 +61,12 @@ export function useCustomizeEditor(previewCanvasRef) {
     return card?.querySelectorAll('.editable-bg')?.[block.index] || null;
   }, [getCurrentCardElement, previewCanvasRef]);
 
+  // Invalidate caches
   const invalidateEditorCaches = useCallback(() => {
     textCacheRef.current = { hash: null, items: [] };
   }, []);
 
+  // Build text fields list
   const buildTextList = useCallback(() => {
     const card = getCurrentCardElement();
     if (!card) return;
@@ -132,6 +138,7 @@ export function useCustomizeEditor(previewCanvasRef) {
     setTextFields(items);
   }, [getCurrentCardElement, previewCanvasRef]);
 
+  // Build background blocks
   const buildBackgroundBlocks = useCallback(() => {
     const card = getCurrentCardElement();
     if (!card) return;
@@ -167,6 +174,7 @@ export function useCustomizeEditor(previewCanvasRef) {
     setBackgroundBlocks(blocks);
   }, [getCurrentCardElement, getFrontFace, getBackFace]);
 
+  // Detect features
   const detectFeatures = useCallback(() => {
     const card = getCurrentCardElement();
     if (!card) return;
@@ -180,41 +188,57 @@ export function useCustomizeEditor(previewCanvasRef) {
     setDetectedFeatures(features);
   }, [getCurrentCardElement]);
 
+  // Build sidebar (all sections)
   const buildSidebar = useCallback(() => {
-    if (buildSidebarTimeoutRef.current) clearTimeout(buildSidebarTimeoutRef.current);
-    buildSidebarTimeoutRef.current = setTimeout(() => {
-      if (!previewCanvasRef.current) return;
-      buildTextList();
-      buildBackgroundBlocks();
-      detectFeatures();
-      buildSidebarTimeoutRef.current = null;
-    }, 50);
-  }, [buildTextList, buildBackgroundBlocks, detectFeatures, previewCanvasRef]);
+    buildTextList();
+    buildBackgroundBlocks();
+    detectFeatures();
+  }, [buildTextList, buildBackgroundBlocks, detectFeatures]);
 
-  const markUnsaved = useCallback(() => setHasUnsavedChanges(true), []);
-  const clearUnsaved = useCallback(() => setHasUnsavedChanges(false), []);
+  // Unsaved changes management
+  const markUnsaved = useCallback(() => {
+    setHasUnsavedChanges(true);
+  }, []);
+
+  const clearUnsaved = useCallback(() => {
+    setHasUnsavedChanges(false);
+  }, []);
 
   return {
+    // State
     textFields, setTextFields,
     backgroundBlocks, setBackgroundBlocks,
-    detectedFeatures,
+    detectedFeatures, setDetectedFeatures,
     selectedTheme, setSelectedTheme,
     customPrimary, setCustomPrimary,
     customSecondary, setCustomSecondary,
     customAccent, setCustomAccent,
     customCardBg, setCustomCardBg,
     uploadedImages, setUploadedImages,
-    hasUnsavedChanges,
+    hasUnsavedChanges, setHasUnsavedChanges,
+    
+    // Refs
+    textCacheRef,
+    resetCooldownRef,
+    
+    // Getters
     getCurrentCardElement,
     getFrontFace,
     getBackFace,
     resolveTextFieldElement,
     resolveBackgroundElement,
+    
+    // Builders
     buildTextList,
     buildBackgroundBlocks,
+    detectFeatures,
     buildSidebar,
+    
+    // Cache management
     invalidateEditorCaches,
+    
+    // Unsaved changes
     markUnsaved,
-    clearUnsaved,
+    clearUnsaved
   };
 }

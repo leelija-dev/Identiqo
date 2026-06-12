@@ -1,47 +1,104 @@
 // app/gallery/page.jsx
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import CardPreview, { CardGrid } from '@/components/Common/Card';
 import Button from '@/components/Common/Button';
-import { FiDownload, FiStar, FiTrash2, FiEdit2, FiChevronLeft } from 'react-icons/fi';
+import Pagination from '@/components/Common/Pagination';
+import Modal from '@/components/Common/Modal';
+import { FiDownload, FiStar, FiTrash2, FiEdit2, FiTrash } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
-import { TemplateGridSkeleton, SidebarSkeleton } from '@/components/Common/Skeleton';
+import { TemplateGridSkeleton } from '@/components/Common/Skeleton';
+
+function GallerySkeleton() {
+  return (
+    <div className="space-y-8">
+      <div>
+        <div className="mb-4">
+          <div className="h-7 bg-slate-200 rounded w-48 animate-pulse"></div>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-1.5 sm:gap-2 lg:gap-3 justify-items-center items-start">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="w-full max-w-[360px] mx-auto aspect-[550/348] max-h-[240px] animate-pulse rounded-xl bg-gradient-to-r from-slate-200/50 via-slate-100/50 to-slate-200/50" />
+          ))}
+        </div>
+      </div>
+      <div>
+        <div className="mb-4">
+          <div className="h-7 bg-slate-200 rounded w-48 animate-pulse"></div>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-1 sm:gap-1.5 lg:gap-2 justify-items-center items-start">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="w-full max-w-[240px] mx-auto aspect-[350/550] max-h-[400px] animate-pulse rounded-xl bg-gradient-to-r from-slate-200/50 via-slate-100/50 to-slate-200/50" />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function GalleryPage() {
   const router = useRouter();
   const [currentCategory, setCurrentCategory] = useState('wishlist');
   const [galleryItems, setGalleryItems] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
-  const [showModal, setShowModal] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState('success');
   const [totalItems, setTotalItems] = useState(0);
   const [isClient, setIsClient] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const modalCardRef = useRef(null);
+  
+  // Sliding pill state
+  const [pillStyle, setPillStyle] = useState({ left: '0px', width: '0px' });
+  const categoryBarRef = useRef(null);
+  const categoryRefs = useRef({
+    wishlist: null,
+    drafts: null,
+    downloads: null,
+  });
+  
+  // Pagination states
+  const [landscapePage, setLandscapePage] = useState(1);
+  const [portraitPage, setPortraitPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
 
-  // Direction for horizontal slide animation (1 = from right, -1 = from left)
+  // Direction for horizontal slide animation
   const [categoryDirection, setCategoryDirection] = useState(0);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
+  // Reset pagination when category changes
   useEffect(() => {
-    if (isClient) {
-      loadCategoryData();
-      updateStorageInfo();
-      const timer = setTimeout(() => setIsLoading(false), 800);
-      return () => clearTimeout(timer);
-    }
+    setLandscapePage(1);
+    setPortraitPage(1);
+  }, [currentCategory]);
+
+  // Update pill position when category changes
+  useEffect(() => {
+    if (!isClient) return;
+    const updatePill = () => {
+      const activeRef = categoryRefs.current[currentCategory];
+      if (activeRef && categoryBarRef.current) {
+        const parentRect = categoryBarRef.current.getBoundingClientRect();
+        const btnRect = activeRef.getBoundingClientRect();
+        setPillStyle({
+          left: `${btnRect.left - parentRect.left}px`,
+          width: `${btnRect.width}px`,
+        });
+      }
+    };
+    updatePill();
+    window.addEventListener('resize', updatePill);
+    return () => window.removeEventListener('resize', updatePill);
   }, [currentCategory, isClient]);
 
-  // Detect orientation from HTML content - prioritize stored orientation
+  // Detect orientation from HTML content
   const getOrientationFromHTML = useCallback((html, itemOrientation) => {
-    // If the item has a stored orientation property, use it first
     if (itemOrientation === 'portrait' || itemOrientation === 'landscape') {
       return itemOrientation;
     }
@@ -49,20 +106,17 @@ export default function GalleryPage() {
     if (!html) return 'landscape';
     const htmlStr = String(html).toLowerCase();
     
-    // Check for explicit portrait indicators in the HTML
     if (
       htmlStr.includes('width: 350px') ||
       htmlStr.includes('width:350px') ||
       htmlStr.includes('350/550') ||
       htmlStr.includes('aspect-ratio:350/550') ||
       htmlStr.includes('height:550px') ||
-      htmlStr.includes('height:500px') ||
-      htmlStr.includes('aspect-ratio: 0.58')
+      htmlStr.includes('height:500px')
     ) {
       return 'portrait';
     }
     
-    // Check for explicit landscape indicators in the HTML
     if (
       htmlStr.includes('width: 550px') ||
       htmlStr.includes('width:550px') ||
@@ -73,39 +127,26 @@ export default function GalleryPage() {
       return 'landscape';
     }
     
-    // Fallback: check if the word "portrait" appears
     if (htmlStr.includes('portrait')) {
       return 'portrait';
     }
     
-    // Default to landscape
     return 'landscape';
   }, []);
 
-  const handleModalCardFlip = (e) => {
-    e.stopPropagation();
-    const root = modalCardRef.current;
-    if (!root) return;
+  const getStorageKey = (category) => `cardstudio_${category}`;
 
-    const clickedFlipCard = e.target.closest('.flip-card');
-    const flipCard = clickedFlipCard || root.querySelector('.flip-card') || root;
-    const flipInner = flipCard.querySelector?.('.flip-card-inner');
-
-    if (flipInner) {
-      const currentlyFlipped =
-        flipInner.dataset.flipped === 'true' ||
-        /rotateY\(180deg\)/.test(flipInner.style.transform || '') ||
-        flipCard.classList.contains('flipped');
-
-      flipInner.style.transform = currentlyFlipped ? 'rotateY(0deg)' : 'rotateY(180deg)';
-      flipInner.dataset.flipped = currentlyFlipped ? 'false' : 'true';
-      flipCard.classList.toggle('flipped', !currentlyFlipped);
+  const safeJsonArrayLength = (raw) => {
+    if (!raw) return 0;
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed.length : 0;
+    } catch {
+      return 0;
     }
   };
 
-  const getStorageKey = (category) => `cardstudio_${category}`;
-
-  const loadCategoryData = () => {
+  const loadCategoryData = useCallback(() => {
     if (typeof window === 'undefined') return;
     const key = getStorageKey(currentCategory);
     const data = localStorage.getItem(key);
@@ -119,7 +160,24 @@ export default function GalleryPage() {
     } catch {
       setGalleryItems([]);
     }
-  };
+  }, [currentCategory]);
+
+  const updateStorageInfo = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    const wishlist = safeJsonArrayLength(localStorage.getItem('cardstudio_wishlist'));
+    const drafts = safeJsonArrayLength(localStorage.getItem('cardstudio_drafts'));
+    const downloads = safeJsonArrayLength(localStorage.getItem('cardstudio_downloads'));
+    setTotalItems(wishlist + drafts + downloads);
+  }, []);
+
+  useEffect(() => {
+    if (isClient) {
+      loadCategoryData();
+      updateStorageInfo();
+      const timer = setTimeout(() => setIsLoading(false), 800);
+      return () => clearTimeout(timer);
+    }
+  }, [currentCategory, isClient, loadCategoryData, updateStorageInfo]);
 
   const saveCategoryData = (items) => {
     if (typeof window === 'undefined') return;
@@ -129,23 +187,22 @@ export default function GalleryPage() {
     updateStorageInfo();
   };
 
-  const safeJsonArrayLength = (raw) => {
-    if (!raw) return 0;
-    try {
-      const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed.length : 0;
-    } catch {
-      return 0;
+  // Clear current category items
+  const clearCurrentCategory = useCallback(() => {
+    if (!confirm(`Are you sure you want to clear all items from ${currentCategory}? This action cannot be undone.`)) {
+      return;
     }
-  };
-
-  const updateStorageInfo = () => {
-    if (typeof window === 'undefined') return;
-    const wishlist = safeJsonArrayLength(localStorage.getItem('cardstudio_wishlist'));
-    const drafts = safeJsonArrayLength(localStorage.getItem('cardstudio_drafts'));
-    const downloads = safeJsonArrayLength(localStorage.getItem('cardstudio_downloads'));
-    setTotalItems(wishlist + drafts + downloads);
-  };
+    
+    const key = getStorageKey(currentCategory);
+    localStorage.setItem(key, JSON.stringify([]));
+    setGalleryItems([]);
+    updateStorageInfo();
+    showToastMessage(`Cleared all ${currentCategory} items`, 'warning');
+    
+    // Reset pagination
+    setLandscapePage(1);
+    setPortraitPage(1);
+  }, [currentCategory]);
 
   const showToastMessage = (msg, type = 'success') => {
     setToastMessage(msg);
@@ -158,14 +215,12 @@ export default function GalleryPage() {
     const item = galleryItems.find(i => i.id == id);
     if (!item) return;
     setSelectedItem({ ...item });
-    setShowModal(true);
-    document.body.style.overflow = 'hidden';
+    setIsModalOpen(true);
   };
 
   const closeModal = () => {
-    setShowModal(false);
+    setIsModalOpen(false);
     setSelectedItem(null);
-    document.body.style.overflow = 'unset';
   };
 
   const customizeItem = (id) => {
@@ -230,22 +285,6 @@ export default function GalleryPage() {
       return;
     }
     openPreviewModal(item.id);
-  };
-
-  const handleModalAction = (action) => {
-    if (typeof window === 'undefined') return;
-    if (action === 'customize' && selectedItem) {
-      localStorage.setItem('selectedTemplateForCustomize', JSON.stringify(selectedItem));
-      router.push('/customize');
-    } else if (action === 'delete' && selectedItem) {
-      removeItem(selectedItem.id);
-    } else if (action === 'wishlist') {
-      moveToWishlist();
-    } else if (action === 'download') {
-      downloadSelectedItem();
-    } else if (action === 'close') {
-      closeModal();
-    }
   };
 
   const downloadSelectedItem = async () => {
@@ -346,13 +385,46 @@ export default function GalleryPage() {
     }
   };
 
-  // Separate items by orientation - ALWAYS use stored orientation first
+  // Separate items by orientation
   const landscapeItems = galleryItems.filter(item => 
     getOrientationFromHTML(item.fullHTML, item.orientation) === 'landscape'
   );
   const portraitItems = galleryItems.filter(item => 
     getOrientationFromHTML(item.fullHTML, item.orientation) === 'portrait'
   );
+
+  // Paginated items
+  const paginatedLandscapeItems = landscapeItems.slice(
+    (landscapePage - 1) * ITEMS_PER_PAGE,
+    landscapePage * ITEMS_PER_PAGE
+  );
+  const paginatedPortraitItems = portraitItems.slice(
+    (portraitPage - 1) * ITEMS_PER_PAGE,
+    portraitPage * ITEMS_PER_PAGE
+  );
+
+  const landscapeTotalPages = Math.ceil(landscapeItems.length / ITEMS_PER_PAGE);
+  const portraitTotalPages = Math.ceil(portraitItems.length / ITEMS_PER_PAGE);
+
+  const handleLandscapePageChange = (page) => {
+    setLandscapePage(page);
+    setTimeout(() => {
+      const landscapeSection = document.getElementById('landscape-section');
+      if (landscapeSection) {
+        landscapeSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
+  };
+
+  const handlePortraitPageChange = (page) => {
+    setPortraitPage(page);
+    setTimeout(() => {
+      const portraitSection = document.getElementById('portrait-section');
+      if (portraitSection) {
+        portraitSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
+  };
 
   // Dynamic background gradient per category
   const categoryBackgrounds = {
@@ -367,29 +439,24 @@ export default function GalleryPage() {
   const handleCategoryChange = (newCategory) => {
     const oldIndex = categoryOrder.indexOf(currentCategory);
     const newIndex = categoryOrder.indexOf(newCategory);
-    if (newIndex > oldIndex) setCategoryDirection(1);  // slide from right
-    else if (newIndex < oldIndex) setCategoryDirection(-1); // slide from left
+    if (newIndex > oldIndex) setCategoryDirection(1);
+    else if (newIndex < oldIndex) setCategoryDirection(-1);
     else setCategoryDirection(0);
     setCurrentCategory(newCategory);
   };
 
-  // Custom skeleton for gallery (matching the layout)
-  const GallerySkeleton = () => (
-    <div className="space-y-8">
-      <div>
-        <div className="mb-4">
-          <div className="h-7 bg-slate-200 rounded w-48 animate-pulse"></div>
-        </div>
-        <TemplateGridSkeleton count={3} orientation="landscape" />
-      </div>
-      <div>
-        <div className="mb-4">
-          <div className="h-7 bg-slate-200 rounded w-48 animate-pulse"></div>
-        </div>
-        <TemplateGridSkeleton count={4} orientation="portrait" />
-      </div>
-    </div>
-  );
+  // Category items for the toggle
+  const categoryItems = [
+    { key: 'wishlist', icon: '⭐', label: 'Wishlist' },
+    { key: 'drafts', icon: '✏️', label: 'Drafts' },
+    { key: 'downloads', icon: '⬇️', label: 'Downloads' },
+  ];
+
+  // Get current category display name
+  const getCurrentCategoryName = () => {
+    const current = categoryItems.find(item => item.key === currentCategory);
+    return current ? current.label : '';
+  };
 
   return (
     <div
@@ -402,33 +469,60 @@ export default function GalleryPage() {
       <div className="min-h-screen overflow-y-auto p-4 sm:p-6 md:p-8">
         <div className="max-w-[1400px] mx-auto">
           <div className="flex flex-col gap-4 mb-6">
-            <div>
-              <h1 className="text-slate-800 text-xl sm:text-2xl font-bold">
-                My Gallery
-              </h1>
-              <p className="text-slate-500 text-sm mt-1">
-                Manage wishlist, drafts, and downloaded cards
-              </p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h1 className="text-slate-800 text-xl sm:text-2xl font-bold">
+                  My Gallery
+                </h1>
+                <p className="text-slate-500 text-sm mt-1">
+                  Manage wishlist, drafts, and downloaded cards
+                </p>
+              </div>
+              
+              {/* Clear Button for current section */}
+              {galleryItems.length > 0 && (
+                <Button
+                  variant="danger"
+                  size="sm"
+                  icon={FiTrash}
+                  onClick={clearCurrentCategory}
+                  className="rounded-full shadow-sm"
+                >
+                  Clear {getCurrentCategoryName()}
+                </Button>
+              )}
             </div>
 
-            <div className="flex flex-wrap gap-2">
-              {[
-                { key: 'wishlist', icon: '⭐', label: 'Wishlist' },
-                { key: 'drafts', icon: '✏️', label: 'Drafts' },
-                { key: 'downloads', icon: '⬇️', label: 'Downloads' },
-              ].map((item) => (
-                <button
-                  key={item.key}
-                  onClick={() => handleCategoryChange(item.key)}
-                  className={`px-4 py-2 rounded-xl font-semibold transition-all duration-300 text-sm whitespace-nowrap ${
-                    currentCategory === item.key
-                      ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md'
-                      : 'bg-white/60 backdrop-blur-sm border border-slate-200 text-slate-600 hover:border-indigo-300 hover:text-indigo-600'
-                  }`}
-                >
-                  {item.icon} {item.label}
-                </button>
-              ))}
+            {/* Category Toggle - Beautiful sliding pill style */}
+            <div className="relative inline-flex" ref={categoryBarRef}>
+              <div className="relative flex items-stretch gap-0 bg-slate-100 rounded-full p-1 border border-slate-200 shadow-inner">
+                {/* Sliding Pill Background */}
+                <div
+                  className="absolute top-1 bottom-1 bg-white rounded-full shadow-md transition-all duration-300 ease-out"
+                  style={{
+                    left: pillStyle.left,
+                    width: pillStyle.width,
+                  }}
+                />
+                
+                {categoryItems.map((item) => (
+                  <button
+                    key={item.key}
+                    ref={(el) => {
+                      categoryRefs.current[item.key] = el;
+                    }}
+                    onClick={() => handleCategoryChange(item.key)}
+                    className={`relative z-10 px-4 sm:px-6 py-1.5 sm:py-2 rounded-full font-semibold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap ${
+                      currentCategory === item.key
+                        ? 'text-indigo-600'
+                        : 'text-slate-500 hover:text-indigo-500'
+                    }`}
+                  >
+                    <span className="text-sm sm:text-base mr-1">{item.icon}</span>
+                    {item.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div className="text-xs text-slate-500">
@@ -441,7 +535,7 @@ export default function GalleryPage() {
             <div className="flex items-center justify-center py-20">
               <div className="text-center">
                 <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                <p className="text-slate-400 text-p-xs">Loading your gallery...</p>
+                <p className="text-slate-400 text-sm">Loading your gallery...</p>
               </div>
             </div>
           ) : isLoading ? (
@@ -449,7 +543,7 @@ export default function GalleryPage() {
           ) : galleryItems.length === 0 ? (
             <div className="text-center py-16 md:py-24 animate-fade-in-up">
               <div className="text-6xl mb-4">✨</div>
-              <h3 className="text-p-sm font-semibold text-slate-700 mb-2">No items yet</h3>
+              <h3 className="text-sm font-semibold text-slate-700 mb-2">No items yet</h3>
               <p className="text-slate-400 text-xs">Your {currentCategory} will appear here</p>
             </div>
           ) : (
@@ -461,68 +555,152 @@ export default function GalleryPage() {
                 exit={{ opacity: 0, x: categoryDirection * -200 }}
                 transition={{ duration: 0.35, ease: 'easeInOut' }}
               >
-                <div className="max-w-[1400px] mx-auto space-y-8">
+                <div className="max-w-[1400px] mx-auto space-y-10">
                   {/* Landscape Cards Section */}
                   {landscapeItems.length > 0 && (
-                    <div>
-                      {portraitItems.length > 0 && (
-                        <div className="mb-4">
-                          <h3 className="text-h4-sm font-semibold text-slate-700 flex items-center gap-2">
-                            <span>🌄</span> Landscape Cards
-                            <span className="text-xs font-normal text-slate-400">
-                              ({landscapeItems.length} {landscapeItems.length === 1 ? 'card' : 'cards'})
-                            </span>
-                          </h3>
-                        </div>
-                      )}
-                      <CardGrid orientation="landscape" className="w-full">
-                        {landscapeItems.map(item => (
+                    <div id="landscape-section">
+                      <div className="mb-4 flex items-center justify-between flex-wrap gap-2">
+                        <h3 className="text-lg font-semibold text-slate-700 flex items-center gap-2">
+                          <span>🌄</span> Landscape Cards
+                          <span className="text-xs font-normal text-slate-400">
+                            ({landscapeItems.length} {landscapeItems.length === 1 ? 'card' : 'cards'})
+                          </span>
+                        </h3>
+                        {landscapeTotalPages > 1 && (
+                          <span className="text-xs text-indigo-500 bg-indigo-50 px-2 py-1 rounded-full">
+                            Page {landscapePage} of {landscapeTotalPages}
+                          </span>
+                        )}
+                      </div>
+                      
+                      <CardGrid orientation="landscape">
+                        {paginatedLandscapeItems.map(item => (
                           <div 
                             key={item.id} 
                             onClick={(e) => handleCardClick(e, item)} 
                             className="group relative flex cursor-pointer flex-col items-center overflow-visible transition-all duration-300 hover:-translate-y-2 w-full"
                           >
+                            {/* Edit and Delete buttons */}
                             <div className="absolute -top-2 right-2 flex gap-2 z-10 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 opacity-100">
-                              <button data-action="edit" data-id={item.id} className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-indigo-500 text-white flex items-center justify-center hover:bg-indigo-600 transition-all hover:scale-110 shadow-lg text-sm active:scale-95"><FiEdit2 size={14} /></button>
-                              <button data-action="delete" data-id={item.id} className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-rose-500 text-white flex items-center justify-center hover:bg-rose-600 transition-all hover:scale-110 shadow-lg text-sm active:scale-95"><FiTrash2 size={14} /></button>
+                              <Button
+                                variant="primary"
+                                size="xs"
+                                icon={FiEdit2}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  customizeItem(item.id);
+                                }}
+                                className="!w-8 !h-8 !p-0 rounded-full shadow-lg"
+                                ariaLabel="Edit card"
+                              />
+                              <Button
+                                variant="danger"
+                                size="xs"
+                                icon={FiTrash2}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  removeItem(item.id);
+                                }}
+                                className="!w-8 !h-8 !p-0 rounded-full shadow-lg"
+                                ariaLabel="Delete card"
+                              />
                             </div>
-                            <CardPreview html={item.fullHTML} orientation="landscape" className="w-full transition-all duration-300 group-hover:shadow-2xl group-hover:shadow-black/10" />
-                            <p className="mt-3 text-p-xs font-medium text-slate-700 md:hidden truncate max-w-[200px]">{item.name || 'Untitled Card'}</p>
+                            <CardPreview 
+                              html={item.fullHTML} 
+                              orientation="landscape" 
+                              className="w-full transition-all duration-300 group-hover:shadow-2xl group-hover:shadow-black/10" 
+                            />
+                            <p className="mt-3 text-xs font-medium text-slate-700 md:hidden truncate max-w-[200px]">
+                              {item.name || 'Untitled Card'}
+                            </p>
                           </div>
                         ))}
                       </CardGrid>
+                      
+                      {landscapeTotalPages > 1 && (
+                        <Pagination
+                          currentPage={landscapePage}
+                          totalPages={landscapeTotalPages}
+                          onPageChange={handleLandscapePageChange}
+                          siblingCount={1}
+                          showFirstLast={true}
+                          className="mt-6"
+                        />
+                      )}
                     </div>
                   )}
 
                   {/* Portrait Cards Section */}
                   {portraitItems.length > 0 && (
-                    <div>
-                      {landscapeItems.length > 0 && (
-                        <div className="mb-4">
-                          <h3 className="text-h4-sm font-semibold text-slate-700 flex items-center gap-2">
-                            <span>📱</span> Portrait Cards
-                            <span className="text-xs font-normal text-slate-400">
-                              ({portraitItems.length} {portraitItems.length === 1 ? 'card' : 'cards'})
-                            </span>
-                          </h3>
-                        </div>
-                      )}
-                      <CardGrid orientation="portrait" className="w-full">
-                        {portraitItems.map(item => (
+                    <div id="portrait-section">
+                      <div className="mb-4 flex items-center justify-between flex-wrap gap-2">
+                        <h3 className="text-lg font-semibold text-slate-700 flex items-center gap-2">
+                          <span>📱</span> Portrait Cards
+                          <span className="text-xs font-normal text-slate-400">
+                            ({portraitItems.length} {portraitItems.length === 1 ? 'card' : 'cards'})
+                          </span>
+                        </h3>
+                        {portraitTotalPages > 1 && (
+                          <span className="text-xs text-indigo-500 bg-indigo-50 px-2 py-1 rounded-full">
+                            Page {portraitPage} of {portraitTotalPages}
+                          </span>
+                        )}
+                      </div>
+                      
+                      <CardGrid orientation="portrait">
+                        {paginatedPortraitItems.map(item => (
                           <div 
                             key={item.id} 
                             onClick={(e) => handleCardClick(e, item)} 
                             className="group relative flex cursor-pointer flex-col items-center overflow-visible transition-all duration-300 hover:-translate-y-2 w-full"
                           >
+                            {/* Edit and Delete buttons */}
                             <div className="absolute -top-2 right-2 flex gap-2 z-10 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 opacity-100">
-                              <button data-action="edit" data-id={item.id} className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-indigo-500 text-white flex items-center justify-center hover:bg-indigo-600 transition-all hover:scale-110 shadow-lg text-sm active:scale-95"><FiEdit2 size={14} /></button>
-                              <button data-action="delete" data-id={item.id} className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-rose-500 text-white flex items-center justify-center hover:bg-rose-600 transition-all hover:scale-110 shadow-lg text-sm active:scale-95"><FiTrash2 size={14} /></button>
+                              <Button
+                                variant="primary"
+                                size="xs"
+                                icon={FiEdit2}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  customizeItem(item.id);
+                                }}
+                                className="!w-8 !h-8 !p-0 rounded-full shadow-lg"
+                                ariaLabel="Edit card"
+                              />
+                              <Button
+                                variant="danger"
+                                size="xs"
+                                icon={FiTrash2}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  removeItem(item.id);
+                                }}
+                                className="!w-8 !h-8 !p-0 rounded-full shadow-lg"
+                                ariaLabel="Delete card"
+                              />
                             </div>
-                            <CardPreview html={item.fullHTML} orientation="portrait" className="w-full transition-all duration-300 group-hover:shadow-2xl group-hover:shadow-black/10" />
-                            <p className="mt-3 text-p-xs font-medium text-slate-700 md:hidden truncate max-w-[200px]">{item.name || 'Untitled Card'}</p>
+                            <CardPreview 
+                              html={item.fullHTML} 
+                              orientation="portrait" 
+                              className="w-full transition-all duration-300 group-hover:shadow-2xl group-hover:shadow-black/10" 
+                            />
+                            <p className="mt-3 text-xs font-medium text-slate-700 md:hidden truncate max-w-[200px]">
+                              {item.name || 'Untitled Card'}
+                            </p>
                           </div>
                         ))}
                       </CardGrid>
+                      
+                      {portraitTotalPages > 1 && (
+                        <Pagination
+                          currentPage={portraitPage}
+                          totalPages={portraitTotalPages}
+                          onPageChange={handlePortraitPageChange}
+                          siblingCount={1}
+                          showFirstLast={true}
+                          className="mt-6"
+                        />
+                      )}
                     </div>
                   )}
 
@@ -539,38 +717,25 @@ export default function GalleryPage() {
         </div>
       </div>
 
-      {/* Modal */}
-      {showModal && selectedItem && (
-        <div 
-          className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center z-[2000] p-3 sm:p-4 md:p-6 animate-fade-in" 
-          onClick={(e) => e.target === e.currentTarget && closeModal()}
-        >
-          <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 items-center justify-center w-full max-w-[95vw] sm:max-w-[90vw] lg:max-w-[85vw]">
-            <div
-              ref={modalCardRef}
-              onClick={handleModalCardFlip}
-              className={`rounded-2xl overflow-hidden shadow-2xl shadow-black/50 transition-all duration-300 ${
-                getOrientationFromHTML(selectedItem.fullHTML, selectedItem.orientation) === 'portrait' 
-                  ? 'w-full max-w-[300px] sm:max-w-[350px] aspect-[350/550]' 
-                  : 'w-full max-w-[450px] sm:max-w-[550px] aspect-[550/348]'
-              }`}
-            >
-              <div className="w-full h-full" dangerouslySetInnerHTML={{ __html: selectedItem.fullHTML || '' }} />
-            </div>
-
-            {/* Action Buttons - stacked on mobile, row on desktop */}
-            <div className="flex flex-col sm:flex-row lg:flex-col gap-2 sm:gap-3 w-full lg:w-auto justify-center animate-fade-in-up">
-              <Button onClick={() => handleModalAction('customize')} variant="primary" size="md" icon={FiEdit2} className="w-full lg:w-auto">Customize</Button>
-              {(currentCategory === 'drafts' || currentCategory === 'downloads') && (
-                <Button onClick={() => handleModalAction('wishlist')} variant="warning" size="md" icon={FiStar} className="w-full lg:w-auto">Save</Button>
-              )}
-              <Button onClick={() => handleModalAction('download')} variant="success" size="md" icon={FiDownload} className="w-full lg:w-auto">Download</Button>
-              <Button onClick={() => handleModalAction('delete')} variant="danger" size="md" icon={FiTrash2} className="w-full lg:w-auto">Delete</Button>
-              <Button onClick={() => handleModalAction('close')} variant="secondary" size="md" icon={FiChevronLeft} className="w-full lg:w-auto">Close</Button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Modal - Using reusable Modal component */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        htmlContent={selectedItem?.fullHTML}
+        orientation={getOrientationFromHTML(selectedItem?.fullHTML, selectedItem?.orientation)}
+        onWishlist={moveToWishlist}
+        onCustomize={() => {
+          if (selectedItem) {
+            localStorage.setItem('selectedTemplateForCustomize', JSON.stringify(selectedItem));
+            router.push('/customize');
+          }
+        }}
+        onDownload={downloadSelectedItem}
+        showWishlist={currentCategory !== 'wishlist'}
+        showCustomize={true}
+        showDownload={true}
+        title="Card Preview"
+      />
 
       {/* Toast Notification */}
       <div className={`fixed bottom-4 sm:bottom-6 right-4 sm:right-6 px-4 py-2.5 sm:px-5 sm:py-3 rounded-xl text-xs font-medium transition-all duration-300 z-[1100] shadow-lg ${
@@ -579,39 +744,8 @@ export default function GalleryPage() {
         {toastMessage}
       </div>
 
+      {/* Global Styles */}
       <style jsx global>{`
-        .flip-card { 
-          width: 100%; 
-          height: 100%; 
-          perspective: 1800px; 
-          cursor: pointer; 
-        }
-        
-        .flip-card-inner { 
-          position: relative; 
-          width: 100%; 
-          height: 100%; 
-          transition: transform 0.65s cubic-bezier(0.4, 0, 0.2, 1); 
-          transform-style: preserve-3d; 
-        }
-        
-        .flip-card.flipped .flip-card-inner { 
-          transform: rotateY(180deg); 
-        }
-        
-        .card-front, .card-back { 
-          position: absolute; 
-          width: 100%; 
-          height: 100%; 
-          backface-visibility: hidden; 
-          border-radius: 20px; 
-          overflow: hidden; 
-        }
-        
-        .card-back { 
-          transform: rotateY(180deg); 
-        }
-        
         @media (hover: hover) {
           .group:hover .md\\:group-hover\\:opacity-100 {
             opacity: 1;
@@ -677,6 +811,10 @@ export default function GalleryPage() {
         
         .animate-shimmer { 
           animation: shimmer 1.5s ease-in-out infinite; 
+        }
+
+        html {
+          scroll-behavior: smooth;
         }
       `}</style>
     </div>

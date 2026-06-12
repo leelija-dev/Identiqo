@@ -4,6 +4,7 @@
 import Link from "next/link";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { useRef, useState, useEffect } from "react";
+import Button from "@/components/Common/Button";
 import {
   FiHeart,
   FiTarget,
@@ -18,13 +19,10 @@ import {
   FiTrendingUp,
   FiCloud,
   FiStar,
- 
   FiPlay,
- 
   FiBriefcase,
   FiCpu,
   FiLayers,
- 
   FiCompass,
 } from "react-icons/fi"; 
 
@@ -33,6 +31,8 @@ const Container = ({ children, className = "" }) => (
     {children}
   </div>
 );
+
+const ROTATING_VALUES_COUNT = 6;
 
 export default function AboutPage() {
   const [mounted, setMounted] = useState(false);
@@ -87,7 +87,7 @@ export default function AboutPage() {
   
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentRotatingIndex((prev) => (prev + 1) % rotatingValues.length);
+      setCurrentRotatingIndex((prev) => (prev + 1) % ROTATING_VALUES_COUNT);
     }, 3000);
     return () => clearInterval(interval);
   }, []);
@@ -162,22 +162,26 @@ export default function AboutPage() {
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4">
-                <Link 
-                  href="/pricing" 
-                  className="group relative inline-flex items-center justify-center gap-2 px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full font-semibold overflow-hidden transition-all hover:shadow-xl hover:scale-105"
+                <Button
+                  href="/pricing"
+                  variant="primary"
+                  size="lg"
+                  icon={FiArrowRight}
+                  iconPosition="right"
+                  className="rounded-full shadow-lg hover:shadow-xl"
                 >
-                  <span className="relative z-10">Start Creating Now</span>
-                  <FiArrowRight className="relative z-10 group-hover:translate-x-1 transition-transform" />
-                  <div className="absolute inset-0 bg-gradient-to-r from-pink-600 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </Link>
+                  Start Creating Now
+                </Button>
                 
-                <Link 
-                  href="/contact" 
-                  className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-white text-slate-700 rounded-full font-semibold border border-slate-200 hover:border-purple-300 hover:shadow-md transition-all hover:scale-105"
+                <Button
+                  href="/contact"
+                  variant="secondary"
+                  size="lg"
+                  icon={FiPlay}
+                  className="rounded-full bg-white border-slate-200 hover:border-purple-300"
                 >
-                  <FiPlay className="w-4 h-4" />
                   See Demo
-                </Link>
+                </Button>
               </div>
 
               {/* Rotating Value Badge - Light */}
@@ -459,7 +463,7 @@ export default function AboutPage() {
         </Container>
       </div>
 
-      {/* CTA - 3D Glass Morphism Light */}
+      {/* CTA - 3D Glass Morphism Light - NOW USING BUTTON COMPONENT */}
       <Container className="py-20">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -476,19 +480,24 @@ export default function AboutPage() {
               Join 50,000+ businesses already using CardStudio to create stunning employee IDs
             </p>
             <div className="flex flex-wrap gap-4 justify-center">
-              <Link 
-                href="/pricing" 
-                className="group relative inline-flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full font-semibold overflow-hidden transition-all hover:shadow-xl hover:scale-105"
+              <Button
+                href="/pricing"
+                variant="primary"
+                size="lg"
+                icon={FiArrowRight}
+                iconPosition="right"
+                className="rounded-full shadow-lg hover:shadow-xl"
               >
-                <span className="relative z-10">Start Free Trial</span>
-                <FiArrowRight className="relative z-10 group-hover:translate-x-1 transition-transform" />
-              </Link>
-              <Link 
-                href="/contact" 
-                className="px-8 py-3 bg-white text-slate-700 rounded-full font-semibold border border-slate-200 hover:border-purple-300 hover:shadow-md transition-all hover:scale-105"
+                Start Free Trial
+              </Button>
+              <Button
+                href="/contact"
+                variant="secondary"
+                size="lg"
+                className="rounded-full bg-white border-slate-200 hover:border-purple-300"
               >
                 Talk to Sales
-              </Link>
+              </Button>
             </div>
           </div>
         </motion.div>

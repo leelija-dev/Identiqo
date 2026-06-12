@@ -4,14 +4,20 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { 
-  FiMail, FiLock, FiEye, FiEyeOff, FiArrowRight, 
-  FiBriefcase, FiTrendingUp, FiUsers, FiShield, FiAlertCircle
+import {
+  FiMail,
+  FiLock,
+  FiEye,
+  FiEyeOff,
+  FiTrendingUp,
+  FiUsers,
+  FiShield,
+  FiAlertCircle,
 } from "react-icons/fi";
 import { FaGoogle, FaMicrosoft, FaStar } from "react-icons/fa";
 import Button from '@/components/Common/Button';
 
-export default function signin() {
+export default function SignInPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -175,131 +181,128 @@ export default function signin() {
               </div>
             </div>
 
+            {/* Social Login Buttons */}
+            <div className="grid grid-cols-2 gap-3 mb-6">
+              <button
+                onClick={() => handleSocialLogin("Google")}
+                className="flex items-center justify-center gap-3 px-4 py-3 border border-slate-200 rounded-xl hover:shadow-lg hover:border-slate-300 transition-all duration-300 text-p-xs font-medium text-slate-700 bg-white hover:bg-gray-50 group relative overflow-hidden"
+              >
+                <FaGoogle className="w-5 h-5" style={{ color: '#4285F4' }} />
+                <span>Google</span>
+              </button>
+              <button
+                onClick={() => handleSocialLogin("Microsoft")}
+                className="flex items-center justify-center gap-3 px-4 py-3 border border-slate-200 rounded-xl hover:shadow-lg hover:border-slate-300 transition-all duration-300 text-p-xs font-medium text-slate-700 bg-white hover:bg-gray-50 group relative overflow-hidden"
+              >
+                <svg className="w-5 h-5" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="1" y="1" width="9" height="9" fill="#F25022"/>
+                  <rect x="11" y="1" width="9" height="9" fill="#7FBA00"/>
+                  <rect x="1" y="11" width="9" height="9" fill="#00A4EF"/>
+                  <rect x="11" y="11" width="9" height="9" fill="#FFB900"/>
+                </svg>
+                <span>Microsoft</span>
+              </button>
+            </div>
+
+            {/* Divider */}
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-slate-200" />
+              </div>
+              <div className="relative flex justify-center text-p-xs">
+                <span className="px-4 bg-white text-slate-400">Or continue with email</span>
+              </div>
+            </div>
+
             {/* Login Form */}
-            <>
-              {/* Social Login Buttons */}
-              <div className="grid grid-cols-2 gap-3 mb-6">
-                <button
-                  onClick={() => handleSocialLogin("Google")}
-                  className="flex items-center justify-center gap-3 px-4 py-3 border border-slate-200 rounded-xl hover:shadow-lg hover:border-slate-300 transition-all duration-300 text-p-xs font-medium text-slate-700 bg-white hover:bg-gray-50 group relative overflow-hidden"
-                >
-                  <FaGoogle className="w-5 h-5" style={{ color: '#4285F4' }} />
-                  <span>Google</span>
-                </button>
-                <button
-                  onClick={() => handleSocialLogin("Microsoft")}
-                  className="flex items-center justify-center gap-3 px-4 py-3 border border-slate-200 rounded-xl hover:shadow-lg hover:border-slate-300 transition-all duration-300 text-p-xs font-medium text-slate-700 bg-white hover:bg-gray-50 group relative overflow-hidden"
-                >
-                  <svg className="w-5 h-5" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="1" y="1" width="9" height="9" fill="#F25022"/>
-                    <rect x="11" y="1" width="9" height="9" fill="#7FBA00"/>
-                    <rect x="1" y="11" width="9" height="9" fill="#00A4EF"/>
-                    <rect x="11" y="11" width="9" height="9" fill="#FFB900"/>
-                  </svg>
-                  <span>Microsoft</span>
-                </button>
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div>
+                <label className="block text-p-xs font-semibold text-slate-700 mb-2">
+                  Email address
+                </label>
+                <div className="relative">
+                  <FiMail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (errors.email) setErrors({ ...errors, email: "" });
+                    }}
+                    placeholder="hello@cardstudio.com"
+                    className={`w-full pl-12 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-4 transition-all text-p-xs ${
+                      errors.email
+                        ? "border-red-300 focus:border-red-400 focus:ring-red-100"
+                        : "border-slate-200 focus:border-indigo-400 focus:ring-indigo-100"
+                    }`}
+                  />
+                </div>
+                {errors.email && (
+                  <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                    <FiAlertCircle className="w-3 h-3" /> {errors.email}
+                  </p>
+                )}
               </div>
 
-              {/* Divider */}
-              <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-slate-200" />
+              <div>
+                <label className="block text-p-xs font-semibold text-slate-700 mb-2">
+                  Password
+                </label>
+                <div className="relative">
+                  <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      if (errors.password) setErrors({ ...errors, password: "" });
+                    }}
+                    placeholder="Enter your password"
+                    className={`w-full pl-12 pr-12 py-3 border rounded-xl focus:outline-none focus:ring-4 transition-all text-p-xs ${
+                      errors.password
+                        ? "border-red-300 focus:border-red-400 focus:ring-red-100"
+                        : "border-slate-200 focus:border-indigo-400 focus:ring-indigo-100"
+                    }`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  >
+                    {showPassword ? <FiEyeOff className="w-5 h-5" /> : <FiEye className="w-5 h-5" />}
+                  </button>
                 </div>
-                <div className="relative flex justify-center text-p-xs">
-                  <span className="px-4 bg-white text-slate-400">Or continue with email</span>
-                </div>
+                {errors.password && (
+                  <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                    <FiAlertCircle className="w-3 h-3" /> {errors.password}
+                  </p>
+                )}
               </div>
 
-              {/* Login Form */}
-              <form onSubmit={handleSubmit} className="space-y-5">
-                <div>
-                  <label className="block text-p-xs font-semibold text-slate-700 mb-2">
-                    Email address
-                  </label>
-                  <div className="relative">
-                    <FiMail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => {
-                        setEmail(e.target.value);
-                        if (errors.email) setErrors({...errors, email: ""});
-                      }}
-                      placeholder="hello@cardstudio.com"
-                      className={`w-full pl-12 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-4 transition-all text-p-xs ${
-                        errors.email 
-                          ? "border-red-300 focus:border-red-400 focus:ring-red-100" 
-                          : "border-slate-200 focus:border-indigo-400 focus:ring-indigo-100"
-                      }`}
-                    />
-                  </div>
-                  {errors.email && (
-                    <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
-                      <FiAlertCircle className="w-3 h-3" /> {errors.email}
-                    </p>
-                  )}
-                </div>
+              <div className="flex items-center justify-between">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                  />
+                  <span className="text-p-xs text-slate-600">Remember me</span>
+                </label>
+                <Link href="/forgot-password" className="text-p-xs text-indigo-600 hover:text-indigo-700 font-medium">
+                  Forgot password?
+                </Link>
+              </div>
 
-                <div>
-                  <label className="block text-p-xs font-semibold text-slate-700 mb-2">
-                    Password
-                  </label>
-                  <div className="relative">
-                    <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      value={password}
-                      onChange={(e) => {
-                        setPassword(e.target.value);
-                        if (errors.password) setErrors({...errors, password: ""});
-                      }}
-                      placeholder="Enter your password"
-                      className={`w-full pl-12 pr-12 py-3 border rounded-xl focus:outline-none focus:ring-4 transition-all text-p-xs ${
-                        errors.password 
-                          ? "border-red-300 focus:border-red-400 focus:ring-red-100" 
-                          : "border-slate-200 focus:border-indigo-400 focus:ring-indigo-100"
-                      }`}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                    >
-                      {showPassword ? <FiEyeOff className="w-5 h-5" /> : <FiEye className="w-5 h-5" />}
-                    </button>
-                  </div>
-                  {errors.password && (
-                    <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
-                      <FiAlertCircle className="w-3 h-3" /> {errors.password}
-                    </p>
-                  )}
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={rememberMe}
-                      onChange={(e) => setRememberMe(e.target.checked)}
-                      className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                    />
-                    <span className="text-p-xs text-slate-600">Remember me</span>
-                  </label>
-                  <Link href="/forgot-password" className="text-p-xs text-indigo-600 hover:text-indigo-700 font-medium">
-                    Forgot password?
-                  </Link>
-                </div>
-
-                <Button
-                  type="submit"
-                  variant="primary"
-                  size="lg"
-                  className="w-full"
-                >
-                  Sign in
-                </Button>
-              </form>
-            </>
+              <Button
+                type="submit"
+                variant="primary"
+                size="lg"
+                className="w-full"
+              >
+                Sign in
+              </Button>
+            </form>
 
             {/* Sign Up Link */}
             <p className="text-center text-p-xs text-slate-600 mt-6">

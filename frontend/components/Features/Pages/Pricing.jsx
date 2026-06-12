@@ -1,10 +1,10 @@
 // app/pricing/page.jsx
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Container from "../../Common/Container";
 import SectionTitle from "../../Common/SectionTitle";
-import Button from "@/components/Common/Button";  
+import Button from "@/components/Common/Button";
 
 export default function PricingPage() {
   const router = useRouter();
@@ -24,11 +24,14 @@ export default function PricingPage() {
   const [contentDirection, setContentDirection] = useState("right");
   const [animating, setAnimating] = useState(false);
   const pricingRef = useRef(null);
-  const tierRefs = {
-    essential: useRef(null),
-    professional: useRef(null),
-    enterprise: useRef(null),
-  };
+  const essentialTierRef = useRef(null);
+  const professionalTierRef = useRef(null);
+  const enterpriseTierRef = useRef(null);
+  const tierRefs = useMemo(() => ({
+    essential: essentialTierRef,
+    professional: professionalTierRef,
+    enterprise: enterpriseTierRef,
+  }), []);
   const tiersOrder = ["essential", "professional", "enterprise"];
 
   // Typewriter animation effect
@@ -139,7 +142,7 @@ export default function PricingPage() {
     updatePill();
     window.addEventListener("resize", updatePill);
     return () => window.removeEventListener("resize", updatePill);
-  }, [currentTier, mounted]);
+  }, [currentTier, mounted, tierRefs]);
 
   // Scroll reveal animation
   useEffect(() => {
@@ -217,14 +220,14 @@ export default function PricingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 relative overflow-hidden">
       
-      {/* Animated Background Glows - Mobile Optimized */}
+      {/* Animated Background Glows */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-[20%] -right-[10%] w-[60%] h-[60%] bg-gradient-to-r from-blue-200/20 to-purple-200/20 rounded-full blur-80px animate-pulse" />
         <div className="absolute -bottom-[20%] -left-[10%] w-[50%] h-[50%] bg-gradient-to-r from-emerald-200/15 to-teal-200/15 rounded-full blur-80px animate-pulse delay-1000" />
         <div className="absolute top-[30%] left-[20%] w-[40%] h-[40%] bg-gradient-to-r from-amber-200/10 to-orange-200/10 rounded-full blur-80px animate-pulse delay-2000" />
       </div>
 
-      {/* Hidden Decorative Box – scroll revealed - Mobile Responsive */}
+      {/* Hidden Decorative Box – scroll revealed */}
       <div className={`fixed right-0 top-1/2 -translate-y-1/2 w-[200px] sm:w-[300px] h-[300px] sm:h-[400px] bg-gradient-to-r from-indigo-500/10 to-purple-500/10 rounded-full blur-120px transition-all duration-1000 ${
         hasScrolled ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-32'
       }`} />
@@ -232,7 +235,7 @@ export default function PricingPage() {
         hasScrolled ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-32'
       }`} />
 
-      {/* Floating Particles - Reduced count for mobile */}
+      {/* Floating Particles */}
       {mounted && (
         <div className="fixed inset-0 pointer-events-none overflow-hidden">
           {particles.map((particle) => (
@@ -255,7 +258,7 @@ export default function PricingPage() {
 
       <Container className="relative z-10 py-8 sm:py-12 md:py-16 px-4 sm:px-6">
         
-        {/* Pricing Heading Section - Mobile Optimized */}
+        {/* Pricing Heading Section */}
         <div className={`text-center max-w-4xl mx-auto mb-8 sm:mb-12 transition-all duration-700 ${mounted ? 'translate-y-0 opacity-100' : '-translate-y-10 opacity-0'}`}>
           <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm border border-indigo-100 px-3 sm:px-5 py-1.5 sm:py-2 rounded-full mb-4 sm:mb-6 shadow-sm animate-fade-in-up">
             <span className="relative flex h-1.5 w-1.5 sm:h-2 sm:w-2">
@@ -276,7 +279,7 @@ export default function PricingPage() {
             Start for free and upgrade when you need more.
           </p>
 
-          {/* Billing Toggle - Mobile Optimized */}
+          {/* Billing Toggle - Restored original stylish design */}
           <div className="flex items-center justify-center gap-2 sm:gap-4 mt-6 sm:mt-8 animate-fade-in-up">
             <span className={`text-[11px] sm:text-p-xs font-medium transition-all duration-300 ${!isYearly ? 'text-slate-800 scale-105' : 'text-slate-500'}`}>
               Monthly
@@ -301,7 +304,7 @@ export default function PricingPage() {
           </div>
         </div>
         
-        {/* Main Split Container - Mobile Responsive Layout */}
+        {/* Main Split Container */}
         <div
           ref={pricingRef}
           className={`transition-all duration-1000 ${
@@ -310,7 +313,7 @@ export default function PricingPage() {
         >
           <div className="flex flex-col lg:flex-row bg-white/80 backdrop-blur-sm border border-blue-500/20 shadow-2xl rounded-3xl sm:rounded-[48px] overflow-hidden w-full transition-all duration-500 hover:shadow-[0_30px_50px_-20px_rgba(0,0,0,0.3)] min-h-[auto] lg:min-h-[580px]">
             
-            {/* Left Side - Hero Section - Mobile Optimized */}
+            {/* Left Side - Hero Section */}
             <div className="flex-1 p-6 sm:p-8 md:p-10 lg:p-14 bg-gradient-to-br from-white via-white to-slate-50 border-b lg:border-b-0 lg:border-r border-slate-200 flex flex-col justify-center">
               <div className="inline-block bg-gradient-to-r from-indigo-50 to-purple-50 px-3 sm:px-4 py-1 rounded-full text-[10px] sm:text-p-xs font-semibold text-indigo-600 w-fit mb-4 sm:mb-6 tracking-wide animate-pulse hover:animate-none transition-all">
                 ✦ ID 3.0 PLATFORM
@@ -339,10 +342,10 @@ export default function PricingPage() {
               </div>
             </div>
 
-            {/* Right Side - Pricing Configurator - Mobile Optimized */}
+            {/* Right Side - Pricing Configurator */}
             <div className="flex-[1.2] p-6 sm:p-8 md:p-10 lg:p-12 bg-gradient-to-br from-slate-50 to-indigo-50/20 flex flex-col justify-center min-h-[480px] sm:min-h-[500px]">
               
-              {/* Tier Options with sliding pill - Mobile Responsive */}
+              {/* Tier Options with sliding pill - RESTORED ORIGINAL STYLING */}
               <div className="relative flex gap-1 sm:gap-2 mb-6 sm:mb-8 bg-slate-100 p-1.5 sm:p-2 rounded-full w-full sm:w-fit border border-slate-200 shadow-inner overflow-x-auto no-scrollbar">
                 <div
                   className="absolute top-1.5 sm:top-2 bottom-1.5 sm:bottom-2 bg-white rounded-full shadow-md transition-all duration-300 ease-out hidden sm:block"
@@ -356,10 +359,10 @@ export default function PricingPage() {
                     key={tier}
                     ref={tierRefs[tier]}
                     onClick={() => handleTierChange(tier)}
-                    className={`relative z-10 flex-1 sm:flex-none px-3 sm:px-5 md:px-7 py-1.5 sm:py-2 rounded-full font-semibold text-[11px] sm:text-p-xs md:text-p-sm transition-colors duration-300 whitespace-nowrap ${
+                    className={`relative z-10 flex-1 sm:flex-none px-3 sm:px-5 md:px-7 py-1.5 sm:py-2 rounded-full font-semibold text-[11px] sm:text-p-xs md:text-p-sm transition-all duration-300 whitespace-nowrap ${
                       currentTier === tier
                         ? 'text-indigo-600 bg-white sm:bg-transparent shadow-sm sm:shadow-none'
-                        : 'text-slate-500 hover:text-indigo-500'
+                        : 'text-slate-500 hover:text-indigo-500 hover:bg-white/50'
                     }`}
                   >
                     {tier.charAt(0).toUpperCase() + tier.slice(1)}
@@ -367,7 +370,7 @@ export default function PricingPage() {
                 ))}
               </div>
 
-              {/* Pricing Core with Slide Animation - Mobile Optimized */}
+              {/* Pricing Core with Slide Animation */}
               <div className={`transition-all duration-400 ${contentAnimationClass}`}>
                 <div className="relative">
                   {currentTier === "professional" && (

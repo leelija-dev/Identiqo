@@ -85,6 +85,7 @@ export const TemplateCardSkeleton = memo(({ orientation = "landscape" }) => {
     </div>
   );
 });
+TemplateCardSkeleton.displayName = "TemplateCardSkeleton";
 
 // Simple Card Skeleton for Gallery/Grid view
 export const SimpleCardSkeleton = memo(({ orientation = "landscape" }) => {
@@ -108,6 +109,7 @@ export const SimpleCardSkeleton = memo(({ orientation = "landscape" }) => {
     </div>
   );
 });
+SimpleCardSkeleton.displayName = "SimpleCardSkeleton";
 
 // List View Skeleton
 export const ListCardSkeleton = memo(() => {
@@ -130,6 +132,7 @@ export const ListCardSkeleton = memo(() => {
     </div>
   );
 });
+ListCardSkeleton.displayName = "ListCardSkeleton";
 
 // Loading Grid for Templates Page
 export const TemplateGridSkeleton = memo(({ count = 6, orientation = "landscape" }) => {
@@ -146,6 +149,7 @@ export const TemplateGridSkeleton = memo(({ count = 6, orientation = "landscape"
     </div>
   );
 });
+TemplateGridSkeleton.displayName = "TemplateGridSkeleton";
 
 // Sidebar Skeleton
 export const SidebarSkeleton = memo(() => {
@@ -176,6 +180,7 @@ export const SidebarSkeleton = memo(() => {
     </aside>
   );
 });
+SidebarSkeleton.displayName = "SidebarSkeleton";
 
 // ============= BLOG SKELETONS =============
 
@@ -244,6 +249,7 @@ export const BlogCardSkeleton = memo(({ viewMode = "grid" }) => {
     </div>
   );
 });
+BlogCardSkeleton.displayName = "BlogCardSkeleton";
 
 // Featured Post Skeleton
 export const FeaturedPostSkeleton = memo(({ viewMode = "grid" }) => {
@@ -317,6 +323,7 @@ export const FeaturedPostSkeleton = memo(({ viewMode = "grid" }) => {
     </div>
   );
 });
+FeaturedPostSkeleton.displayName = "FeaturedPostSkeleton";
 
 // Category Pills Skeleton
 export const CategoryPillsSkeleton = memo(() => {
@@ -328,6 +335,7 @@ export const CategoryPillsSkeleton = memo(() => {
     </div>
   );
 });
+CategoryPillsSkeleton.displayName = "CategoryPillsSkeleton";
 
 // Grid Skeleton for Blog (multiple cards)
 export const BlogGridSkeleton = memo(({ count = 6, viewMode = "grid" }) => {
@@ -339,5 +347,6 @@ export const BlogGridSkeleton = memo(({ count = 6, viewMode = "grid" }) => {
     </div>
   );
 });
+BlogGridSkeleton.displayName = "BlogGridSkeleton";
 
 export default Skeleton;
