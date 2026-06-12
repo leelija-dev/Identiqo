@@ -38,7 +38,14 @@ const normalizeTemplate = (template) => ({
 });
 
 const landscapeEmployee = landscapeEmployeeRaw.map(normalizeTemplate);
-const landscapeVisiting = landscapeVisitingRaw.map(normalizeTemplate);
+// The landscape visiting source file currently contains employee-tagged cards.
+// Normalize them here so they enter the visiting flow and show visiting-specific UI.
+const landscapeVisiting = landscapeVisitingRaw.map((template) =>
+  normalizeTemplate({
+    ...template,
+    category: 'visiting',
+  })
+);
 const portraitEmployee = portraitEmployeeRaw.map(normalizeTemplate);
 
 export const allTemplates = [

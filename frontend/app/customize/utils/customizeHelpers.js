@@ -89,4 +89,4 @@ export const DEFAULT_IMAGE_CLASSES = {
   logo: ['.logo'],
   barcode: ['.barcode', '.barcode-section'],
   qr: ['.qr-placeholder']
-};  
+};

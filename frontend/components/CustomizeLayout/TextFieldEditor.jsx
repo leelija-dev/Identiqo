@@ -2,8 +2,6 @@
 'use client';
 
 import { FiType, FiRefreshCcw } from 'react-icons/fi';
-import { throttle } from '../utils/customizeHelpers';
-import { useMemo, useCallback } from 'react';
 
 export default function TextFieldEditor({ 
   textFields, 
@@ -16,7 +14,8 @@ export default function TextFieldEditor({
   onFieldClick
 }) {
   return (
-    <div className="mb-3 p-3.5 border border-slate-100 rounded-2xl bg-white shadow-sm">
+    // Changed background: from bg-white to gradient
+    <div className="mb-3 p-3.5 border border-slate-100 rounded-2xl bg-gradient-to-br from-indigo-50/30 to-purple-50/30 shadow-sm">
       <div className="flex items-center gap-2 mb-3 text-slate-700 font-semibold text-xs uppercase tracking-wider">
         <FiType /> Editable Text Fields
       </div>
@@ -44,6 +43,7 @@ export default function TextFieldEditor({
   );
 }
 
+// TextFieldItem component remains unchanged
 function TextFieldItem({ 
   field, 
   onTextChange, 

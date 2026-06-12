@@ -3,6 +3,8 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
+import Button from "@/components/Common/Button";
+import { FiMail, FiPhone, FiMapPin, FiSend, FiNavigation, FiShare2, FiClock } from "react-icons/fi";
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -30,7 +32,6 @@ export default function ContactPage() {
       setTimeout(() => setIsSubmitted(false), 5000);
     }, 1500);
   };
-
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50/30">
@@ -64,7 +65,7 @@ export default function ContactPage() {
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         
-        {/* Contact Cards */}
+        {/* Contact Cards - Using Button component for links */}
         <div className="grid md:grid-cols-3 gap-6 mb-16">
           {/* Email */}
           <motion.div
@@ -74,14 +75,17 @@ export default function ContactPage() {
             className="bg-white rounded-xl p-6 text-center shadow-sm hover:shadow-md transition-shadow border border-purple-100"
           >
             <div className="w-12 h-12 mx-auto rounded-full bg-purple-50 flex items-center justify-center mb-4">
-              <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
+              <FiMail className="w-6 h-6 text-purple-600" />
             </div>
             <h3 className="font-semibold text-slate-800 mb-1">Email</h3>
-            <a href="mailto:debasmita@example.com" className="text-purple-600 text-sm hover:text-purple-700 transition">
+            <Button
+              href="mailto:debasmita@example.com"
+              variant="ghost"
+              size="sm"
+              className="text-purple-600 hover:text-purple-700"
+            >
               debasmita@example.com
-            </a>
+            </Button>
           </motion.div>
 
           {/* Phone */}
@@ -92,14 +96,17 @@ export default function ContactPage() {
             className="bg-white rounded-xl p-6 text-center shadow-sm hover:shadow-md transition-shadow border border-purple-100"
           >
             <div className="w-12 h-12 mx-auto rounded-full bg-purple-50 flex items-center justify-center mb-4">
-              <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-              </svg>
+              <FiPhone className="w-6 h-6 text-purple-600" />
             </div>
             <h3 className="font-semibold text-slate-800 mb-1">Phone</h3>
-            <a href="tel:+15551234567" className="text-purple-600 text-sm hover:text-purple-700 transition">
+            <Button
+              href="tel:+15551234567"
+              variant="ghost"
+              size="sm"
+              className="text-purple-600 hover:text-purple-700"
+            >
               +1 (555) 123-4567
-            </a>
+            </Button>
           </motion.div>
 
           {/* Location */}
@@ -110,10 +117,7 @@ export default function ContactPage() {
             className="bg-white rounded-xl p-6 text-center shadow-sm hover:shadow-md transition-shadow border border-purple-100"
           >
             <div className="w-12 h-12 mx-auto rounded-full bg-purple-50 flex items-center justify-center mb-4">
-              <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
+              <FiMapPin className="w-6 h-6 text-purple-600" />
             </div>
             <h3 className="font-semibold text-slate-800 mb-1">Location</h3>
             <p className="text-slate-500 text-sm">San Francisco, CA</p>
@@ -182,13 +186,18 @@ export default function ContactPage() {
                 />
               </div>
 
-              <button
+              <Button
                 type="submit"
+                variant="primary"
+                size="lg"
+                fullWidth
                 disabled={isSubmitting}
-                className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-3 rounded-lg font-medium hover:from-purple-700 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                loading={isSubmitting}
+                icon={FiSend}
+                className="shadow-sm"
               >
                 {isSubmitting ? "Sending..." : "Send Message"}
-              </button>
+              </Button>
 
               <p className="text-xs text-slate-400 text-center">
                 I respect your privacy. Your information is safe with me.
@@ -238,9 +247,7 @@ export default function ContactPage() {
             {/* Quick Response Time */}
             <div className="mt-6 bg-purple-50 rounded-xl p-6 border border-purple-100">
               <div className="flex items-center gap-3 mb-3">
-                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+                <FiClock className="w-6 h-6 text-purple-600" />
                 <h3 className="font-semibold text-slate-800">Quick response</h3>
               </div>
               <p className="text-slate-600 text-sm">
@@ -266,17 +273,34 @@ export default function ContactPage() {
                   <p className="text-slate-500 text-sm mt-1">Visit my workspace or send mail</p>
                 </div>
                 <div className="flex gap-2">
-                  <a 
-                    href="https://maps.google.com/?q=San+Francisco+CA" 
-                    target="_blank" 
+                  <Button
+                    href="https://maps.google.com/?q=San+Francisco+CA"
+                    variant="secondary"
+                    size="sm"
+                    icon={FiNavigation}
+                    className="rounded-lg"
+                    target="_blank"
                     rel="noopener noreferrer"
-                    className="px-3 py-1.5 text-xs bg-purple-50 text-purple-600 rounded-lg hover:bg-purple-100 transition"
                   >
                     Directions
-                  </a>
-                  <button className="px-3 py-1.5 text-xs bg-purple-50 text-purple-600 rounded-lg hover:bg-purple-100 transition">
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    icon={FiShare2}
+                    className="rounded-lg"
+                    onClick={() => {
+                      if (navigator.share) {
+                        navigator.share({
+                          title: 'CardStudio Location',
+                          text: 'Check out CardStudio in San Francisco!',
+                          url: 'https://maps.google.com/?q=San+Francisco+CA',
+                        });
+                      }
+                    }}
+                  >
                     Share
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -312,10 +336,7 @@ export default function ContactPage() {
             <div className="p-6 bg-purple-50/30">
               <div className="grid md:grid-cols-3 gap-4">
                 <div className="flex items-start gap-3">
-                  <svg className="w-5 h-5 text-purple-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
+                  <FiMapPin className="w-5 h-5 text-purple-600 mt-0.5" />
                   <div>
                     <p className="font-medium text-slate-800 text-sm">Studio Address</p>
                     <p className="text-slate-500 text-xs">123 Creative Street</p>
@@ -325,9 +346,7 @@ export default function ContactPage() {
                 </div>
                 
                 <div className="flex items-start gap-3">
-                  <svg className="w-5 h-5 text-purple-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                  </svg>
+                  <FiPhone className="w-5 h-5 text-purple-600 mt-0.5" />
                   <div>
                     <p className="font-medium text-slate-800 text-sm">Call Direct</p>
                     <p className="text-slate-500 text-xs">+1 (555) 123-4567</p>
@@ -336,9 +355,7 @@ export default function ContactPage() {
                 </div>
                 
                 <div className="flex items-start gap-3">
-                  <svg className="w-5 h-5 text-purple-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
+                  <FiMail className="w-5 h-5 text-purple-600 mt-0.5" />
                   <div>
                     <p className="font-medium text-slate-800 text-sm">Email Me</p>
                     <p className="text-slate-500 text-xs">debasmita@example.com</p>

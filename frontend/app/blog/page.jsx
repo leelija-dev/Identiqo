@@ -4,7 +4,8 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { FiSearch, FiCalendar, FiClock, FiArrowRight, FiEye, FiTrendingUp,  FiBookOpen } from "react-icons/fi";
+import Button from "@/components/Common/Button";
+import { FiSearch, FiCalendar, FiClock, FiArrowRight, FiEye, FiTrendingUp, FiBookOpen } from "react-icons/fi";
 
 const Container = ({ children, className = "" }) => (
   <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ${className}`}>
@@ -131,8 +132,10 @@ export default function BlogPage() {
       <div className="bg-gradient-to-b from-indigo-50 via-white to-white pt-16 pb-12 border-b border-indigo-100">
         <Container>
           <div className="max-w-3xl mx-auto text-center">
-            <div className="inline-block mb-4 px-4 py-1.5 bg-indigo-100 rounded-full">
-              <span className="text-indigo-700 text-sm font-medium">Our Blog</span>
+            <div className="inline-block mb-4">
+              <span className="px-4 py-1.5 bg-indigo-100 rounded-full text-indigo-700 text-sm font-medium">
+                Our Blog
+              </span>
             </div>
             <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
               Insights from the
@@ -164,8 +167,10 @@ export default function BlogPage() {
           <div className="mb-16">
             <div className="grid lg:grid-cols-2 gap-8 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl overflow-hidden">
               <div className="p-8 lg:p-10">
-                <div className="inline-block px-3 py-1 bg-indigo-600 text-white text-xs font-semibold rounded-full mb-4">
-                  Featured Article
+                <div className="inline-block mb-4">
+                  <span className="px-3 py-1 bg-indigo-600 text-white text-xs font-semibold rounded-full">
+                    Featured Article
+                  </span>
                 </div>
                 <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 leading-tight">
                   {featuredPost.title}
@@ -183,13 +188,16 @@ export default function BlogPage() {
                     {featuredPost.readTime}
                   </span>
                 </div>
-                <Link 
+                <Button
                   href={`/blog/${featuredPost.id}`}
-                  className="inline-flex items-center gap-2 text-indigo-600 font-semibold hover:gap-3 transition-all"
+                  variant="primary"
+                  size="md"
+                  icon={FiArrowRight}
+                  iconPosition="right"
+                  className="rounded-full"
                 >
                   Read Article
-                  <FiArrowRight className="w-4 h-4" />
-                </Link>
+                </Button>
               </div>
               <div className="hidden lg:flex items-center justify-center bg-gradient-to-br from-indigo-200 to-purple-200">
                 <div className="text-9xl">{featuredPost.image}</div>
@@ -203,22 +211,20 @@ export default function BlogPage() {
           {/* Main Content */}
           <div className="lg:col-span-8">
             
-            {/* Categories */}
+            {/* Categories - Now using Button component */}
             <div className="mb-8">
               <div className="flex flex-wrap gap-2">
                 {categories.map((category) => (
-                  <button
+                  <Button
                     key={category.id}
+                    variant={selectedCategory === category.id ? "primary" : "secondary"}
+                    size="sm"
                     onClick={() => setSelectedCategory(category.id)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                      selectedCategory === category.id
-                        ? "bg-indigo-600 text-white"
-                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                    }`}
+                    className="rounded-lg"
                   >
                     {category.name}
                     <span className="ml-1 text-xs opacity-70">({category.count})</span>
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>
@@ -287,12 +293,14 @@ export default function BlogPage() {
                         </div>
                         <span className="text-sm text-gray-600">{post.author}</span>
                       </div>
-                      <Link 
+                      <Button
                         href={`/blog/${post.id}`}
-                        className="text-indigo-600 text-sm font-medium hover:text-indigo-700 transition-colors"
+                        variant="ghost"
+                        size="sm"
+                        className="text-indigo-600 hover:text-indigo-700"
                       >
                         Read more →
-                      </Link>
+                      </Button>
                     </div>
                   </motion.article>
                 ))}
@@ -340,7 +348,7 @@ export default function BlogPage() {
               </div>
             </div>
 
-            {/* Newsletter */}
+            {/* Newsletter - Subscribe button now uses Button component */}
             <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl p-6 text-center">
               <h3 className="text-xl font-bold text-white mb-2">Subscribe to Our Newsletter</h3>
               <p className="text-indigo-100 text-sm mb-4">
@@ -349,31 +357,37 @@ export default function BlogPage() {
               <input
                 type="email"
                 placeholder="Enter your email"
-                className="w-full px-4 py-2 rounded-lg mb-3 text-gray-900 placeholder:text-gray-400 focus:outline-none"
+                className="w-full px-4 py-2 rounded-lg mb-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-white"
               />
-              <button className="w-full px-4 py-2 bg-white text-indigo-600 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+              <Button
+                variant="secondary"
+                size="md"
+                className="w-full bg-white text-indigo-600 hover:bg-gray-100"
+              >
                 Subscribe
-              </button>
+              </Button>
               <p className="text-indigo-200 text-xs mt-3">No spam. Unsubscribe anytime.</p>
             </div>
 
-            {/* Categories */}
+            {/* Categories Sidebar - Now using Button component */}
             <div className="bg-gray-50 rounded-xl p-6 mt-8">
               <h3 className="text-lg font-bold text-gray-900 mb-4">Categories</h3>
               <div className="space-y-2">
                 {categories.map((category) => (
-                  <button
+                  <Button
                     key={category.id}
+                    variant="ghost"
+                    size="sm"
                     onClick={() => setSelectedCategory(category.id)}
-                    className={`w-full flex justify-between items-center px-3 py-2 rounded-lg text-sm transition-all ${
+                    className={`w-full justify-between rounded-lg ${
                       selectedCategory === category.id
                         ? "bg-indigo-100 text-indigo-700"
-                        : "hover:bg-gray-100 text-gray-600"
+                        : "text-gray-600 hover:bg-gray-100"
                     }`}
                   >
                     <span>{category.name}</span>
                     <span className="text-xs text-gray-400">{category.count}</span>
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>

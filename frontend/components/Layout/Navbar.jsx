@@ -8,6 +8,7 @@ import { FiLogIn } from "react-icons/fi";
 import { HiBars3, HiXMark } from "react-icons/hi2";
 import Button from "@/components/Common/Button";
 import Container from "../Common/Container";
+import Image from "next/image";
 
 export default function NavbarMinimal() {
   const pathname = usePathname();
@@ -83,12 +84,21 @@ export default function NavbarMinimal() {
         <Container>
           <div className="flex items-center justify-between h-12 sm:h-14 md:h-16 lg:h-20">
             
-<Link
-  href="/"
-  className="text-h4-sm sm:text-h4-md md:text-h3-sm font-black tracking-tight text-slate-900 transition-all duration-300 hover:scale-105 hover:text-indigo-600"
->
-  IDENTIQO
-</Link>
+            <Link
+              href="/"
+              className="flex items-center gap-3 text-h4-sm sm:text-h4-md md:text-h3-sm font-black tracking-tight text-slate-900 transition-all duration-300 hover:scale-105 hover:text-indigo-600"
+            >
+              <Image 
+                src="/favicon.ico"
+                alt="IDENTIQO Logo"
+                width={48}
+                height={48}
+                className="rounded-lg transition-transform duration-300"
+                priority
+              />
+              <span>IDENTIQO</span>
+            </Link>
+
             {/* Desktop Menu - Hidden on mobile/tablet */}
             <div className="hidden lg:flex items-center gap-3 xl:gap-4 2xl:gap-6">
               {navLinks.map((link) => {
@@ -179,9 +189,16 @@ export default function NavbarMinimal() {
               <Link
                 href="/" 
                 onClick={() => setIsOpen(false)}
-                className="text-h4-sm font-black tracking-tight text-slate-900"
+                className="flex items-center gap-3 text-h4-sm font-black tracking-tight text-slate-900"
               >
-                IDENTIQO
+                <Image 
+                  src="/favicon.ico"
+                  alt="IDENTIQO Logo"
+                  width={40}
+                  height={40}
+                  className="rounded-lg"
+                />
+                <span>IDENTIQO</span>
               </Link>
               <button
                 onClick={() => setIsOpen(false)}

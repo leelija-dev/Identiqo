@@ -10,12 +10,9 @@ import { FaBarcode, FaQrcode, FaBuilding } from 'react-icons/fa';
 import TextFieldEditor from './TextFieldEditor';
 
 export default function EditorSidebar({
-  // Template info
   currentTemplate,
   currentOrientation,
   isMobileView = false,
-  
-  // Text fields
   textFields,
   onTextChange,
   onColorChange,
@@ -24,16 +21,12 @@ export default function EditorSidebar({
   onToggleTextFieldStyle,
   onResetTextField,
   onTextFieldClick,
-  
-  // Background
   backgroundBlocks,
   onBackgroundModeChange,
   onSolidColorChange,
   onGradientChange,
   onBackgroundImageUpload,
   refreshBackgrounds,
-  
-  // Theme
   showThemeSection,
   selectedTheme,
   customPrimary,
@@ -45,38 +38,26 @@ export default function EditorSidebar({
   onCustomSecondaryChange,
   onCustomAccentChange,
   onCustomCardBgChange,
-  
-  // Images
   showImageSection,
   detectedFeatures,
   uploadedImages,
   onImageUpload,
   onImageRemove,
-  
-  // Barcode/QR
   barcodeValue,
   qrValue,
   onBarcodeValueChange,
   onQrValueChange,
   onApplyBarcode,
   onApplyQR,
-  
-  // Actions
   onSave,
   onReset,
   onClose,
-  
-  // Sidebar
   sidebarRef,
   sidebarWidth,
   onResizeStart,
   isSidebarOpen,
   onToggleSidebar,
-  
-  // Trigger
   triggerUpdate,
-  
-  // Preview ref (for theme application)
   previewCanvasRef
 }) {
   return (
@@ -168,7 +149,7 @@ export default function EditorSidebar({
           onClick={onSave} 
           className="flex-[2] bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-2 py-2.5 rounded-[10px] font-bold hover:-translate-y-0.5 hover:shadow-lg transition-all flex items-center justify-center gap-1 text-sm"
         >
-          <FiSave size={14} /> Save
+          <FiSave size={14} /> Save to Drafts   {/* Changed text */}
         </button>
         <button 
           onClick={onReset} 
@@ -181,27 +162,21 @@ export default function EditorSidebar({
   );
 }
 
-// Sub-components (unchanged, keep them as they were)
+// Background Editor sub-component – background changed to gradient
 function BackgroundEditor({ backgroundBlocks, onModeChange, onSolidColorChange, onGradientChange, onImageUpload, refreshBackgrounds, triggerUpdate }) {
-  // ... same code as before ...
   return (
-    <div className="mb-3 p-3.5 border border-slate-100 rounded-2xl bg-white shadow-sm">
+    <div className="mb-3 p-3.5 border border-slate-100 rounded-2xl bg-gradient-to-br from-indigo-50/30 to-purple-50/30 shadow-sm">   {/* Changed background */}
       <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
         <div className="flex items-center gap-2 text-slate-700 font-semibold text-xs uppercase tracking-wider">
           <FiDroplet /> Background Editor
         </div>
-        <button 
-          onClick={refreshBackgrounds} 
-          className="text-indigo-500 hover:text-indigo-700 text-xs flex items-center gap-1"
-        >
+        <button onClick={refreshBackgrounds} className="text-indigo-500 hover:text-indigo-700 text-xs flex items-center gap-1">
           <FiRefreshCcw size={12} /> Refresh
         </button>
       </div>
       
       {backgroundBlocks.length === 0 ? (
-        <p className="text-center py-5 text-slate-400 text-xs">
-          No editable backgrounds found. Click "Refresh" to detect.
-        </p>
+        <p className="text-center py-5 text-slate-400 text-xs">No editable backgrounds found. Click "Refresh" to detect.</p>
       ) : (
         backgroundBlocks.map(block => (
           <BackgroundBlock
@@ -219,8 +194,8 @@ function BackgroundEditor({ backgroundBlocks, onModeChange, onSolidColorChange, 
   );
 }
 
+// BackgroundBlock, ColorThemeSection, ImagesSection, ImageUploadBlock remain unchanged
 function BackgroundBlock({ block, onModeChange, onSolidColorChange, onGradientChange, onImageUpload, triggerUpdate }) {
-  // ... same code as before ...
   return (
     <div className="mb-3">
       <span className="text-[10px] text-slate-400 mb-1 block">{block.label}</span>
@@ -311,7 +286,6 @@ function ColorThemeSection({
   onApplyTheme, onCustomPrimaryChange, onCustomSecondaryChange, onCustomAccentChange, 
   onCustomCardBgChange, previewCanvasRef, triggerUpdate 
 }) {
-  // ... same code as before ...
   const themes = [
     { name: 'Default', primary: '#ff7e5f', secondary: '#6a11cb', accent: '#2575fc' },
     { name: 'Sunset', primary: '#ff6b35', secondary: '#f7931e', accent: '#ff2d55' },
@@ -413,7 +387,6 @@ function ImagesSection({
   barcodeValue, qrValue, onBarcodeValueChange, onQrValueChange,
   onApplyBarcode, onApplyQR, triggerUpdate
 }) {
-  // ... same code as before ...
   return (
     <div className="mb-3 p-3.5 border border-slate-100 rounded-2xl bg-white shadow-sm">
       <div className="flex items-center gap-2 mb-3 text-slate-700 font-semibold text-xs uppercase tracking-wider">
@@ -495,7 +468,6 @@ function ImagesSection({
 }
 
 function ImageUploadBlock({ label, type, image, onUpload, onRemove, icon }) {
-  // ... same code as before ...
   return (
     <div>
       <div 
@@ -523,3 +495,4 @@ function ImageUploadBlock({ label, type, image, onUpload, onRemove, icon }) {
     </div>
   );
 }
+

@@ -117,7 +117,7 @@ function useFitScale(orientation, containerRef) {
       observer.disconnect();
       window.removeEventListener("resize", updateScale);
     };
-  }, [orientation, designSize.width, designSize.height]);
+  }, [containerRef, orientation, designSize.width, designSize.height]);
 
   return {
     scale,
@@ -129,6 +129,7 @@ function useFitScale(orientation, containerRef) {
 
 /* =========================================================
    FLIP CARD WRAPPER (Adds flip functionality to any card)
+   FIXED: Back side no longer appears mirrored
 ========================================================= */
 
 export function FlipCardWrapper({ children, className = "", onClick }) {
@@ -157,7 +158,7 @@ export function FlipCardWrapper({ children, className = "", onClick }) {
           width: '100%',
           height: '100%',
           textAlign: 'center',
-          transition: 'transform 0.6s',
+          transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
           transformStyle: 'preserve-3d',
           transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)'
         }}
@@ -170,6 +171,7 @@ export function FlipCardWrapper({ children, className = "", onClick }) {
 
 /* =========================================================
    CARD PREVIEW (READ ONLY) - NO WHITE BACKGROUND
+   FIXED: Added proper styling for card faces
 ========================================================= */
 
 export default function CardPreview({

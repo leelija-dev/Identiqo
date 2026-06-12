@@ -1,6 +1,5 @@
 /** @type {import('tailwindcss').Config} */
-export default {
-  darkMode: ['class'],
+const tailwindConfig = {
   content: [
     "./app/**/*.{js,jsx,ts,tsx}",
     "./pages/**/*.{js,jsx,ts,tsx}",
@@ -80,34 +79,23 @@ export default {
         '120px': '120px',
       },
       colors: {
-        // Hero gradient colors
         'hero-bg-start': 'var(--hero-bg-start)',
         'hero-bg-mid1': 'var(--hero-bg-mid1)',
         'hero-bg-mid2': 'var(--hero-bg-mid2)',
         'hero-bg-end': 'var(--hero-bg-end)',
-        
-        // Device backgrounds
         'device-dark': 'var(--device-dark)',
         'device-darker': 'var(--device-darker)',
-        
-        // Gradient stops
         'gradient-sky-600': 'var(--gradient-sky-600)',
         'gradient-indigo-700': 'var(--gradient-indigo-700)',
         'gradient-sky-700': 'var(--gradient-sky-700)',
         'gradient-purple-700': 'var(--gradient-purple-700)',
         'gradient-indigo-600': 'var(--gradient-indigo-600)',
         'gradient-purple-600': 'var(--gradient-purple-600)',
-        
-        // Text colors
         'text-slate-700': 'var(--text-slate-700)',
         'text-slate-800': 'var(--text-slate-800)',
         'text-emerald-600': 'var(--text-emerald-600)',
-        
-        // Border colors
         'border-gray-300': 'var(--border-gray-300)',
         'border-gray-500': 'var(--border-gray-500)',
-        
-        // Feature badge colors
         'feature-amber': 'var(--feature-amber)',
         'feature-purple': 'var(--feature-purple)',
         'feature-emerald': 'var(--feature-emerald)',
@@ -128,6 +116,9 @@ export default {
         'float-1': 'float1 4s ease-in-out infinite',
         'float-2': 'float2 4.5s ease-in-out infinite',
         'float-3': 'float3 3.5s ease-in-out infinite',
+        // NEW: Ripple animation
+        'ripple': 'ripple 0.6s ease-out forwards',
+        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
       },
       keyframes: {
         fadeInUp: {
@@ -186,6 +177,17 @@ export default {
             transform: 'translateY(-12px) translateX(3px)',
           },
         },
+        // NEW: Ripple keyframes
+        ripple: {
+          '0%': {
+            transform: 'scale(0)',
+            opacity: '0.5',
+          },
+          '100%': {
+            transform: 'scale(4)',
+            opacity: '0',
+          },
+        },
       },
     },
   },
@@ -196,3 +198,5 @@ export default {
   ],
   plugins: [],
 };
+
+export default tailwindConfig;
