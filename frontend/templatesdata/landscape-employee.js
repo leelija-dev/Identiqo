@@ -11,7 +11,7 @@ export default [
 },
  {
     id: 'l2',
-    name: "Spectrum Marketing",
+    name: "Spectrum Marketing",''
     category: "employee",
     filter: "corporate",
     icon: "🌈",
