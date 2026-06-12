@@ -3,6 +3,7 @@
 import { useRef, useState, useEffect } from "react";
 import { motion, useScroll, useTransform, useInView } from "framer-motion";
 import SectionTitle from "../../Common/SectionTitle";
+import Container from "../../Common/Container";
 
 export default function FeatureFlow() {
   const containerRef = useRef(null);
@@ -38,7 +39,7 @@ export default function FeatureFlow() {
     {
       id: "01",
       title: "Smart ID Templates",
-      description: "50+ professionally designed templates for corporate, healthcare, and events. Fully customizable with your branding.",
+      description: "  For corporate, healthcare, and events. Fully customizable with your branding.",
       gradient: "from-orange-500 to-pink-500",
       image: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=600&h=400&fit=crop",
       stats: "50+",
@@ -49,7 +50,7 @@ export default function FeatureFlow() {
     {
       id: "02",
       title: "Real-Time Editing",
-      description: "See changes instantly as you type. Drag-and-drop interface with live preview. No design skills needed!",
+      description: "See changes instantly as you type. Drag-and-drop interface with live preview.",
       gradient: "from-pink-500 to-purple-500",
       image: "https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?w=600&h=400&fit=crop",
       stats: "0ms",
@@ -111,8 +112,9 @@ export default function FeatureFlow() {
       )}
 
       {/* Hero Section */}
-      <section className="relative min-h-[60vh] flex items-center justify-center pt-20 pb-16 px-4">
-        <div className="max-w-5xl mx-auto text-center">
+      <section className="relative min-h-[60vh] flex items-center justify-center pt-20 pb-16">
+        <Container>
+        <div className="text-center">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -167,14 +169,16 @@ export default function FeatureFlow() {
             </motion.div>
           </motion.div>
         </div>
+        </Container>
       </section>
 
       {/* Features Timeline */}
-      <section className="relative py-16 px-4">
-        <div className="max-w-6xl mx-auto">
+      <section className="relative py-16">
+        <Container>
+        <div>
           
           {/* Center Line with Glow */}
-          <div className="absolute left-1/2 -translate-x-1/2 w-[2px] bg-gradient-to-b from-orange-500 via-pink-500 to-purple-500 hidden md:block rounded-full" 
+          <div className="absolute left-1/2 -translate-x-1/2 z-0 w-[2px] bg-gradient-to-b from-orange-500 via-pink-500 to-purple-500 hidden md:block rounded-full" 
                style={{ height: "calc(100% - 120px)", top: "60px" }}>
             <motion.div 
               className="absolute top-0 left-0 w-full bg-gradient-to-b from-orange-500 via-pink-500 to-purple-500 rounded-full"
@@ -194,11 +198,13 @@ export default function FeatureFlow() {
             />
           ))}
         </div>
+        </Container>
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4">
-        <div className="max-w-4xl mx-auto">
+      <section className="py-20">
+        <Container>
+        <div>
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -244,6 +250,7 @@ export default function FeatureFlow() {
             </div>
           </motion.div>
         </div>
+        </Container>
       </section>
     </div>
   );
@@ -254,21 +261,24 @@ function FeatureNode({ feature, index, isEven }) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
   const [isHovered, setIsHovered] = useState(false);
-  
+  const [showMore, setShowMore] = useState(false);
+  const previewText = feature.description.length > 90 ? `${feature.description.slice(0, 90)}...` : feature.description;
+  const visibleDetails = showMore ? feature.details : feature.details.slice(0, 2);
+
   return (
     <motion.div
       ref={ref}
       initial={{ opacity: 0 }}
       animate={isInView ? { opacity: 1 } : {}}
       transition={{ duration: 0.5 }}
-      className={`relative flex flex-col md:flex-row items-center gap-8 mb-24 last:mb-0 ${
+      className={`relative z-10 flex flex-col md:flex-row items-center gap-8 mb-24 last:mb-0 ${
         isEven ? 'md:flex-row' : 'md:flex-row-reverse'
       }`}
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
     >
       {/* Center Node with Pulse */}
-      <div className="absolute left-1/2 -translate-x-1/2 z-20 hidden md:block">
+     <div className="absolute left-1/2 -translate-x-1/2 z-20 hidden md:block">
         <motion.div
           initial={{ scale: 0, opacity: 0 }}
           animate={isInView ? { scale: 1, opacity: 1 } : {}}
@@ -359,12 +369,12 @@ function FeatureNode({ feature, index, isEven }) {
           
           <div className={`${isEven ? 'md:clear-both' : ''}`}>
             <p className={`text-slate-500 text-sm leading-relaxed mb-4 ${isEven ? 'md:text-right' : ''}`}>
-              {feature.description}
+              {showMore ? feature.description : previewText}
             </p>
             
             {/* Animated Tags */}
             <div className={`flex flex-wrap gap-2 mb-4 ${isEven ? 'md:justify-end' : ''}`}>
-              {feature.details.map((detail, i) => (
+              {visibleDetails.map((detail, i) => (
                 <motion.span
                   key={i}
                   initial={{ opacity: 0, scale: 0.8 }}
@@ -377,22 +387,14 @@ function FeatureNode({ feature, index, isEven }) {
                 </motion.span>
               ))}
             </div>
-            
-            {/* Stats Card with Hover Effect */}
-            <motion.div 
-              className={`inline-flex items-center gap-3 px-3 py-2 bg-white rounded-xl shadow-md border border-slate-100 ${isEven ? 'md:justify-end' : ''}`}
-              whileHover={{ y: -3, boxShadow: "0 10px 25px -5px rgba(0,0,0,0.1)" }}
-              transition={{ duration: 0.2 }}
+
+            <button
+              type="button"
+              onClick={() => setShowMore(!showMore)}
+              className={`text-sm font-semibold ${isEven ? 'md:float-right' : ''} text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 transition-colors`}
             >
-              <motion.div 
-                className="text-xl font-bold bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent"
-                animate={{ scale: isHovered ? 1.1 : 1 }}
-              >
-                {feature.stats}
-              </motion.div>
-              <div className="w-px h-6 bg-slate-200" />
-              <div className="text-xs text-slate-500">{feature.statLabel}</div>
-            </motion.div>
+              {showMore ? 'Show less' : 'Read more'}
+            </button>
           </div>
           
           {/* Mobile Node */}

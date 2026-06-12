@@ -381,33 +381,6 @@ export default function BlogPage() {
         </div>
       </Container>
 
-      {/* CTA Section */}
-      <div className="bg-gray-900 mt-16">
-        <Container className="py-12">
-          <div className="text-center">
-            <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3">
-              Ready to transform your ID system?
-            </h2>
-            <p className="text-gray-400 mb-6">
-              Join thousands of businesses using CardStudio
-            </p>
-            <div className="flex flex-wrap gap-4 justify-center">
-              <Link 
-                href="/pricing" 
-                className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition-colors"
-              >
-                Start Free Trial
-              </Link>
-              <Link 
-                href="/contact" 
-                className="px-6 py-2.5 bg-gray-800 text-white rounded-lg font-semibold border border-gray-700 hover:bg-gray-700 transition-colors"
-              >
-                Contact Sales
-              </Link>
-            </div>
-          </div>
-        </Container>
-      </div>
     </div>
   );
 }

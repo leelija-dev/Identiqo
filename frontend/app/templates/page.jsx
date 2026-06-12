@@ -1,5 +1,4 @@
-//app/templates/page.jsx  
-
+// app/templates/page.jsx
 'use client';
 
 import { useState, useEffect, useMemo, memo, useCallback, useRef } from 'react';
@@ -7,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { templatesByOrientation, normalizeTemplateHtml } from '../../templatesdata';
 import CardPreview, { CardGrid, CardSkeleton } from '@/components/Common/Card';
 import Button from '@/components/Common/Button';
-import { FiDownload } from 'react-icons/fi';
+import { FiDownload, FiX,  FiFilter } from 'react-icons/fi';
 import { SidebarSkeleton } from '@/components/Common/Skeleton';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -23,6 +22,7 @@ export default function TemplatesPage() {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
   const modalCardRef = useRef(null);
 
   // --- Sliding pill & indicator state ---
@@ -35,8 +35,6 @@ export default function TemplatesPage() {
     portrait: useRef(null),
   };
   const slideTimeoutRef = useRef(null);
-
-  // Direction for horizontal slide animation (1 = to portrait, -1 = to landscape)
   const [slideDirection, setSlideDirection] = useState(0);
 
   const categoryTitles = {
@@ -110,7 +108,6 @@ export default function TemplatesPage() {
     setIndicatorStyle({ left: `${left}px`, width: `${width}px` });
   }, [orientation]);
 
-  // Initial measurement and resize listener
   useEffect(() => {
     const initTimeout = setTimeout(updateSlidingPositions, 80);
     window.addEventListener('resize', updateSlidingPositions);
@@ -120,7 +117,6 @@ export default function TemplatesPage() {
     };
   }, [updateSlidingPositions]);
 
-  // Observe size changes
   useEffect(() => {
     if (!tabBarRef.current) return;
     const resizeObserver = new ResizeObserver(() => updateSlidingPositions());
@@ -280,7 +276,6 @@ export default function TemplatesPage() {
     };
   }, [openModal]);
 
-  // --- Dynamic page background ---
   const pageBackground = orientation === 'landscape'
     ? 'linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 50%, #dbeafe 100%)'
     : 'linear-gradient(135deg, #ffe4e6 0%, #fff1f2 50%, #fce7f3 100%)';
@@ -294,7 +289,7 @@ export default function TemplatesPage() {
       }}
     >
       <div className="flex min-h-screen">
-        {/* ===== SIDEBAR ===== */}
+        {/* ===== SIDEBAR - Desktop (unchanged) + Hidden on tablet/mobile ===== */}
         {isLoading ? (
           <SidebarSkeleton />
         ) : (
@@ -337,7 +332,7 @@ export default function TemplatesPage() {
           </aside>
         )}
 
-        {/* ===== MAIN CONTENT (fixed mobile overflow) ===== */}
+        {/* ===== MAIN CONTENT ===== */}
         <div className="flex-1 w-full max-w-full overflow-y-auto p-4 sm:p-6 md:p-8 lg:p-10 min-w-0">
           <div className="flex flex-col sm:flex-row sm:items-center items-start gap-4 mb-6 w-full">
             <div className="flex-shrink-0">
@@ -346,7 +341,19 @@ export default function TemplatesPage() {
               </h1>
             </div>
 
-            {/* === RESPONSIVE ORIENTATION TAB SWITCHER (constrained width) === */}
+            {/* Mobile Filter Button - Only visible on mobile/tablet */}
+            <button
+              onClick={() => setShowMobileFilters(true)}
+              className="md:hidden flex items-center gap-2 px-3 py-1.5 bg-white/80 backdrop-blur-sm rounded-lg border border-slate-200/60 text-slate-600 text-sm"
+            >
+              <FiFilter size={14} />
+              <span>Filter</span>
+              {(category !== 'all' || industryFilter !== 'all') && (
+                <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
+              )}
+            </button>
+
+            {/* === RESPONSIVE ORIENTATION TAB SWITCHER (unchanged for desktop) === */}
             <div className="relative w-full sm:w-auto max-w-full flex-shrink-0" ref={tabBarRef}>
               <div className="relative z-10 flex items-stretch gap-0 bg-white/90 backdrop-blur-sm rounded-xl border border-slate-200/60 shadow-sm p-1 w-full sm:w-auto">
                 {['landscape', 'portrait'].map((tab) => (
@@ -386,39 +393,8 @@ export default function TemplatesPage() {
             </div>
           </div>
 
-          {/* ===== MOBILE FILTER CHIPS ===== */}
-          <div className="md:hidden mb-5">
-            <div className="flex overflow-x-auto pb-2 gap-1.5 mb-3 scrollbar-none">
-              {categoryOptions.map(item => (
-                <button
-                  key={item.key}
-                  onClick={() => setCategory(item.key)}
-                  className={`flex-shrink-0 px-2.5 py-1.5 rounded-full text-[11px] font-medium transition-all ${
-                    category === item.key
-                      ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-sm'
-                      : 'bg-white/70 backdrop-blur-sm border border-slate-200 text-slate-600 hover:border-indigo-300'
-                  }`}
-                >
-                  {item.icon} {item.key === 'all' ? 'All' : item.key === 'employee' ? 'Employee' : 'Visiting'}
-                </button>
-              ))}
-            </div>
-            <div className="flex overflow-x-auto pb-2 gap-1.5 scrollbar-none">
-              {industryOptions.map(opt => (
-                <button
-                  key={opt.value}
-                  onClick={() => setIndustryFilter(opt.value)}
-                  className={`flex-shrink-0 px-2.5 py-1.5 rounded-full text-[11px] font-medium transition-all ${
-                    industryFilter === opt.value
-                      ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-sm'
-                      : 'bg-white/70 backdrop-blur-sm border border-slate-200 text-slate-600 hover:border-indigo-300'
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          </div>
+          {/* ===== MOBILE FILTER CHIPS (only visible on mobile/tablet, hidden on desktop) ===== */}
+        
 
           {/* Templates Grid with smooth orientation transition */}
           {isLoading ? (
@@ -454,58 +430,154 @@ export default function TemplatesPage() {
         </div>
       </div>
 
-      {/* ===== MODAL ===== */}
-      {showModal && selectedTemplate && (
-        <div
-          className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-[1000] p-4 animate-fade-in"
-          onClick={handleOverlayClick}
-        >
-          <div className="flex flex-col md:flex-row gap-6 items-center justify-center w-full max-w-[90vw]">
-            <div className={`relative ${
-              selectedTemplate.orientation === 'landscape'
-                ? 'w-full max-w-[550px] aspect-[550/348]'
-                : 'w-full max-w-[350px] aspect-[350/550]'
-            }`}>
-              <div
-                ref={modalCardRef}
-                onClick={handleModalCardFlip}
-                className="w-full h-full rounded-2xl overflow-hidden shadow-2xl shadow-black/30 bg-transparent"
-              >
-                <div className="w-full h-full rounded-2xl overflow-hidden shadow-2xl shadow-black/30 bg-transparent">
+      {/* ===== MOBILE FILTER SHEET (only for tablet/mobile) ===== */}
+      <AnimatePresence>
+        {showMobileFilters && (
+          <>
+            <div
+              className="fixed inset-0 bg-black/50 z-[1000] md:hidden"
+              onClick={() => setShowMobileFilters(false)}
+            />
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25 }}
+              className="fixed right-0 top-0 bottom-0 w-[280px] bg-white shadow-2xl z-[1001] md:hidden overflow-y-auto"
+            >
+              <div className="sticky top-0 bg-white border-b border-slate-200 p-4 flex items-center justify-between">
+                <h3 className="font-semibold text-slate-800">Filters</h3>
+                <button
+                  onClick={() => setShowMobileFilters(false)}
+                  className="p-1 rounded-lg hover:bg-slate-100"
+                >
+                  <FiX size={20} />
+                </button>
+              </div>
+
+              <div className="p-4">
+                <div className="mb-6">
+                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 block">
+                    Card Category
+                  </label>
+                  <div className="space-y-1">
+                    {categoryOptions.map(item => (
+                      <div
+                        key={item.key}
+                        onClick={() => {
+                          setCategory(item.key);
+                          setShowMobileFilters(false);
+                        }}
+                        className={`flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-all ${
+                          category === item.key
+                            ? 'bg-indigo-50 text-indigo-700 font-medium'
+                            : 'text-slate-600 hover:bg-slate-50'
+                        }`}
+                      >
+                        <span>{item.icon}</span>
+                        <span className="text-sm">{item.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 block">
+                    Industry
+                  </label>
+                  <div className="space-y-1">
+                    {industryOptions.map(opt => (
+                      <div
+                        key={opt.value}
+                        onClick={() => {
+                          setIndustryFilter(opt.value);
+                          setShowMobileFilters(false);
+                        }}
+                        className={`px-3 py-2 rounded-lg cursor-pointer transition-all text-sm ${
+                          industryFilter === opt.value
+                            ? 'bg-indigo-50 text-indigo-700 font-medium'
+                            : 'text-slate-600 hover:bg-slate-50'
+                        }`}
+                      >
+                        {opt.label}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* ===== MODAL (responsive for mobile) ===== */}
+      <AnimatePresence>
+        {showModal && selectedTemplate && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-[1000] p-4"
+            onClick={handleOverlayClick}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="flex flex-col md:flex-row gap-6 items-center justify-center w-full max-w-[90vw]"
+            >
+              <div className={`template-modal-card relative ${
+                selectedTemplate.orientation === 'landscape'
+                  ? 'w-full max-w-[550px] aspect-[550/348]'
+                  : 'w-full max-w-[350px] aspect-[350/550]'
+              }`}>
+                <div
+                  ref={modalCardRef}
+                  onClick={handleModalCardFlip}
+                  className="w-full h-full rounded-2xl overflow-hidden shadow-2xl shadow-black/30 bg-transparent cursor-pointer"
+                >
                   <div
-                    className="w-full h-full"
+                    className="w-full h-full rounded-2xl overflow-hidden"
                     dangerouslySetInnerHTML={{ __html: selectedTemplate.htmlContent }}
                   />
                 </div>
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] text-white/70 bg-black/50 px-2 py-0.5 rounded-full md:hidden">
+                  Tap to flip
+                </div>
               </div>
-            </div>
-            
-            <div className="flex flex-col gap-3 w-full md:w-auto justify-center animate-fade-in-up">
-              <Button onClick={addToWishlist} variant="warning" size="md" className="w-full md:w-auto rounded-full text-sm bg-amber-500/90 backdrop-blur-sm hover:bg-amber-600">
-                ⭐ Wishlist
-              </Button>
-              <Button onClick={goToCustomize} variant="primary" size="md" className="w-full md:w-auto rounded-full text-sm bg-indigo-600/90 backdrop-blur-sm hover:bg-indigo-700">
-                ✏️ Customize
-              </Button>
-              <Button onClick={downloadTemplate} variant="success" size="md" icon={FiDownload} className="w-full md:w-auto rounded-full text-sm bg-emerald-500/90 backdrop-blur-sm hover:bg-emerald-600">
-                Download
-              </Button>
-              <Button onClick={closeModal} variant="secondary" size="md" className="w-full md:w-auto rounded-full text-sm bg-slate-600/90 backdrop-blur-sm hover:bg-slate-700">
-                ✕ Close
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+              
+              <div className="template-modal-action-group flex flex-col gap-3 w-full md:w-auto justify-center">
+                <Button onClick={addToWishlist} variant="warning" size="md" className="w-full md:w-auto px-4 py-3 md:px-6 md:py-2.5 rounded-full text-sm bg-amber-500/90 backdrop-blur-sm hover:bg-amber-600 text-center">
+                  ⭐ Wishlist
+                </Button>
+                <Button onClick={goToCustomize} variant="primary" size="md" className="w-full md:w-auto px-4 py-3 md:px-6 md:py-2.5 rounded-full text-sm bg-indigo-600/90 backdrop-blur-sm hover:bg-indigo-700 text-center">
+                  ✏️ Customize
+                </Button>
+                <Button onClick={downloadTemplate} variant="success" size="md" icon={FiDownload} className="w-full md:w-auto px-4 py-3 md:px-6 md:py-2.5 rounded-full text-sm bg-emerald-500/90 backdrop-blur-sm hover:bg-emerald-600 text-center flex items-center justify-center gap-2">
+                  <span>Download</span>
+                </Button>
+                <Button onClick={closeModal} variant="secondary" size="md" className="w-full md:w-auto px-4 py-3 md:px-6 md:py-2.5 rounded-full text-sm bg-slate-600/90 backdrop-blur-sm hover:bg-slate-700 text-center">
+                  ✕ Close
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ===== TOAST ===== */}
-      <div
-        className={`fixed bottom-4 right-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-5 py-2.5 rounded-full font-semibold transition-all duration-300 z-[1100] text-sm shadow-lg ${
-          showToast ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-[100px]'
-        }`}
-      >
-        {toastMessage}
-      </div>
+      <AnimatePresence>
+        {showToast && (
+          <motion.div
+            initial={{ opacity: 0, x: 100 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 100 }}
+            className="fixed bottom-4 right-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-5 py-2.5 rounded-full font-semibold z-[1100] text-sm shadow-lg"
+          >
+            {toastMessage}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <style dangerouslySetInnerHTML={{ __html: `
         .scrollbar-none::-webkit-scrollbar { display: none; }
@@ -517,7 +589,36 @@ export default function TemplatesPage() {
         .animate-shimmer { animation: shimmer 1.5s ease-in-out infinite; }
         .animate-fade-in { animation: fade-in 0.3s ease-out forwards; }
         .animate-fade-in-up { animation: fade-in-up 0.4s ease-out forwards; }
+
         
+        .template-modal-card {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+
+        .template-modal-action-group {
+          max-width: 100%;
+        }
+
+        @media (max-width: 800px) and (orientation: landscape) {
+          .template-modal-card {
+            max-width: 100%;
+          }
+          .template-modal-action-group {
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: center;
+            align-items: stretch;
+          }
+          .template-modal-action-group > * {
+            flex: 1 1 calc(50% - 0.375rem);
+            width: calc(50% - 0.375rem) !important;
+            min-width: 0;
+          }
+        }
+
         .flip-card {
           background-color: transparent;
           width: 100%;

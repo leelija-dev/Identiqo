@@ -235,52 +235,35 @@ export default function Howitworks() {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 overflow-x-hidden font-sans">
       
       {/* Decorative Background Elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30"></div>
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-pink-100 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
-      </div>
+     
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         
-        {/* Video Player Style Header */}
         <motion.div 
           initial={{ opacity: 0, y: -30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
           className="mb-8"
         >
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3 bg-white shadow-lg rounded-full px-4 py-2 border border-gray-200">
-              <div className="flex gap-1.5">
-                <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-                <div className="w-3 h-3 bg-yellow-500 rounded-full animate-pulse delay-150"></div>
-                <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse delay-300"></div>
-              </div>
-              <span className="text-gray-700 text-sm font-mono">how-it-works.mp4</span>
-              <span className="text-green-600 text-xs font-semibold">● LIVE</span>
-              {isSpeaking && (
-                <span className="flex items-center gap-1 text-purple-600 text-xs">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
-                  </span>
-                  Speaking...
-                </span>
-              )}
+          <div className="relative pt-4">
+            <div className="absolute right-0 top-0">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleMuteToggle}
+                className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-white border border-gray-200 text-2xl text-gray-700 shadow-lg hover:bg-gray-100 transition-all"
+              >
+                {isMuted ? "🔇" : "🔊"}
+              </motion.button>
             </div>
-            <div className="flex gap-2">
-            
+            <div className="text-center">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-3 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                How It Works
+              </h1>
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                Create stunning employee cards in minutes with our seamless 4-step workflow
+              </p>
             </div>
-          </div>
-
-          <div className="text-center">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-3 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-              How It Works
-            </h1>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Create stunning employee cards in minutes with our seamless 4-step workflow
-            </p>
           </div>
         </motion.div>
 
@@ -585,13 +568,6 @@ export default function Howitworks() {
                 </div>
                 
                 <div className="flex items-center gap-3">
-                  <motion.button 
-                    whileHover={{ scale: 1.05 }} 
-                    onClick={handleMuteToggle}
-                    className="text-gray-500 hover:text-gray-700 text-lg"
-                  >
-                    {isMuted ? "🔇" : "🔊"}
-                  </motion.button>
                   <motion.button whileHover={{ scale: 1.05 }} className="text-gray-500 hover:text-gray-700 text-lg">
                     ⛶
                   </motion.button>
