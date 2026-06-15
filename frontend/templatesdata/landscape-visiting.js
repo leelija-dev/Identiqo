@@ -1,10 +1,10 @@
-﻿// landscape-employee.js
+﻿// landscape-visiting.js
 const landscapeVisiting = [
   // MEDICAL
   {
     id: 'LV1',
     name: "Mercy Health (Crimson)",
-    category: "employee",
+    category: "visiting",  // ✅ Changed from "employee" to "visiting"
     filter: "medical",
     icon: "🩺",
     orientation: "landscape",
@@ -13,7 +13,7 @@ const landscapeVisiting = [
   {
     id: 'LV2',
     name: "Vitalis Clinic (Teal)",
-    category: "employee",
+    category: "visiting",  // ✅ Changed from "employee" to "visiting"
     filter: "medical",
     icon: "🩺",
     orientation: "landscape",
@@ -22,7 +22,7 @@ const landscapeVisiting = [
   {
     id: 'LV3',
     name: "Neuro Advanced (Purple)",
-    category: "employee",
+    category: "visiting",  // ✅ Changed from "employee" to "visiting"
     filter: "medical",
     icon: "🩺",
     orientation: "landscape",
@@ -33,7 +33,7 @@ const landscapeVisiting = [
   {
     id: 'LV4',
     name: "Global Trust (IT Blue)",
-    category: "employee",
+    category: "visiting",  // ✅ Changed from "employee" to "visiting"
     filter: "technology",
     icon: "💻",
     orientation: "landscape",
@@ -42,7 +42,7 @@ const landscapeVisiting = [
   {
     id: 'LV5',
     name: "Nexus Secure (Dark)",
-    category: "employee",
+    category: "visiting",  // ✅ Changed from "employee" to "visiting"
     filter: "technology",
     icon: "🌙",
     orientation: "landscape",
@@ -53,7 +53,7 @@ const landscapeVisiting = [
   {
     id: 'LV6',
     name: "Peoplecare (Coral)",
-    category: "employee",
+    category: "visiting",  // ✅ Changed from "employee" to "visiting"
     filter: "nontech",
     icon: "🧡",
     orientation: "landscape",
@@ -62,7 +62,7 @@ const landscapeVisiting = [
   {
     id: 'LV7',
     name: "Logicorp (Mint Navy)",
-    category: "employee",
+    category: "visiting",  // ✅ Changed from "employee" to "visiting"
     filter: "nontech",
     icon: "🌿",
     orientation: "landscape",
@@ -73,7 +73,7 @@ const landscapeVisiting = [
   {
     id: 'LV8',
     name: "Executive Corp (Gold Accent)",
-    category: "employee",
+    category: "visiting",  // ✅ Changed from "employee" to "visiting"
     filter: "corporate",
     icon: "🏆",
     orientation: "landscape",
@@ -82,7 +82,7 @@ const landscapeVisiting = [
   {
     id: 'LV9',
     name: "Prestige Corp (Charcoal Gold)",
-    category: "employee",
+    category: "visiting",  // ✅ Changed from "employee" to "visiting"
     filter: "corporate",
     icon: "✨",
     orientation: "landscape",
@@ -91,7 +91,7 @@ const landscapeVisiting = [
   {
     id: 'LV10',
     name: "Emerald Group (Emerald)",
-    category: "employee",
+    category: "visiting",  // ✅ Changed from "employee" to "visiting"
     filter: "corporate",
     icon: "💼",
     orientation: "landscape",

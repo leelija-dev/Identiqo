@@ -6,16 +6,11 @@ import { useRouter } from 'next/navigation';
 import { templatesByOrientation, normalizeTemplateHtml } from '../../templatesdata';
 import CardPreview, { CardGrid, CardSkeleton } from '@/components/Common/Card';
 import Button from '@/components/Common/Button';
-import { FiDownload, FiX,  FiFilter } from 'react-icons/fi';
-import { SidebarSkeleton } from '@/components/Common/Skeleton';
+import { FiDownload, FiX, FiFilter, FiChevronDown } from 'react-icons/fi';
+import { SidebarSkeleton, TemplateGridSkeleton } from '@/components/Common/Skeleton';
 import { motion, AnimatePresence } from 'framer-motion';
-import { templatesByOrientation, normalizeTemplateHtml } from '../../templatesdata';
-import CardPreview from '@/components/Common/Card';
-import Button from '@/components/Common/Button';
 import Pagination from '@/components/Common/Pagination';
 import Modal from '@/components/Common/Modal';
-import { SidebarSkeleton, TemplateGridSkeleton } from '@/components/Common/Skeleton';
-import { FiChevronDown } from 'react-icons/fi';
 
 // ============================================================================
 // Constants
@@ -127,26 +122,15 @@ export default function TemplatesPage() {
   const [indicatorStyle, setIndicatorStyle] = useState({ left: '0px', width: '0px' });
 
   const tabBarRef = useRef(null);
-  const tabRefs = {
-    landscape: useRef(null),
-    portrait: useRef(null),
-  };
-  const slideTimeoutRef = useRef(null);
-  const [slideDirection, setSlideDirection] = useState(0);
-  const [isScrolling, setIsScrolling] = useState(false);
-  const [isMobileIndustryOpen, setIsMobileIndustryOpen] = useState(false);
-  const mobileIndustryRef = useRef(null);
-
-  // Sliding Tab State
-  const [pillStyle, setPillStyle] = useState({ left: '0px', width: '0px' });
-
-  // Refs
-  const tabBarRef = useRef(null);
   const tabRefs = useRef({
     landscape: null,
     portrait: null,
   });
   const slideTimeoutRef = useRef(null);
+  const [slideDirection, setSlideDirection] = useState(0);
+  const [isScrolling, setIsScrolling] = useState(false);
+  const [isMobileIndustryOpen, setIsMobileIndustryOpen] = useState(false);
+  const mobileIndustryRef = useRef(null);
   const mainContentRef = useRef(null);
   const scrollTimeoutRef = useRef(null);
 
@@ -251,6 +235,15 @@ export default function TemplatesPage() {
     }, 500);
   }, []);
 
+  const handleOrientationChange = useCallback((newOrientation) => {
+    setOrientation(newOrientation);
+  }, []);
+
+  const closeModal = useCallback(() => {
+    setIsModalOpen(false);
+    setSelectedTemplate(null);
+  }, []);
+
   // ==========================================================================
   // Update pill position for orientation toggle
   // ==========================================================================
@@ -269,6 +262,7 @@ export default function TemplatesPage() {
     width = Math.max(20, Math.min(width, barRect.width - left));
     
     setPillStyle({ left: `${left}px`, width: `${width}px` });
+    setIndicatorStyle({ left: `${left}px`, width: `${width}px` });
   }, [orientation]);
 
   useEffect(() => {
@@ -308,11 +302,6 @@ export default function TemplatesPage() {
   const openModal = useCallback((template) => {
     setSelectedTemplate(template);
     setIsModalOpen(true);
-  }, []);
-
-  const closeModal = useCallback(() => {
-    setIsModalOpen(false);
-    setSelectedTemplate(null);
   }, []);
 
   // ==========================================================================
@@ -452,7 +441,7 @@ export default function TemplatesPage() {
       }}
     >
       <div className="flex min-h-screen">
-        {/* ===== SIDEBAR - Desktop (unchanged) + Hidden on tablet/mobile ===== */}
+        {/* ===== SIDEBAR - Desktop ===== */}
         {isLoading ? (
           <SidebarSkeleton />
         ) : (
@@ -461,7 +450,7 @@ export default function TemplatesPage() {
               <div className="text-lg uppercase tracking-[1.5px] text-slate-500 font-semibold px-5 pb-3">
                 CARD CATEGORY
               </div>
-              {categoryOptions.map(item => (
+              {CATEGORY_OPTIONS.map(item => (
                 <div
                   key={item.key}
                   onClick={() => setCategory(item.key)}
@@ -486,7 +475,7 @@ export default function TemplatesPage() {
                   onChange={(e) => setIndustryFilter(e.target.value)}
                   className="w-full px-3.5 py-2.5 bg-white/50 backdrop-blur-sm border border-slate-200 rounded-xl text-sm text-slate-800 cursor-pointer hover:border-indigo-400 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-400"
                 >
-                  {industryOptions.map(opt => (
+                  {INDUSTRY_OPTIONS.map(opt => (
                     <option key={opt.value} value={opt.value}>{opt.label}</option>
                   ))}
                 </select>
@@ -496,70 +485,70 @@ export default function TemplatesPage() {
         )}
 
         {/* ===== MAIN CONTENT ===== */}
-        <div className="flex-1 w-full max-w-full overflow-y-auto p-4 sm:p-6 md:p-8 lg:p-10 min-w-0">
-          <div className="flex flex-col sm:flex-row sm:items-center items-start gap-4 mb-6 w-full">
+        <main className="flex-1 w-full max-w-full overflow-y-auto p-4 sm:p-6 md:p-8 lg:p-10 min-w-0">
+          {/* Header Section - Responsive flex wrap */}
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
             <div className="flex-shrink-0">
               <h1 className="text-slate-800 text-xl font-bold">
                 {categoryTitles[category]}
               </h1>
             </div>
 
-            {/* Mobile Filter Button - Only visible on mobile/tablet */}
-            <button
-              onClick={() => setShowMobileFilters(true)}
-              className="md:hidden flex items-center gap-2 px-3 py-1.5 bg-white/80 backdrop-blur-sm rounded-lg border border-slate-200/60 text-slate-600 text-sm"
-            >
-              <FiFilter size={14} />
-              <span>Filter</span>
-              {(category !== 'all' || industryFilter !== 'all') && (
-                <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
-              )}
-            </button>
+            <div className="flex flex-wrap items-center gap-3 ml-auto">
+              {/* Mobile Filter Button - Only on mobile */}
+              <button
+                onClick={() => setShowMobileFilters(true)}
+                className="md:hidden flex items-center gap-2 px-3 py-2 bg-white/80 backdrop-blur-sm rounded-lg border border-slate-200/60 text-slate-600 text-sm whitespace-nowrap"
+              >
+                <FiFilter size={14} />
+                <span>Filter</span>
+                {(category !== 'all' || industryFilter !== 'all') && (
+                  <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
+                )}
+              </button>
 
-            {/* === RESPONSIVE ORIENTATION TAB SWITCHER (unchanged for desktop) === */}
-            <div className="relative w-full sm:w-auto max-w-full flex-shrink-0" ref={tabBarRef}>
-              <div className="relative z-10 flex items-stretch gap-0 bg-white/90 backdrop-blur-sm rounded-xl border border-slate-200/60 shadow-sm p-1 w-full sm:w-auto">
-                {['landscape', 'portrait'].map((tab) => (
-                  <button
-                    key={tab}
-                    ref={tabRefs[tab]}
-                    onClick={() => handleOrientationChange(tab)}
-                    className={`flex flex-col items-center justify-center gap-0.5 sm:gap-1 px-3 sm:px-5 py-2 sm:py-2.5 flex-1 sm:flex-initial min-w-[64px] sm:min-w-[82px] rounded-lg transition-colors duration-200 text-xs sm:text-sm font-medium z-10 whitespace-nowrap ${
-                      orientation === tab
-                        ? 'text-indigo-700 font-bold'
-                        : 'text-slate-500 hover:text-indigo-500'
-                    }`}
-                  >
-                    <span className="text-base sm:text-lg">{tab === 'landscape' ? '🌄' : '📱'}</span>
-                    <span className="text-[10px] sm:text-xs">{tab === 'landscape' ? 'LAND' : 'PORT'}</span>
-                  </button>
-                ))}
+              {/* Orientation Tab Switcher */}
+              <div className="relative w-auto flex-shrink-0" ref={tabBarRef}>
+                <div className="relative z-10 flex items-stretch gap-0 bg-white/90 backdrop-blur-sm rounded-xl border border-slate-200/60 shadow-sm p-1">
+                  {['landscape', 'portrait'].map((tab) => (
+                    <button
+                      key={tab}
+                      ref={(el) => { tabRefs.current[tab] = el; }}
+                      onClick={() => handleOrientationChange(tab)}
+                      className={`flex flex-col items-center justify-center gap-0.5 sm:gap-1 px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg transition-colors duration-200 text-xs sm:text-sm font-medium z-10 whitespace-nowrap ${
+                        orientation === tab
+                          ? 'text-indigo-700 font-bold'
+                          : 'text-slate-500 hover:text-indigo-500'
+                      }`}
+                    >
+                      <span className="text-sm sm:text-base">{tab === 'landscape' ? '🌄' : '📱'}</span>
+                      <span className="text-[10px] sm:text-xs">{tab === 'landscape' ? 'LAND' : 'PORT'}</span>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Sliding background pill */}
+                <div
+                  className="absolute top-1 bottom-1 rounded-lg bg-gradient-to-r from-white via-indigo-50/80 to-white shadow-sm pointer-events-none z-0"
+                  style={{
+                    ...pillStyle,
+                    transition: 'left 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1), width 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1)',
+                  }}
+                />
+
+                {/* Sliding bottom indicator */}
+                <div
+                  className="absolute bottom-0 left-0 h-[3px] bg-indigo-500 rounded-t-full pointer-events-none z-20"
+                  style={{
+                    ...indicatorStyle,
+                    transition: 'left 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1), width 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1), background 0.2s',
+                  }}
+                />
               </div>
-
-              {/* Sliding background pill */}
-              <div
-                className="absolute top-1 bottom-1 rounded-lg bg-gradient-to-r from-white via-indigo-50/80 to-white shadow-sm pointer-events-none z-0"
-                style={{
-                  ...pillStyle,
-                  transition: 'left 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1), width 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1)',
-                }}
-              />
-
-              {/* Sliding bottom indicator */}
-              <div
-                className="absolute bottom-0 left-0 h-[3px] bg-indigo-500 rounded-t-full pointer-events-none z-20"
-                style={{
-                  ...indicatorStyle,
-                  transition: 'left 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1), width 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1), background 0.2s',
-                }}
-              />
             </div>
           </div>
 
-          {/* ===== MOBILE FILTER CHIPS (only visible on mobile/tablet, hidden on desktop) ===== */}
-        
-
-          {/* Templates Grid */}
+          {/* Templates Grid - FIXED: Landscape shows 1 card per row on mobile */}
           {isLoading ? (
             <TemplateGridSkeleton count={ITEMS_PER_PAGE} orientation={orientation} />
           ) : filteredTemplates.length === 0 ? (
@@ -578,10 +567,10 @@ export default function TemplatesPage() {
                 >
                   <div
                     className={`
-                      grid gap-5 sm:gap-6
+                      grid gap-4 sm:gap-5 md:gap-6
                       ${orientation === 'landscape'
-                        ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4'
-                        : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'
+                        ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+                        : 'grid-cols-2 xs:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'
                       }
                     `}
                   >
@@ -599,7 +588,7 @@ export default function TemplatesPage() {
                           enableFlip={false}
                           className="w-full transition-all duration-300 group-hover:shadow-2xl group-hover:shadow-black/10"
                         />
-                        <p className="mt-3 text-xs font-medium text-slate-700 md:hidden truncate max-w-[200px]">
+                        <p className="mt-2 text-xs font-medium text-slate-700 text-center truncate w-full px-1">
                           {template.name || 'Untitled Card'}
                         </p>
                       </motion.div>
@@ -610,21 +599,23 @@ export default function TemplatesPage() {
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  onPageChange={handlePageChange}
-                  siblingCount={1}
-                  showFirstLast={true}
-                  className="mt-8 mb-4"
-                />
+                <div className="mt-8 mb-4 overflow-x-auto">
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                    siblingCount={1}
+                    showFirstLast={true}
+                    className="justify-center min-w-max"
+                  />
+                </div>
               )}
             </>
           )}
         </main>
       </div>
 
-      {/* ===== MOBILE FILTER SHEET (only for tablet/mobile) ===== */}
+      {/* ===== MOBILE FILTER SHEET ===== */}
       <AnimatePresence>
         {showMobileFilters && (
           <>
@@ -655,7 +646,7 @@ export default function TemplatesPage() {
                     Card Category
                   </label>
                   <div className="space-y-1">
-                    {categoryOptions.map(item => (
+                    {CATEGORY_OPTIONS.map(item => (
                       <div
                         key={item.key}
                         onClick={() => {
@@ -680,7 +671,7 @@ export default function TemplatesPage() {
                     Industry
                   </label>
                   <div className="space-y-1">
-                    {industryOptions.map(opt => (
+                    {INDUSTRY_OPTIONS.map(opt => (
                       <div
                         key={opt.value}
                         onClick={() => {
@@ -704,60 +695,20 @@ export default function TemplatesPage() {
         )}
       </AnimatePresence>
 
-      {/* ===== MODAL (responsive for mobile) ===== */}
-      <AnimatePresence>
-        {showModal && selectedTemplate && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-[1000] p-4"
-            onClick={handleOverlayClick}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="flex flex-col md:flex-row gap-6 items-center justify-center w-full max-w-[90vw]"
-            >
-              <div className={`template-modal-card relative ${
-                selectedTemplate.orientation === 'landscape'
-                  ? 'w-full max-w-[550px] aspect-[550/348]'
-                  : 'w-full max-w-[350px] aspect-[350/550]'
-              }`}>
-                <div
-                  ref={modalCardRef}
-                  onClick={handleModalCardFlip}
-                  className="w-full h-full rounded-2xl overflow-hidden shadow-2xl shadow-black/30 bg-transparent cursor-pointer"
-                >
-                  <div
-                    className="w-full h-full rounded-2xl overflow-hidden"
-                    dangerouslySetInnerHTML={{ __html: selectedTemplate.htmlContent }}
-                  />
-                </div>
-                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] text-white/70 bg-black/50 px-2 py-0.5 rounded-full md:hidden">
-                  Tap to flip
-                </div>
-              </div>
-              
-              <div className="template-modal-action-group flex flex-col gap-3 w-full md:w-auto justify-center">
-                <Button onClick={addToWishlist} variant="warning" size="md" className="w-full md:w-auto px-4 py-3 md:px-6 md:py-2.5 rounded-full text-sm bg-amber-500/90 backdrop-blur-sm hover:bg-amber-600 text-center">
-                  ⭐ Wishlist
-                </Button>
-                <Button onClick={goToCustomize} variant="primary" size="md" className="w-full md:w-auto px-4 py-3 md:px-6 md:py-2.5 rounded-full text-sm bg-indigo-600/90 backdrop-blur-sm hover:bg-indigo-700 text-center">
-                  ✏️ Customize
-                </Button>
-                <Button onClick={downloadTemplate} variant="success" size="md" icon={FiDownload} className="w-full md:w-auto px-4 py-3 md:px-6 md:py-2.5 rounded-full text-sm bg-emerald-500/90 backdrop-blur-sm hover:bg-emerald-600 text-center flex items-center justify-center gap-2">
-                  <span>Download</span>
-                </Button>
-                <Button onClick={closeModal} variant="secondary" size="md" className="w-full md:w-auto px-4 py-3 md:px-6 md:py-2.5 rounded-full text-sm bg-slate-600/90 backdrop-blur-sm hover:bg-slate-700 text-center">
-                  ✕ Close
-                </Button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* ===== MODAL using imported Modal component ===== */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        htmlContent={selectedTemplate?.htmlContent || ''}
+        orientation={selectedTemplate?.orientation || 'landscape'}
+        onWishlist={addToWishlist}
+        onCustomize={goToCustomize}
+        onDownload={downloadTemplate}
+        showWishlist={true}
+        showCustomize={true}
+        showDownload={true}
+        title={selectedTemplate?.name || 'Template Preview'}
+      />
 
       {/* ===== TOAST ===== */}
       <AnimatePresence>
@@ -766,7 +717,7 @@ export default function TemplatesPage() {
             initial={{ opacity: 0, x: 100 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 100 }}
-            className="fixed bottom-4 right-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-5 py-2.5 rounded-full font-semibold z-[1100] text-sm shadow-lg"
+            className="fixed bottom-4 right-4 left-4 sm:left-auto bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-4 sm:px-5 py-2.5 rounded-full font-semibold z-[1100] text-sm shadow-lg text-center sm:text-right"
           >
             {toastMessage}
           </motion.div>
@@ -774,72 +725,40 @@ export default function TemplatesPage() {
       </AnimatePresence>
 
       {/* Global Styles */}
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-        .scrollbar-none::-webkit-scrollbar { display: none; }
-        .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          .scrollbar-none::-webkit-scrollbar { display: none; }
+          .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
 
-        @keyframes fade-in {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        
-        @keyframes fade-in-up {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .animate-fade-in { animation: fade-in 0.3s ease-out forwards; }
-        .animate-fade-in-up { animation: fade-in-up 0.4s ease-out forwards; }
-
-        
-        .template-modal-card {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-        }
-
-        .template-modal-action-group {
-          max-width: 100%;
-        }
-
-        @media (max-width: 800px) and (orientation: landscape) {
-          .template-modal-card {
-            max-width: 100%;
+          @keyframes fade-in {
+            from { opacity: 0; }
+            to { opacity: 1; }
           }
-          .template-modal-action-group {
-            flex-direction: row;
-            flex-wrap: wrap;
-            gap: 0.75rem;
-            justify-content: center;
-            align-items: stretch;
+          
+          @keyframes fade-in-up {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
           }
-          .template-modal-action-group > * {
-            flex: 1 1 calc(50% - 0.375rem);
-            width: calc(50% - 0.375rem) !important;
-            min-width: 0;
+          
+          .animate-fade-in { animation: fade-in 0.3s ease-out forwards; }
+          .animate-fade-in-up { animation: fade-in-up 0.4s ease-out forwards; }
+
+          .overflow-y-auto {
+            scroll-behavior: smooth;
           }
-        }
 
-        .flip-card {
-          background-color: transparent;
-          width: 100%;
-          height: 100%;
-          perspective: 1000px;
-          cursor: pointer;
-        }
-        
-        .overflow-y-auto {
-          scroll-behavior: smooth;
-        }
+          .modal-open {
+            overflow: hidden;
+          }
 
-        .modal-open {
-          overflow: hidden;
-        }
-      `,
-        }}
-      />
+          /* Responsive breakpoints */
+          @media (max-width: 480px) {
+            .grid-cols-1\\:xs\\:grid-cols-2 {
+              grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+          }
+        `
+      }} />
     </div>
   );
 }

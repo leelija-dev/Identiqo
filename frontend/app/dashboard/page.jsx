@@ -6,11 +6,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   FiUsers, FiDollarSign, FiTrendingUp, FiActivity,
   FiBell, FiSearch, FiMenu, FiSun, FiMoon,
-  FiChevronLeft,  FiHome, FiPieChart, FiUser, FiSettings, FiHelpCircle
+  FiChevronLeft, FiHome, FiPieChart, FiUser, FiSettings, FiHelpCircle
 } from 'react-icons/fi';
 
 // ---------- Theme Context ----------
-const ThemeContext = createContext();  
+const ThemeContext = createContext();
 
 export function useTheme() {
   const context = useContext(ThemeContext);
@@ -22,12 +22,15 @@ function ThemeProvider({ children }) {
   const [theme, setTheme] = useState('light');
   const [mounted, setMounted] = useState(false);
 
+  // Initialize theme on mount
   useEffect(() => {
     setMounted(true);
     const savedTheme = localStorage.getItem('theme');
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     const initialTheme = savedTheme || (prefersDark ? 'dark' : 'light');
     setTheme(initialTheme);
+    
+    // Apply theme to html element
     if (initialTheme === 'dark') {
       document.documentElement.classList.add('dark');
     } else {
@@ -39,8 +42,19 @@ function ThemeProvider({ children }) {
     const newTheme = theme === 'light' ? 'dark' : 'light';
     setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
-    document.documentElement.classList.toggle('dark', newTheme === 'dark');
+    
+    // Apply theme to html element immediately
+    if (newTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
   };
+
+  // Don't render until mounted to prevent hydration mismatch
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>
@@ -49,9 +63,8 @@ function ThemeProvider({ children }) {
   );
 }
 
-// ---------- Sidebar Component (Integrated) ----------
+// ---------- Sidebar Component ----------
 function Sidebar({ collapsed, onToggle, isMobileOpen, onMobileClose }) {
-  const { theme } = useTheme();
   const menuItems = [
     { icon: FiHome, label: 'Dashboard', href: '/dashboard', active: true },
     { icon: FiPieChart, label: 'Analytics', href: '/analytics' },
@@ -63,12 +76,17 @@ function Sidebar({ collapsed, onToggle, isMobileOpen, onMobileClose }) {
   return (
     <>
       {/* Mobile overlay */}
-      {isMobileOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-          onClick={onMobileClose}
-        />
-      )}
+      <AnimatePresence>
+        {isMobileOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+            onClick={onMobileClose}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Sidebar */}
       <motion.aside
@@ -205,7 +223,7 @@ function StatCard({ icon: Icon, label, value, trend, color, delay }) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.5 }}
-      className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl p-5 border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all"
+      className="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-all"
     >
       <div className="flex items-center justify-between">
         <div className={`p-3 rounded-xl ${color}`}>
@@ -215,7 +233,7 @@ function StatCard({ icon: Icon, label, value, trend, color, delay }) {
           {trend}
         </span>
       </div>
-      <h3 className="mt-4 text-2xl font-bold text-slate-800 dark:text-slate-100">{value}</h3>
+      <h3 className="mt-4 text-2xl font-bold text-slate-800 dark:text-white">{value}</h3>
       <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{label}</p>
     </motion.div>
   );
@@ -233,41 +251,22 @@ function MobileMenuButton({ onClick }) {
   );
 }
 
-// ---------- Theme Toggle Button ----------
+// ---------- Theme Toggle Button (Fixed) ----------
 function ThemeToggleButton() {
   const { theme, toggleTheme } = useTheme();
 
   return (
-    <motion.button
-      whileTap={{ scale: 0.95 }}
+    <button
       onClick={toggleTheme}
       className="p-2 rounded-xl bg-white dark:bg-slate-800 shadow-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
       aria-label="Toggle theme"
     >
-      <AnimatePresence mode="wait" initial={false}>
-        {theme === 'light' ? (
-          <motion.div
-            key="sun"
-            initial={{ rotate: -90, opacity: 0 }}
-            animate={{ rotate: 0, opacity: 1 }}
-            exit={{ rotate: 90, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            <FiMoon className="w-5 h-5 text-slate-600" />
-          </motion.div>
-        ) : (
-          <motion.div
-            key="moon"
-            initial={{ rotate: 90, opacity: 0 }}
-            animate={{ rotate: 0, opacity: 1 }}
-            exit={{ rotate: -90, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            <FiSun className="w-5 h-5 text-amber-400" />
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.button> 
+      {theme === 'light' ? (
+        <FiMoon className="w-5 h-5 text-slate-600" />
+      ) : (
+        <FiSun className="w-5 h-5 text-amber-400" />
+      )}
+    </button>
   );
 }
 
@@ -326,9 +325,13 @@ function NotificationBell() {
       >
         <FiBell className="w-5 h-5 text-slate-600 dark:text-slate-300" />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 rounded-full text-[10px] text-white flex items-center justify-center">
+          <motion.span
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 rounded-full text-[10px] text-white flex items-center justify-center"
+          >
             {unreadCount}
-          </span>
+          </motion.span>
         )}
       </button>
 
@@ -344,19 +347,21 @@ function NotificationBell() {
               className="absolute right-0 mt-2 w-80 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 z-50 overflow-hidden"
             >
               <div className="p-4 border-b border-slate-200 dark:border-slate-700">
-                <h3 className="font-semibold text-slate-800 dark:text-slate-100">Notifications</h3>
+                <h3 className="font-semibold text-slate-800 dark:text-white">Notifications</h3>
               </div>
               <div className="max-h-96 overflow-y-auto">
                 {notifications.map(notif => (
-                  <div 
+                  <motion.div 
                     key={notif.id} 
-                    className={`p-4 border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors ${
-                      !notif.read ? 'bg-indigo-50/50 dark:bg-indigo-900/20' : ''
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className={`p-4 border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer ${
+                      !notif.read ? 'bg-indigo-50 dark:bg-indigo-900/20' : ''
                     }`}
                   >
                     <p className="text-sm text-slate-700 dark:text-slate-300">{notif.title}</p>
                     <p className="text-xs text-slate-400 mt-1">{notif.time}</p>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
             </motion.div>
@@ -371,6 +376,12 @@ function NotificationBell() {
 export default function DashboardPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // Fix hydration issues
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const pieData = [
     { name: 'Active', value: 65 },
@@ -382,6 +393,10 @@ export default function DashboardPage() {
     { value: 30 }, { value: 45 }, { value: 28 }, { value: 80 },
     { value: 55 }, { value: 60 }, { value: 70 }, { value: 40 }
   ];
+
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <ThemeProvider>
@@ -395,12 +410,17 @@ export default function DashboardPage() {
         />
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col overflow-hidden" style={{ marginLeft: sidebarCollapsed ? 80 : 280 }}>
+        <div 
+          className="flex-1 flex flex-col overflow-hidden transition-all duration-300"
+          style={{ 
+            marginLeft: mounted ? (sidebarCollapsed ? 80 : 280) : 280
+          }}
+        >
           {/* Header with actions */}
           <header className="flex items-center justify-between px-4 lg:px-6 py-4 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border-b border-slate-200/60 dark:border-slate-700/60">
             <div className="flex items-center gap-3">
               <MobileMenuButton onClick={() => setMobileSidebarOpen(true)} />
-              <h1 className="text-xl font-semibold text-slate-800 dark:text-slate-100">Dashboard</h1>
+              <h1 className="text-xl font-semibold text-slate-800 dark:text-white">Dashboard</h1>
             </div>
             <div className="flex items-center gap-3">
               <SearchBar />
@@ -422,9 +442,9 @@ export default function DashboardPage() {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.5 }}
-                className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl p-6 border border-slate-200/60 dark:border-slate-700/60"
+                className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700"
               >
-                <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-4">Card Status</h2>
+                <h2 className="text-lg font-semibold text-slate-800 dark:text-white mb-4">Card Status</h2>
                 <div className="flex items-center justify-center flex-wrap gap-6">
                   <AnimatedPieChart data={pieData} size={200} strokeWidth={35} />
                   <div className="flex flex-col gap-2">
@@ -442,9 +462,9 @@ export default function DashboardPage() {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.7 }}
-                className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl p-6 border border-slate-200/60 dark:border-slate-700/60"
+                className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700"
               >
-                <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-4">Weekly Activity</h2>
+                <h2 className="text-lg font-semibold text-slate-800 dark:text-white mb-4">Weekly Activity</h2>
                 <div className="h-48 w-full">
                   <WavyChart data={chartData} color="#6366f1" />
                 </div>
@@ -458,9 +478,9 @@ export default function DashboardPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.9 }}
-              className="mt-6 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl p-6 border border-slate-200/60 dark:border-slate-700/60"
+              className="mt-6 bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700"
             >
-              <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-4">Recent ID Scans</h2>
+              <h2 className="text-lg font-semibold text-slate-800 dark:text-white mb-4">Recent ID Scans</h2>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm text-left">
                   <thead className="text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
@@ -483,7 +503,7 @@ export default function DashboardPage() {
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.1 * i }}
-                        className="hover:bg-slate-50/50 dark:hover:bg-slate-700/30 transition-colors"
+                        className="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors"
                       >
                         <td className="py-3 font-medium text-slate-700 dark:text-slate-300">{row.name}</td>
                         <td className="py-3 text-slate-500 dark:text-slate-400">{row.id}</td>

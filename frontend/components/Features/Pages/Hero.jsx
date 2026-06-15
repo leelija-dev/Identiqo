@@ -1,8 +1,7 @@
 "use client";
 import Link from "next/link";
-
 import Container from "@/components/Common/Container";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 export default function Hero() {
   const [animatedText, setAnimatedText] = useState({
@@ -12,6 +11,10 @@ export default function Hero() {
     buttons: false,
     trust: false,
   });
+  
+  const [liquidPosition, setLiquidPosition] = useState({ x: 0, y: 0 });
+  const [isHovering, setIsHovering] = useState(false);
+  const btnRef = useRef(null);
 
   useEffect(() => {
     const timers = [
@@ -24,11 +27,20 @@ export default function Hero() {
     return () => timers.forEach(timer => clearTimeout(timer));
   }, []);
 
+  const handleMouseMove = (e) => {
+    if (btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      setLiquidPosition({ x, y });
+    }
+  };
+
   // Fixed barcode pattern
   const barcodePattern = [4, 8, 12, 6, 10, 14, 5, 9, 11, 7, 13, 8, 6, 10, 12, 4, 9, 11, 7, 13, 8, 6, 10, 14, 5, 9, 11, 7, 13, 8];
 
   return (
-   <section className="relative min-h-screen overflow-hidden bg-gradient-to-br from-[#fdf4ff] via-[#eef2ff] to-[#ecfeff] flex items-center py-12 sm:py-16 lg:py-20 px-4 sm:px-6">
+    <section className="relative min-h-screen overflow-hidden bg-gradient-to-br from-[#fdf4ff] via-[#eef2ff] to-[#ecfeff] flex items-center py-12 sm:py-16 lg:py-20 px-4 sm:px-6">
       {/* Background Blur Effects */}
       <div className="absolute -top-[120px] -right-[120px] w-[250px] h-[250px] sm:w-[320px] sm:h-[320px] lg:w-[420px] lg:h-[420px] bg-indigo-300/20 rounded-full blur-80px" />
       <div className="absolute -bottom-[120px] -left-[120px] w-[250px] h-[250px] sm:w-[320px] sm:h-[320px] lg:w-[420px] lg:h-[420px] bg-purple-300/20 rounded-full blur-80px" />
@@ -47,7 +59,7 @@ export default function Hero() {
             </div>
 
             <div className={`transition-all duration-700 delay-100 ease-out ${animatedText.heading ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10'}`}>
-          <h1 className="text-h1-sm sm:text-h1-md md:text-h1-xl lg:text-h1-2xl font-extrabold leading-[1.15] tracking-[-0.02em]">
+              <h1 className="text-h1-sm sm:text-h1-md md:text-h1-xl lg:text-h1-2xl font-extrabold leading-[1.15] tracking-[-0.02em]">
                 Smart Employee
                 <span className="block mt-1 sm:mt-2 text-transparent bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 bg-clip-text">
                   ID Card Generator
@@ -64,10 +76,30 @@ export default function Hero() {
 
             <div className={`transition-all duration-700 delay-300 ease-out ${animatedText.buttons ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}>
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-2.5 mt-6 sm:mt-7 md:mt-8">
-                <Link href="/templates" className="group relative px-5 sm:px-4 md:px-8 py-3 sm:py-2 md:py-3.5 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold text-sm sm:text-xs md:text-base shadow-lg shadow-indigo-300/40 hover:shadow-xl hover:scale-105 transition-all duration-300 overflow-hidden w-full sm:w-auto inline-flex items-center justify-center">
-                  <span className="relative z-10 flex items-center justify-center gap-1">Explore your cards →</span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                {/* Liquid Button */}
+                <Link
+                  href="/templates"
+                  ref={btnRef}
+                  onMouseMove={handleMouseMove}
+                  onMouseEnter={() => setIsHovering(true)}
+                  onMouseLeave={() => setIsHovering(false)}
+                  className="liquid-btn relative overflow-hidden px-5 sm:px-4 md:px-8 py-3 sm:py-2 md:py-3.5 rounded-full bg-white text-indigo-600 font-bold text-sm sm:text-xs md:text-base cursor-pointer border-2 border-indigo-600 transition-all duration-300 hover:text-white w-full sm:w-auto inline-flex items-center justify-center group"
+                >
+                  <div 
+                    className="liquid absolute rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 transition-all duration-700 ease-out pointer-events-none"
+                    style={{
+                      width: isHovering ? '600px' : '0',
+                      height: isHovering ? '600px' : '0',
+                      left: `${liquidPosition.x}px`,
+                      top: `${liquidPosition.y}px`,
+                      transform: 'translate(-50%, -50%)',
+                    }}
+                  />
+                  <span className="relative z-10 flex items-center justify-center gap-1">
+                    Explore your cards →
+                  </span>
                 </Link>
+
                 <Link href="/pricing" className="w-full sm:w-auto px-5 sm:px-4 md:px-8 py-3 sm:py-2 md:py-3.5 rounded-full border-2 border-slate-200 bg-white text-slate-700 font-bold text-sm sm:text-xs md:text-base hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50/30 transition-all duration-300 inline-flex items-center justify-center">
                   View pricing
                 </Link>
@@ -293,6 +325,32 @@ export default function Hero() {
           .card-main { animation: floatMain 5s ease-in-out infinite; }
         }
         .blur-80px { filter: blur(80px); }
+        
+        /* Liquid Button Styles */
+        .liquid-btn {
+          position: relative;
+          overflow: hidden;
+          transition: all 0.3s ease;
+        }
+        
+        .liquid-btn:hover {
+          color: white;
+          border-color: transparent;
+        }
+        
+        .liquid {
+          position: absolute;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #4f46e5, #9333ea);
+          pointer-events: none;
+          transition: width 0.7s ease, height 0.7s ease;
+          z-index: 0;
+        }
+        
+        .liquid-btn span {
+          position: relative;
+          z-index: 2;
+        }
       `}</style>
     </section>
   );

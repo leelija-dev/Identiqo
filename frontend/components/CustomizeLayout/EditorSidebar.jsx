@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { 
-  FiEdit2, FiSave, FiRotateCcw, FiDroplet, FiImage, FiUpload, FiTrash2,
+  FiSave, FiRotateCcw, FiDroplet, FiImage, FiUpload, FiTrash2,
   FiLayers, FiRefreshCcw, FiX, FiUser
 } from 'react-icons/fi';
 import { FaBarcode, FaQrcode, FaBuilding } from 'react-icons/fa';

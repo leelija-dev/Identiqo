@@ -178,37 +178,9 @@ export default function SignIn() {
             </div>
 
             {/* Social Login Buttons */}
-            <div className="grid grid-cols-2 gap-3 mb-6">
-              <button
-                onClick={() => handleSocialLogin("Google")}
-                className="flex items-center justify-center gap-3 px-4 py-3 border border-slate-200 rounded-xl hover:shadow-lg hover:border-slate-300 transition-all duration-300 text-p-xs font-medium text-slate-700 bg-white hover:bg-gray-50"
-              >
-                <FaGoogle className="w-5 h-5" style={{ color: '#4285F4' }} />
-                <span>Google</span>
-              </button>
-              <button
-                onClick={() => handleSocialLogin("Microsoft")}
-                className="flex items-center justify-center gap-3 px-4 py-3 border border-slate-200 rounded-xl hover:shadow-lg hover:border-slate-300 transition-all duration-300 text-p-xs font-medium text-slate-700 bg-white hover:bg-gray-50"
-              >
-                <svg className="w-5 h-5" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect x="1" y="1" width="9" height="9" fill="#F25022"/>
-                  <rect x="11" y="1" width="9" height="9" fill="#7FBA00"/>
-                  <rect x="1" y="11" width="9" height="9" fill="#00A4EF"/>
-                  <rect x="11" y="11" width="9" height="9" fill="#FFB900"/>
-                </svg>
-                <span>Microsoft</span>
-              </button>
-            </div>
+          
 
-            {/* Divider */}
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-slate-200" />
-              </div>
-              <div className="relative flex justify-center text-p-xs">
-                <span className="px-4 bg-white text-slate-400">Or continue with email</span>
-              </div>
-            </div>
+           
 
             {/* Social Login Buttons */}
             <div className="grid grid-cols-2 gap-3 mb-6">

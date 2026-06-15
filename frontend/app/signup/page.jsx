@@ -18,13 +18,14 @@ export default function SignUp() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
-  const [isSliding, setIsSliding] = useState(false);
+  const [isSlidingIn, setIsSlidingIn] = useState(false);
+  const [isSlidingOut, setIsSlidingOut] = useState(false);
   const router = useRouter();
 
   // Animation on page load - slide in from right
   useEffect(() => {
-    // Trigger slide in animation
-    setIsSliding(true);
+    // Small delay to trigger animation
+    setTimeout(() => setIsSlidingIn(true), 10);
   }, []);
 
   const validateForm = () => {
@@ -78,7 +79,10 @@ export default function SignUp() {
   ];
 
   const handleSignInClick = () => {
-    router.push("/signin");
+    setIsSlidingOut(true);
+    setTimeout(() => {
+      router.push("/signin");
+    }, 300);
   };
 
   return (
@@ -168,10 +172,10 @@ export default function SignUp() {
           </div>
         </div>
 
-        {/* Right Side - Signup Form with Slide In Effect */}
+        {/* Right Side - Signup Form with Slide In/Out Effect */}
         <div className={`w-full lg:w-1/2 flex items-center justify-center p-6 md:p-10 bg-white transition-all duration-500 ease-in-out ${
-          isSliding ? 'animate-slide-right' : 'translate-x-full opacity-0'
-        }`}>
+          isSlidingOut ? 'animate-slide-left' : ''
+        } ${isSlidingIn ? 'animate-slide-right' : 'translate-x-full opacity-0'}`}>
           <div className="w-full max-w-md">
             <div className="lg:hidden text-center mb-8">
               <span className="text-2xl font-bold text-indigo-600">IDENTIQO</span>
@@ -337,7 +341,7 @@ export default function SignUp() {
                 )}
               </div>
 
-              <Button type="submit" variant="primary" size="lg" className="w-full">
+              <Button type="submit" variant="primary" size="lg" className="w-full" loading={isLoading}>
                 Create Account
               </Button>
             </form>
@@ -399,6 +403,22 @@ export default function SignUp() {
         
         .animate-slide-right {
           animation: slideRight 0.4s ease-out forwards;
+        }
+        
+        /* Slide out to left animation */
+        @keyframes slideLeft {
+          0% {
+            transform: translateX(0);
+            opacity: 1;
+          }
+          100% {
+            transform: translateX(-100%);
+            opacity: 0;
+          }
+        }
+        
+        .animate-slide-left {
+          animation: slideLeft 0.3s ease-in-out forwards;
         }
       `}</style>
     </div>

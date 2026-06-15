@@ -1,17 +1,17 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, memo } from "react";
 
 /* =========================================================
    CARD CONFIGURATION
 ========================================================= */
 
 export const CARD_DIMENSIONS = {
-  landscape: {
-    designSize: { width: 550, height: 348 },
-    containerClass:
-      "w-full max-w-[360px] mx-auto aspect-[550/348] max-h-[240px]",
-  },
+ landscape: {
+  designSize: { width: 550, height: 348 },
+  containerClass:
+    "w-full max-w-[100%] sm:max-w-[420px] lg:max-w-[360px] mx-auto aspect-[550/348]",
+},
   portrait: {
     designSize: { width: 350, height: 550 },
     containerClass:
@@ -85,12 +85,14 @@ export function CardSkeleton({ orientation = "landscape", count = 8 }) {
 
 /* =========================================================
    SCALE HOOK (CORE ENGINE)
+   FIXED: Added debouncing for resize events
 ========================================================= */
 
 function useFitScale(orientation, containerRef) {
   const [scale, setScale] = useState(1);
   const config = CARD_DIMENSIONS[orientation];
   const designSize = config.designSize;
+  const timeoutRef = useRef(null);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -106,16 +108,23 @@ function useFitScale(orientation, containerRef) {
       setScale(Math.max(0.2, Math.min(next, 1)));
     };
 
+    // Debounced version for resize events
+    const debouncedUpdateScale = () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(updateScale, 100);
+    };
+
     updateScale();
 
-    const observer = new ResizeObserver(updateScale);
+    const observer = new ResizeObserver(debouncedUpdateScale);
     observer.observe(el);
 
-    window.addEventListener("resize", updateScale);
+    window.addEventListener("resize", debouncedUpdateScale);
 
     return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
       observer.disconnect();
-      window.removeEventListener("resize", updateScale);
+      window.removeEventListener("resize", debouncedUpdateScale);
     };
   }, [containerRef, orientation, designSize.width, designSize.height]);
 
@@ -130,15 +139,35 @@ function useFitScale(orientation, containerRef) {
 /* =========================================================
    FLIP CARD WRAPPER (Adds flip functionality to any card)
    FIXED: Back side no longer appears mirrored
+   IMPROVED: Added keyboard accessibility
 ========================================================= */
 
 export function FlipCardWrapper({ children, className = "", onClick }) {
   const [isFlipped, setIsFlipped] = useState(false);
+  const [isFlipping, setIsFlipping] = useState(false);
 
   const handleFlip = (e) => {
     e.stopPropagation();
+    
+    // Prevent double flip during animation
+    if (isFlipping) return;
+    
+    setIsFlipping(true);
     setIsFlipped(!isFlipped);
+    
     if (onClick) onClick(e);
+    
+    // Reset flipping state after animation completes
+    setTimeout(() => {
+      setIsFlipping(false);
+    }, 600);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleFlip(e);
+    }
   };
 
   return (
@@ -150,6 +179,10 @@ export function FlipCardWrapper({ children, className = "", onClick }) {
         perspective: '1000px'
       }}
       onClick={handleFlip}
+      onKeyDown={handleKeyDown}
+      role="button"
+      tabIndex={0}
+      aria-label={isFlipped ? "Flip to front" : "Flip to back"}
     >
       <div
         className="flip-card-inner"
@@ -172,9 +205,10 @@ export function FlipCardWrapper({ children, className = "", onClick }) {
 /* =========================================================
    CARD PREVIEW (READ ONLY) - NO WHITE BACKGROUND
    FIXED: Added proper styling for card faces
+   IMPROVED: Added React.memo for performance
 ========================================================= */
 
-export default function CardPreview({
+function CardPreviewComponent({
   html,
   orientation = "landscape",
   className = "",
@@ -250,6 +284,12 @@ export default function CardPreview({
     </CardContainer>
   );
 }
+
+// Memoize the CardPreview component to prevent unnecessary re-renders
+const CardPreview = memo(CardPreviewComponent);
+CardPreview.displayName = 'CardPreview';
+
+export default CardPreview;
 
 /* =========================================================
    CARD EDITOR STAGE (CANVAS FOR CUSTOMIZER)

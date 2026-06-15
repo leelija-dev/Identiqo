@@ -4,7 +4,7 @@
 import { useEffect, useCallback, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from './Button';
-import { FiDownload, FiStar, FiEdit2, FiX } from 'react-icons/fi';
+import { FiDownload, FiEdit2, FiX, FiRotateCw } from 'react-icons/fi';
 
 export default function Modal({
   isOpen,
@@ -21,34 +21,41 @@ export default function Modal({
   title = '',
 }) {
   const [isFlipped, setIsFlipped] = useState(false);
-  const [frontHtml, setFrontHtml] = useState('');
-  const [backHtml, setBackHtml] = useState('');
+  const [frontContent, setFrontContent] = useState('');
+  const [backContent, setBackContent] = useState('');
 
-  // Extract front and back content from HTML
   useEffect(() => {
     if (htmlContent) {
       const tempDiv = document.createElement('div');
       tempDiv.innerHTML = htmlContent;
       
-      const frontElement = tempDiv.querySelector('.card-front, .face.front');
-      const backElement = tempDiv.querySelector('.card-back, .face.back');
+      const frontEl = tempDiv.querySelector('.card-front');
+      const backEl = tempDiv.querySelector('.card-back');
       
-      if (frontElement && backElement) {
-        setFrontHtml(frontElement.innerHTML);
-        setBackHtml(backElement.innerHTML);
+      if (frontEl && backEl) {
+        setFrontContent(frontEl.innerHTML);
+        setBackContent(backEl.innerHTML);
       } else {
-        setFrontHtml(htmlContent);
-        setBackHtml(htmlContent);
+        setFrontContent(htmlContent);
+        setBackContent(`
+          <div style="background:linear-gradient(135deg, #1e293b, #0f172a); width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; color:white; padding:20px; box-sizing:border-box;">
+            <div style="text-align:center;">
+              <div style="font-size:48px; margin-bottom:16px;">💳</div>
+              <h3 style="margin:0 0 8px 0;">Card Back</h3>
+              <p style="font-size:12px; opacity:0.7;">Scan QR for verification</p>
+              <div style="width:80px; height:80px; background:white; margin:16px auto; border-radius:12px;"></div>
+              <p style="font-size:10px; margin-top:16px;">Authorized Signature</p>
+              <div style="width:120px; height:2px; background:white; margin:8px auto;"></div>
+            </div>
+          </div>
+        `);
       }
     }
   }, [htmlContent]);
 
-  // Handle escape key press
   useEffect(() => {
     const handleEsc = (e) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
-      }
+      if (e.key === 'Escape' && isOpen) onClose();
     };
     
     if (isOpen) {
@@ -64,199 +71,162 @@ export default function Modal({
     };
   }, [isOpen, onClose]);
 
-  // Reset flip when modal closes
   useEffect(() => {
-    if (!isOpen) {
-      setIsFlipped(false);
-    }
+    if (!isOpen) setIsFlipped(false);
   }, [isOpen]);
 
-  // Handle overlay click
-  const handleOverlayClick = useCallback((e) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  }, [onClose]);
-
-  // Handle card flip
   const handleCardFlip = useCallback((e) => {
     e.stopPropagation();
     setIsFlipped(!isFlipped);
   }, [isFlipped]);
 
   const isPortrait = orientation === 'portrait';
-
-  // Button animation variants
-  const buttonVariants = {
-    initial: { opacity: 0, x: -20 },
-    animate: { opacity: 1, x: 0 },
-    hover: { scale: 1.05, transition: { duration: 0.2 } },
-    tap: { scale: 0.95, transition: { duration: 0.1 } }
-  };
+  
+  // Responsive card dimensions
+const cardDimensions = isPortrait
+  ? { width: 'min(350px, 90vw)', height: 'min(550px, 141vw)' }
+  : { width: 'min(550px, 92vw)', height: 'min(348px, 58vw)' };
 
   return (
     <AnimatePresence>
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center z-[2000] p-3 xs:p-4 sm:p-5 md:p-6 animate-fade-in"
-          onClick={handleOverlayClick}
-          role="dialog"
-          aria-modal="true"
-          aria-label={title || 'Preview modal'}
+          className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-[2000] p-3 sm:p-4"
+          onClick={onClose}
         >
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
+            initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="flex flex-col lgg:flex-row gap-4 xs:gap-5 sm:gap-6 items-center justify-center w-full max-w-[90vw] xs:max-w-[85vw] sm:max-w-[80vw] md:max-w-[75vw] lg:max-w-[70vw] xl:max-w-[65vw]"
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ duration: 0.2 }}
+            className="flex flex-col lg:flex-row gap-5 lg:gap-8 items-center justify-center max-w-[95vw] lg:max-w-[90vw] xl:max-w-[80vw]"
           >
-            {/* Card Preview Container with Flip */}
-            <motion.div
-              onClick={handleCardFlip}
-              className={`rounded-2xl overflow-hidden shadow-2xl shadow-black/50 transition-all duration-300 cursor-pointer ${
-                isPortrait
-                  ? 'w-full max-w-[220px] xs:max-w-[240px] sm:max-w-[260px] md:max-w-[280px] lg:max-w-[300px] xl:max-w-[320px]'
-                  : 'w-full max-w-[340px] xs:max-w-[360px] sm:max-w-[380px] md:max-w-[420px] lg:max-w-[460px] xl:max-w-[500px]'
-              }`}
-              style={{
-                aspectRatio: isPortrait ? '350 / 550' : '550 / 348',
-              }}
-              whileHover={{ scale: 1.02 }}
-              transition={{ duration: 0.2 }}
-            >
-              <div className="flip-card w-full h-full">
+            {/* Flip Card Container */}
+            <div className="relative">
+              {/* Flip instruction badge */}
+             
+
+              <div
+                onClick={handleCardFlip}
+                className="cursor-pointer"
+                style={{
+                  width: cardDimensions.width,
+                  height: cardDimensions.height,
+                  perspective: '2000px',
+                }}
+              >
                 <div
-                  className="flip-card-inner w-full h-full"
                   style={{
-                    transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+                    position: 'relative',
+                    width: '100%',
+                    height: '100%',
                     transformStyle: 'preserve-3d',
                     transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
+                    transition: 'transform 0.7s cubic-bezier(0.4, 0.2, 0.2, 1)',
+                    borderRadius: '20px',
+                    boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)',
                   }}
                 >
-                  {/* Front Side */}
                   <div
-                    className="card-front absolute w-full h-full backface-hidden rounded-2xl overflow-hidden"
-                    style={{ backfaceVisibility: 'hidden' }}
-                  >
-                    <div 
-                      className="w-full h-full"
-                      dangerouslySetInnerHTML={{ __html: frontHtml }}
-                    />
-                  </div>
-                  
-                  {/* Back Side */}
-                  <div
-                    className="card-back absolute w-full h-full backface-hidden rounded-2xl overflow-hidden"
                     style={{
+                      position: 'absolute',
+                      width: '100%',
+                      height: '100%',
                       backfaceVisibility: 'hidden',
-                      transform: 'rotateY(180deg)',
+                      WebkitBackfaceVisibility: 'hidden',
+                      borderRadius: '20px',
+                      overflow: 'hidden',
+                      background: 'transparent',
                     }}
                   >
                     <div 
                       className="w-full h-full"
-                      dangerouslySetInnerHTML={{ __html: backHtml }}
+                      dangerouslySetInnerHTML={{ __html: frontContent }}
+                    />
+                  </div>
+                  
+                  <div
+                    style={{
+                      position: 'absolute',
+                      width: '100%',
+                      height: '100%',
+                      backfaceVisibility: 'hidden',
+                      WebkitBackfaceVisibility: 'hidden',
+                      transform: 'rotateY(180deg)',
+                      borderRadius: '20px',
+                      overflow: 'hidden',
+                      background: 'transparent',
+                    }}
+                  >
+                    <div 
+                      className="w-full h-full"
+                      dangerouslySetInnerHTML={{ __html: backContent }}
                     />
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </div>
 
-            {/* Action Buttons Container with Smooth Animations */}
-            <motion.div 
-              className="flex flex-row lgg:flex-col gap-2 xs:gap-2.5 sm:gap-3 w-full lgg:w-auto justify-center"
-              initial="initial"
-              animate="animate"
-              transition={{ staggerChildren: 0.05, delayChildren: 0.1 }}
-            >
+            {/* Buttons - Perfectly Responsive */}
+            <div className="flex flex-row flex-wrap lg:flex-col gap-2 sm:gap-2.5 lg:gap-3 w-full lg:w-auto items-stretch lg:items-stretch justify-center">
               {showWishlist && (
-                <motion.div
-                  variants={buttonVariants}
-                  whileHover="hover"
-                  whileTap="tap"
+                <Button
+                  onClick={onWishlist}
+                  variant="warning"
+                  size="md"
+                  className="flex-1 lg:flex-auto min-w-[100px] lg:min-w-[160px] lg:w-[160px] justify-center text-xs sm:text-sm lg:text-base py-2 lg:py-2.5"
                 >
-                  <Button
-                    onClick={onWishlist}
-                    variant="warning"
-                    size="sm"
-                    className="flex-1 lgg:flex-none lgg:w-full text-sm transition-all duration-300"
-                  >
-                    ⭐ Wishlist
-                  </Button>
-                </motion.div>
+                  ⭐ Wishlist
+                </Button>
               )}
               
               {showCustomize && (
-                <motion.div
-                  variants={buttonVariants}
-                  whileHover="hover"
-                  whileTap="tap"
+                <Button
+                  onClick={onCustomize}
+                  variant="primary"
+                  size="md"
+                  icon={FiEdit2}
+                  className="flex-1 lg:flex-auto min-w-[100px] lg:min-w-[160px] lg:w-[160px] justify-center text-xs sm:text-sm lg:text-base py-2 lg:py-2.5"
                 >
-                  <Button
-                    onClick={onCustomize}
-                    variant="primary"
-                    size="sm"
-                    icon={FiEdit2}
-                    className="flex-1 lgg:flex-none lgg:w-full text-sm transition-all duration-300"
-                  >
-                    ✏️ Customize
-                  </Button>
-                </motion.div>
+                  ✏️ Customize
+                </Button>
               )}
               
               {showDownload && (
-                <motion.div
-                  variants={buttonVariants}
-                  whileHover="hover"
-                  whileTap="tap"
+                <Button
+                  onClick={onDownload}
+                  variant="success"
+                  size="md"
+                  icon={FiDownload}
+                  className="flex-1 lg:flex-auto min-w-[100px] lg:min-w-[160px] lg:w-[160px] justify-center text-xs sm:text-sm lg:text-base py-2 lg:py-2.5"
                 >
-                  <Button
-                    onClick={onDownload}
-                    variant="success"
-                    size="sm"
-                    icon={FiDownload}
-                    className="flex-1 lgg:flex-none lgg:w-full text-sm transition-all duration-300"
-                  >
-                    Download
-                  </Button>
-                </motion.div>
+                  Download
+                </Button>
               )}
               
               {customButtons.map((button, index) => (
-                <motion.div
+                <Button
                   key={index}
-                  variants={buttonVariants}
-                  whileHover="hover"
-                  whileTap="tap"
+                  onClick={button.onClick}
+                  variant={button.variant || 'secondary'}
+                  size="md"
+                  icon={button.icon}
+                  className="flex-1 lg:flex-auto min-w-[100px] lg:min-w-[160px] lg:w-[160px] justify-center text-xs sm:text-sm lg:text-base py-2 lg:py-2.5"
                 >
-                  <Button
-                    onClick={button.onClick}
-                    variant={button.variant || 'secondary'}
-                    size="sm"
-                    icon={button.icon}
-                    className={`flex-1 lgg:flex-none lgg:w-full text-sm transition-all duration-300 ${button.className || ''}`}
-                  >
-                    {button.label}
-                  </Button>
-                </motion.div>
+                  {button.label}
+                </Button>
               ))}
               
-              <motion.div
-                variants={buttonVariants}
-                whileHover="hover"
-                whileTap="tap"
+              <Button
+                onClick={onClose}
+                variant="secondary"
+                size="md"
+                icon={FiX}
+                className="flex-1 lg:flex-auto min-w-[100px] lg:min-w-[160px] lg:w-[160px] justify-center text-xs sm:text-sm lg:text-base py-2 lg:py-2.5"
               >
-                <Button
-                  onClick={onClose}
-                  variant="secondary"
-                  size="sm"
-                  icon={FiX}
-                  className="flex-1 lgg:flex-none lgg:w-full text-sm transition-all duration-300"
-                >
-                  Close
-                </Button>
-              </motion.div>
-            </motion.div>
+                Close
+              </Button>
+            </div>
           </motion.div>
         </div>
       )}

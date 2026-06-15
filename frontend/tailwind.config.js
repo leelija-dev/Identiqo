@@ -1,5 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 const tailwindConfig = {
+  
+  
   content: [
     "./app/**/*.{js,jsx,ts,tsx}",
     "./pages/**/*.{js,jsx,ts,tsx}",
@@ -13,6 +15,7 @@ const tailwindConfig = {
     "./public/**/*.js",
     "./public/**/*.css",
   ],
+  
   theme: {
     screens: {
       xs: "350px",
