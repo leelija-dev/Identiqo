@@ -37,7 +37,7 @@ const ROTATING_VALUES_COUNT = 6;
 
 export default function AboutPage() {
   const [mounted, setMounted] = useState(false);
-  const [activeMilestone, setActiveMilestone] = useState(2);
+  // const [activeMilestone, setActiveMilestone] = useState(2);
   const heroRef = useRef(null);
   const { scrollYProgress } = useScroll({
     target: heroRef,
@@ -45,7 +45,7 @@ export default function AboutPage() {
   });
   const opacity = useTransform(scrollYProgress, [0, 1], [1, 0]);
   const y = useTransform(scrollYProgress, [0, 1], [0, 200]);
-
+  
   useEffect(() => {
     setMounted(true);
   }, []);

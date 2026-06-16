@@ -34,6 +34,7 @@ const tailwindConfig = {
       "max-lg": { max: "1023px" },
       tall: { raw: "(min-height: 800px)" },
     },
+    
     extend: {
       fontSize: {
         "h1-xs": ["1.75rem", { lineHeight: "1.2" }],

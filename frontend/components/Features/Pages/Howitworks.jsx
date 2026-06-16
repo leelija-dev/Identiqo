@@ -3,6 +3,7 @@
 
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import SectionTitle from "../../Common/SectionTitle";
 
 export default function Howitworks() {
   const [currentStep, setCurrentStep] = useState(0);
@@ -232,7 +233,7 @@ export default function Howitworks() {
   const currentStepData = steps[currentStep];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 overflow-x-hidden font-sans">
+    <div className="min-h-[50vh]  bg-gradient-to-br from-gray-50 via-white to-gray-100 overflow-x-hidden font-sans">
       
       {/* Decorative Background Elements */}
      
@@ -257,9 +258,10 @@ export default function Howitworks() {
               </motion.button>
             </div>
             <div className="text-center">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-3 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                How It Works
-              </h1>
+              <SectionTitle
+                        title="How It Works"
+                    
+                      />
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">
                 Create stunning employee cards in minutes with our seamless 4-step workflow
               </p>
