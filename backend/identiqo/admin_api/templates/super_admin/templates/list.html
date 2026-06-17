@@ -1,0 +1,49 @@
+{% extends 'super_admin/base.html' %}
+
+{% block page_title %}Card Templates{% endblock %}
+{% block topbar_actions %}<a href="{% url 'super_admin:template_create' %}" class="btn btn-primary btn-sm">+ Add template</a>{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <form class="search-bar" method="get">
+      <input type="search" name="q" value="{{ q }}" placeholder="Search…">
+      <select name="category">
+        <option value="">All categories</option>
+        <option value="employee" {% if category == 'employee' %}selected{% endif %}>Employee</option>
+        <option value="visiting" {% if category == 'visiting' %}selected{% endif %}>Visiting</option>
+      </select>
+      <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
+    </form>
+  </div>
+  <div class="card-body table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr><th>ID</th><th>Name</th><th>Category</th><th>Orientation</th><th>Premium</th><th>Published</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for t in templates %}
+        <tr>
+          <td><code>{{ t.external_id }}</code></td>
+          <td>{{ t.icon }} {{ t.name }}</td>
+          <td>{{ t.get_category_display }}</td>
+          <td>{{ t.orientation }}</td>
+          <td>{% if t.is_premium %}<span class="badge badge-warning">Premium</span>{% else %}—{% endif %}</td>
+          <td>{% if t.is_published %}<span class="badge badge-success">Yes</span>{% else %}<span class="badge badge-muted">No</span>{% endif %}</td>
+          <td>
+            <a href="{% url 'super_admin:template_edit' t.pk %}" class="btn btn-secondary btn-sm">Edit</a>
+            <form method="post" action="{% url 'super_admin:template_delete' t.pk %}" style="display:inline;" onsubmit="return confirm('Delete template?');">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7">No templates.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% include 'super_admin/partials/pagination.html' %}
+  </div>
+</div>
+{% endblock %}

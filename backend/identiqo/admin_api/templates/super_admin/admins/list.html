@@ -1,0 +1,29 @@
+{% extends 'super_admin/base.html' %}
+
+{% block page_title %}Admin Users{% endblock %}
+{% block topbar_actions %}<a href="{% url 'super_admin:admin_create' %}" class="btn btn-primary btn-sm">+ Add admin</a>{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-body table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr><th>Email</th><th>Name</th><th>Phone</th><th>Status</th><th>Created</th></tr>
+      </thead>
+      <tbody>
+        {% for a in admins %}
+        <tr>
+          <td>{{ a.email }}</td>
+          <td>{{ a.full_name|default:"—" }}</td>
+          <td>{{ a.phone|default:"—" }}</td>
+          <td>{% if a.status %}<span class="badge badge-success">Active</span>{% else %}<span class="badge badge-danger">Inactive</span>{% endif %}</td>
+          <td>{{ a.created_at|date:"M d, Y" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5">No admins.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

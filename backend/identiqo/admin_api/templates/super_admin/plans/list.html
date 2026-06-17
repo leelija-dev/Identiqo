@@ -1,0 +1,31 @@
+{% extends 'super_admin/base.html' %}
+
+{% block page_title %}Subscription Plans{% endblock %}
+{% block topbar_actions %}<a href="{% url 'super_admin:plan_create' %}" class="btn btn-primary btn-sm">+ Add plan</a>{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-body table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr><th>Code</th><th>Name</th><th>Price</th><th>Cycle</th><th>Days</th><th>Active</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for p in plans %}
+        <tr>
+          <td><code>{{ p.code }}</code></td>
+          <td>{{ p.name }}</td>
+          <td>{{ p.currency }} {{ p.price }}</td>
+          <td>{{ p.get_billing_cycle_display }}</td>
+          <td>{{ p.duration_days }}</td>
+          <td>{% if p.is_active %}<span class="badge badge-success">Yes</span>{% else %}<span class="badge badge-muted">No</span>{% endif %}</td>
+          <td><a href="{% url 'super_admin:plan_edit' p.pk %}" class="btn btn-secondary btn-sm">Edit</a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7">No plans. Run <code>python manage.py seed_super_admin</code>.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

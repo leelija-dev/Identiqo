@@ -1,0 +1,61 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Super Admin{% endblock %} | Identiqo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'super_admin/css/dashboard.css' %}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-brand"><span>IDENTIQO</span> Admin</div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">Overview</div>
+        <a href="{% url 'super_admin:dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">📊 Dashboard</a>
+
+        <div class="nav-section">Users & Orgs</div>
+        <a href="{% url 'super_admin:users_list' %}" class="nav-link {% if 'user' in request.resolver_match.url_name %}active{% endif %}">👥 Customers</a>
+        <a href="{% url 'super_admin:organizations_list' %}" class="nav-link {% if 'organization' in request.resolver_match.url_name %}active{% endif %}">🏢 Organizations</a>
+
+        <div class="nav-section">Product</div>
+        <a href="{% url 'super_admin:templates_list' %}" class="nav-link {% if 'template' in request.resolver_match.url_name %}active{% endif %}">🎴 Templates</a>
+
+        <div class="nav-section">Billing</div>
+        <a href="{% url 'super_admin:plans_list' %}" class="nav-link {% if 'plan' in request.resolver_match.url_name %}active{% endif %}">💳 Plans</a>
+        <a href="{% url 'super_admin:subscriptions_list' %}" class="nav-link {% if request.resolver_match.url_name == 'subscriptions_list' %}active{% endif %}">📋 Subscriptions</a>
+        <a href="{% url 'super_admin:payments_list' %}" class="nav-link {% if request.resolver_match.url_name == 'payments_list' %}active{% endif %}">💰 Payments</a>
+
+        <div class="nav-section">Content</div>
+        <a href="{% url 'super_admin:contact_list' %}" class="nav-link {% if 'contact' in request.resolver_match.url_name %}active{% endif %}">✉️ Contact</a>
+        <a href="{% url 'super_admin:blog_list' %}" class="nav-link {% if 'blog' in request.resolver_match.url_name %}active{% endif %}">📝 Blog</a>
+
+        <div class="nav-section">System</div>
+        <a href="{% url 'super_admin:audit_list' %}" class="nav-link {% if request.resolver_match.url_name == 'audit_list' %}active{% endif %}">📜 Audit Logs</a>
+        <a href="{% url 'super_admin:admins_list' %}" class="nav-link {% if 'admin' in request.resolver_match.url_name %}active{% endif %}">🛡️ Admins</a>
+        <a href="{% url 'super_admin:settings_list' %}" class="nav-link {% if 'setting' in request.resolver_match.url_name %}active{% endif %}">⚙️ Settings</a>
+      </nav>
+      <div class="sidebar-footer">
+        {% if request.admin_user %}
+          {{ request.admin_user.email }}<br>
+          <a href="{% url 'super_admin:logout' %}" style="color:#a5b4fc;">Sign out</a>
+        {% endif %}
+      </div>
+    </aside>
+
+    <div class="main">
+      <header class="topbar">
+        <h1>{% block page_title %}Dashboard{% endblock %}</h1>
+        <div>{% block topbar_actions %}{% endblock %}</div>
+      </header>
+      <div class="content">
+        {% block content %}{% endblock %}
+      </div>
+    </div>
+  </div>
+</body>
+</html>
