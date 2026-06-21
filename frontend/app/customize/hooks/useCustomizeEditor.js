@@ -1,4 +1,5 @@
 // app/customize/hooks/useCustomizeEditor.js
+
 'use client';
 
 import { useState, useCallback, useRef } from 'react';
@@ -14,13 +15,6 @@ export function useCustomizeEditor(previewCanvasRef) {
   const [detectedFeatures, setDetectedFeatures] = useState({
     hasProfile: false, hasSignature: false, hasLogo: false, hasBarcode: false, hasQR: false
   });
-  const [selectedTheme, setSelectedTheme] = useState('Default');
-  const [customPrimary, setCustomPrimary] = useState('#ff7e5f');
-  const [customSecondary, setCustomSecondary] = useState('#6a11cb');
-  const [customAccent, setCustomAccent] = useState('#2575fc');
-  const [customCardBg, setCustomCardBg] = useState('#ffffff');
-  const [uploadedImages, setUploadedImages] = useState({ profile: null, signature: null, logo: null });
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   // Helper to get current card element
   const getCurrentCardElement = useCallback(() => {
@@ -41,14 +35,22 @@ export function useCustomizeEditor(previewCanvasRef) {
     return card?.querySelector('.card-back, .face.back');
   }, [getCurrentCardElement]);
 
-  // Resolve text field element
+  // Resolve text field element (prefer stored element, then search by index)
   const resolveTextFieldElement = useCallback((field) => {
     if (!field || !previewCanvasRef.current) return null;
+    // If we have a stored element and it's still in the DOM, use it
     if (field.element && previewCanvasRef.current.contains(field.element)) {
       return field.element;
     }
+    // Otherwise search by data-element-index
     const card = getCurrentCardElement();
-    return card?.querySelector(`[data-element-index="${field.index}"]`) || null;
+    const element = card?.querySelector(`[data-element-index="${field.index}"]`);
+    if (element) {
+      // Update the stored reference for next time
+      field.element = element;
+      return element;
+    }
+    return null;
   }, [getCurrentCardElement, previewCanvasRef]);
 
   // Resolve background element
@@ -69,7 +71,10 @@ export function useCustomizeEditor(previewCanvasRef) {
   // Build text fields list
   const buildTextList = useCallback(() => {
     const card = getCurrentCardElement();
-    if (!card) return;
+    if (!card) {
+      console.log('buildTextList: No card element');
+      return;
+    }
 
     const currentHTML = card.innerHTML;
     const hash = simpleHash(currentHTML);
@@ -77,20 +82,25 @@ export function useCustomizeEditor(previewCanvasRef) {
     const cacheIsLive = cachedItems.every(item => item.element && previewCanvasRef.current?.contains(item.element));
     
     if (hash === textCacheRef.current.hash && cachedItems.length && cacheIsLive) {
+      console.log('Using cached text fields');
       setTextFields(textCacheRef.current.items);
       return;
     }
 
     const classSelector = DEFAULT_TEXT_CLASSES.map(cls => `.${cls}`).join(', ');
     const attributeSelector = '[data-editable="true"], [data-field]';
-    const textElements = card.querySelectorAll(`${classSelector}, ${attributeSelector}`);
-    const fallbackElements = card.querySelectorAll('h1, h2, h3, p, span, b, strong, li, a');
+    let textElements = card.querySelectorAll(`${classSelector}, ${attributeSelector}`);
+    
+    // Fallback to common text tags if none found
+    if (textElements.length === 0) {
+      textElements = card.querySelectorAll('h1, h2, h3, p, span, b, strong, li, a');
+      console.log('Using fallback text elements:', textElements.length);
+    }
     
     const items = [];
     const seen = new Set();
-    const candidates = [...textElements, ...fallbackElements];
 
-    for (const element of candidates) {
+    for (const element of textElements) {
       if (seen.has(element)) continue;
       seen.add(element);
       const text = element.innerText?.trim();
@@ -128,12 +138,18 @@ export function useCustomizeEditor(previewCanvasRef) {
         italic: computed.fontStyle === 'italic',
         underline: computed.textDecoration?.includes('underline') || false,
         side: isBackField ? 'Back' : 'Front',
-        element,
+        element, // store DOM reference
         originalText: text,
-        originalColor: color
+        originalColor: color,
+        originalFontSize: computed.fontSize,
+        originalFontFamily: computed.fontFamily,
+        originalFontWeight: computed.fontWeight,
+        originalFontStyle: computed.fontStyle,
+        originalTextDecoration: computed.textDecoration,
       });
     }
     
+    console.log(`Detected ${items.length} editable text fields`);
     textCacheRef.current = { hash, items };
     setTextFields(items);
   }, [getCurrentCardElement, previewCanvasRef]);
@@ -195,50 +211,24 @@ export function useCustomizeEditor(previewCanvasRef) {
     detectFeatures();
   }, [buildTextList, buildBackgroundBlocks, detectFeatures]);
 
-  // Unsaved changes management
-  const markUnsaved = useCallback(() => {
-    setHasUnsavedChanges(true);
-  }, []);
-
-  const clearUnsaved = useCallback(() => {
-    setHasUnsavedChanges(false);
-  }, []);
-
   return {
-    // State
-    textFields, setTextFields,
-    backgroundBlocks, setBackgroundBlocks,
-    detectedFeatures, setDetectedFeatures,
-    selectedTheme, setSelectedTheme,
-    customPrimary, setCustomPrimary,
-    customSecondary, setCustomSecondary,
-    customAccent, setCustomAccent,
-    customCardBg, setCustomCardBg,
-    uploadedImages, setUploadedImages,
-    hasUnsavedChanges, setHasUnsavedChanges,
-    
-    // Refs
+    textFields,
+    backgroundBlocks,
+    detectedFeatures,
     textCacheRef,
     resetCooldownRef,
-    
-    // Getters
+    setTextFields,
+    setBackgroundBlocks,
+    setDetectedFeatures,
     getCurrentCardElement,
     getFrontFace,
     getBackFace,
     resolveTextFieldElement,
     resolveBackgroundElement,
-    
-    // Builders
     buildTextList,
     buildBackgroundBlocks,
     detectFeatures,
     buildSidebar,
-    
-    // Cache management
     invalidateEditorCaches,
-    
-    // Unsaved changes
-    markUnsaved,
-    clearUnsaved
   };
 }
