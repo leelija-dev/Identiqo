@@ -1,8 +1,6 @@
-//app/components/Common/Card.jsx
-
 "use client";
 
-import { useRef, useState, useEffect, memo, useCallback } from "react";
+import { useRef, useState, useEffect, memo } from "react";
 
 /* =========================================================
    CARD CONFIGURATION
@@ -12,12 +10,12 @@ export const CARD_DIMENSIONS = {
  landscape: {
   designSize: { width: 550, height: 348 },
   containerClass:
-    "w-full max-w-[100%] sm:max-w-[420px] lg:max-w-[520px] xl:max-w-[600px] mx-auto aspect-[550/348]",
+    "w-full max-w-[100%] sm:max-w-[420px] lg:max-w-[360px] mx-auto aspect-[550/348]",
 },
   portrait: {
     designSize: { width: 350, height: 550 },
     containerClass:
-      "w-full max-w-[320px] mx-auto aspect-[350/550]",
+      "w-full max-w-[240px] mx-auto aspect-[350/550] max-h-[400px]",
   },
 };
 
@@ -61,7 +59,7 @@ export function CardGrid({
       ? "gap-1 sm:gap-1.5 lg:gap-2"
       : "gap-1.5 sm:gap-2 lg:gap-3";
 
-  const gridClasses = `grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 ${gapClass} justify-items-center items-start`;
+  const gridClasses = `grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 ${gapClass} justify-items-center items-start`;
 
   return <div className={`${gridClasses} ${className}`}>{children}</div>;
 }
@@ -295,8 +293,6 @@ export default CardPreview;
 
 /* =========================================================
    CARD EDITOR STAGE (CANVAS FOR CUSTOMIZER)
-   FIXED: Now properly renders HTML content from innerRef
-   FIXED: onReady fires once when canvas DOM node is mounted (callback ref)
 ========================================================= */
 
 export function CardEditorStage({
@@ -307,37 +303,15 @@ export function CardEditorStage({
   className = "",
 }) {
   const frameRef = useRef(null);
-  const [canvasNode, setCanvasNode] = useState(null);
-  const readyCalledRef = useRef(false);
 
   const { scale, designSize, scaledWidth, scaledHeight } = useFitScale(
     orientation,
     frameRef
   );
 
-  // Callback ref: captures the canvas node, updates state, and forwards to innerRef
-  const handleCanvasRef = useCallback((node) => {
-    setCanvasNode(node);
-    if (innerRef) {
-      if (typeof innerRef === 'function') {
-        innerRef(node);
-      } else {
-        innerRef.current = node;
-      }
-    }
-  }, [innerRef]);
-
-  // Signal readiness exactly once when the canvas node becomes available
   useEffect(() => {
-    if (canvasNode && !readyCalledRef.current) {
-      readyCalledRef.current = true;
-      // Small delay to ensure DOM is fully rendered and scaled
-      const timer = setTimeout(() => {
-        onReady?.();
-      }, 100);
-      return () => clearTimeout(timer);
-    }
-  }, [canvasNode, onReady]);
+    if (innerRef?.current) onReady?.();
+  }, [innerRef, onReady, orientation]);
 
   return (
     <div
@@ -365,16 +339,14 @@ export function CardEditorStage({
             height: designSize.height,
             transform: `scale(${scale})`,
             transformOrigin: "top left",
-            backgroundColor: "#ffffff",
           }}
         >
           <div
-            ref={handleCanvasRef}
-            className="w-full h-full overflow-auto card-editor-canvas"
+            ref={innerRef}
+            className="w-full h-full overflow-hidden card-editor-canvas"
             style={{
               width: designSize.width,
               height: designSize.height,
-              position: "relative",
             }}
           />
         </div>

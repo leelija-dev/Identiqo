@@ -1,5 +1,3 @@
-//app/templatesdata/index.js
-
 import landscapeEmployeeRaw from './landscape-employee';
 import landscapeVisitingRaw from './landscape-visiting';
 import portraitEmployeeRaw from './portrait-employee';

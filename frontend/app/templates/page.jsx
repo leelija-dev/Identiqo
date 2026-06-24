@@ -507,43 +507,35 @@ export default function TemplatesPage() {
                 )}
               </button>
 
-              {/* Orientation Tab Switcher */}
+              {/* Clean Orientation Switcher - Updated Design */}
               <div className="relative w-auto flex-shrink-0" ref={tabBarRef}>
-                <div className="relative z-10 flex items-stretch gap-0 bg-white/90 backdrop-blur-sm rounded-xl border border-slate-200/60 shadow-sm p-1">
+                <div className="relative z-10 flex items-center gap-1 bg-white/90 backdrop-blur-sm rounded-full border border-slate-200/60 shadow-sm p-1">
                   {['landscape', 'portrait'].map((tab) => (
                     <button
                       key={tab}
                       ref={(el) => { tabRefs.current[tab] = el; }}
                       onClick={() => handleOrientationChange(tab)}
-                      className={`flex flex-col items-center justify-center gap-0.5 sm:gap-1 px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg transition-colors duration-200 text-xs sm:text-sm font-medium z-10 whitespace-nowrap ${
-                        orientation === tab
-                          ? 'text-indigo-700 font-bold'
-                          : 'text-slate-500 hover:text-indigo-500'
-                      }`}
+                      className={`
+                        flex items-center justify-center gap-2 px-4 py-2 rounded-full 
+                        transition-all duration-200 text-sm font-medium z-10 whitespace-nowrap
+                        ${orientation === tab
+                          ? 'text-white shadow-md'
+                          : 'text-slate-500 hover:text-indigo-600 hover:bg-indigo-50'
+                        }
+                      `}
+                      style={{
+                        background: orientation === tab 
+                          ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' 
+                          : 'transparent'
+                      }}
                     >
-                      <span className="text-sm sm:text-base">{tab === 'landscape' ? '🌄' : '📱'}</span>
-                      <span className="text-[10px] sm:text-xs">{tab === 'landscape' ? 'LAND' : 'PORT'}</span>
+                      <span className="text-base">{tab === 'landscape' ? '🖼️' : '📱'}</span>
+                      <span className="capitalize">{tab}</span>
                     </button>
                   ))}
                 </div>
 
-                {/* Sliding background pill */}
-                <div
-                  className="absolute top-1 bottom-1 rounded-lg bg-gradient-to-r from-white via-indigo-50/80 to-white shadow-sm pointer-events-none z-0"
-                  style={{
-                    ...pillStyle,
-                    transition: 'left 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1), width 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1)',
-                  }}
-                />
-
-                {/* Sliding bottom indicator */}
-                <div
-                  className="absolute bottom-0 left-0 h-[3px] bg-indigo-500 rounded-t-full pointer-events-none z-20"
-                  style={{
-                    ...indicatorStyle,
-                    transition: 'left 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1), width 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1), background 0.2s',
-                  }}
-                />
+                {/* Sliding bottom indicator - Removed for cleaner look */}
               </div>
             </div>
           </div>
