@@ -2,438 +2,567 @@
 "use client";
 
 import Link from "next/link";
+import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
+import { useRef, useState, useEffect } from "react";
+import Button from "@/components/Common/Button";
 import {
   FiHeart,
-  FiUsers,
-  FiGlobe,
-  FiMail,
-  FiMapPin,
-  FiClock,
-  FiBriefcase,
-  FiGithub,
-  FiTwitter,
-  FiLinkedin,
-  FiInstagram,
-  FiArrowRight,
-  FiStar,
-  FiTrendingUp,
-  FiShield,
-  FiZap,
-  FiSmile,
   FiTarget,
-  FiEye,
-  FiMessageCircle,
-} from "react-icons/fi";
+  FiArrowRight,
+  FiMapPin,
+  FiMail,
+  FiClock,
+  FiZap,
+  FiShield,
+  FiGlobe,
+  FiAward,
+  FiTrendingUp,
+  FiCloud,
+  FiStar,
+  FiPlay,
+  FiBriefcase,
+  FiCpu,
+  FiLayers,
+  FiCompass,
+} from "react-icons/fi"; 
 
-// Container component for consistent padding and max-width
+
 const Container = ({ children, className = "" }) => (
   <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ${className}`}>
     {children}
   </div>
 );
 
-// Section wrapper with consistent spacing
-const Section = ({ children, className = "", bg = "transparent" }) => (
-  <section className={`py-16 ${bg !== "transparent" ? bg : ""} ${className}`}>
-    {children}
-  </section>
-);
-
-// Section header component
-const SectionHeader = ({ icon: Icon, label, title, description }) => (
-  <div className="text-center mb-12">
-    <div className="inline-flex items-center gap-2 bg-white/60 backdrop-blur-sm rounded-full px-4 py-1.5 mb-4">
-      <Icon className="text-rose-500 w-4 h-4" />
-      <span className="text-rose-600 text-xs font-semibold tracking-wide">{label}</span>
-    </div>
-    <h2 className="text-3xl lg:text-4xl font-bold text-gray-800 mb-4">
-      {title}
-    </h2>
-    {description && (
-      <p className="text-gray-600 max-w-2xl mx-auto">{description}</p>
-    )}
-  </div>
-);
-
-// Stat card component
-const StatCard = ({ number, label, icon: Icon, color }) => (
-  <div className="bg-white rounded-2xl p-6 text-center shadow-md border border-rose-100 hover:shadow-lg transition-all group">
-    <div className={`w-12 h-12 mx-auto rounded-full bg-gradient-to-r ${color} flex items-center justify-center mb-4 shadow-sm group-hover:scale-110 transition-transform`}>
-      <Icon className="w-6 h-6 text-white" />
-    </div>
-    <div className="text-2xl font-bold text-gray-800">{number}</div>
-    <div className="text-sm text-gray-500 mt-1">{label}</div>
-  </div>
-);
-
-// Value card component
-const ValueCard = ({ title, description, icon: Icon, color }) => (
-  <div className="bg-white rounded-2xl p-6 text-center shadow-md border border-rose-100 hover:shadow-lg transition-all group">
-    <div className={`w-14 h-14 mx-auto rounded-full bg-gradient-to-r ${color} flex items-center justify-center mb-4 shadow-sm group-hover:scale-110 transition-transform`}>
-      <Icon className="w-7 h-7 text-white" />
-    </div>
-    <h3 className="text-lg font-bold text-gray-800 mb-2">{title}</h3>
-    <p className="text-sm text-gray-600">{description}</p>
-  </div>
-);
-
-// Team member card
-const TeamCard = ({ name, role, bio, icon: Icon, color }) => (
-  <div className="bg-white rounded-2xl p-6 text-center shadow-md border border-rose-100 hover:shadow-lg transition-all group">
-    <div className={`w-20 h-20 mx-auto rounded-full bg-gradient-to-r ${color} flex items-center justify-center mb-4 shadow-md group-hover:scale-105 transition-transform`}>
-      <Icon className="w-8 h-8 text-white" />
-    </div>
-    <h3 className="text-lg font-bold text-gray-800 mb-1">{name}</h3>
-    <p className="text-rose-600 text-sm font-medium mb-2">{role}</p>
-    <p className="text-xs text-gray-500">{bio}</p>
-    
-    <div className="flex justify-center gap-3 mt-4 pt-4 border-t border-rose-50">
-      <button className="text-gray-400 hover:text-rose-500 transition">
-        <FiTwitter className="w-4 h-4" />
-      </button>
-      <button className="text-gray-400 hover:text-rose-500 transition">
-        <FiLinkedin className="w-4 h-4" />
-      </button>
-      <button className="text-gray-400 hover:text-rose-500 transition">
-        <FiGithub className="w-4 h-4" />
-      </button>
-    </div>
-  </div>
-);
-
-// Journey timeline item
-const JourneyItem = ({ year, title, description, icon: Icon, index }) => {
-  const isEven = index % 2 === 0;
-  
-  return (
-    <div className={`relative flex flex-col md:flex-row ${isEven ? 'md:flex-row' : 'md:flex-row-reverse'} items-center gap-6`}>
-      <div className="flex-1 md:text-right">
-        <div className="bg-white rounded-2xl p-6 shadow-md border border-rose-100 hover:shadow-lg transition-all">
-          <div className="inline-flex items-center gap-2 mb-2">
-            <span className="text-2xl font-bold text-rose-500">{year}</span>
-          </div>
-          <h3 className="text-lg font-bold text-gray-800 mb-2">{title}</h3>
-          <p className="text-sm text-gray-600">{description}</p>
-        </div>
-      </div>
-      
-      <div className="relative z-10">
-        <div className="w-12 h-12 rounded-full bg-gradient-to-r from-rose-400 to-amber-400 flex items-center justify-center shadow-md">
-          <Icon className="w-5 h-5 text-white" />
-        </div>
-      </div>
-      
-      <div className="flex-1"></div>
-    </div>
-  );
-};
-
-// Contact info item
-const ContactInfo = ({ icon: Icon, title, details, bgColor }) => (
-  <div className="flex flex-col items-center">
-    <div className={`w-12 h-12 rounded-full ${bgColor} flex items-center justify-center mb-3`}>
-      <Icon className="w-5 h-5" />
-    </div>
-    <h3 className="font-semibold text-gray-800 mb-1">{title}</h3>
-    {details.map((detail, idx) => (
-      <p key={idx} className="text-sm text-gray-500">{detail}</p>
-    ))}
-  </div>
-);
+const ROTATING_VALUES_COUNT = 6;
 
 export default function AboutPage() {
-  const stats = [
-    { number: "50K+", label: "Active Users", icon: FiUsers, color: "from-rose-500 to-amber-500" },
-    { number: "200+", label: "Companies", icon: FiBriefcase, color: "from-blue-500 to-indigo-500" },
-    { number: "98%", label: "Satisfaction", icon: FiSmile, color: "from-emerald-500 to-teal-500" },
-    { number: "24/7", label: "Support", icon: FiClock, color: "from-purple-500 to-pink-500" },
-  ];
+  const [mounted, setMounted] = useState(false);
+  // const [activeMilestone, setActiveMilestone] = useState(2);
+  const heroRef = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"],
+  });
+  const opacity = useTransform(scrollYProgress, [0, 1], [1, 0]);
+  const y = useTransform(scrollYProgress, [0, 1], [0, 200]);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
-  const values = [
-    {
-      title: "Innovation First",
-      description: "We constantly push boundaries to bring you the latest in digital identification technology.",
-      icon: FiZap,
-      color: "from-rose-500 to-amber-500",
-    },
-    {
-      title: "Security Focused",
-      description: "Your data security is our top priority with enterprise-grade encryption and protection.",
-      icon: FiShield,
-      color: "from-blue-500 to-indigo-500",
-    },
-    {
-      title: "User Centric",
-      description: "Every feature is designed with our users' needs and experience in mind.",
-      icon: FiHeart,
-      color: "from-emerald-500 to-teal-500",
-    },
-    {
-      title: "Global Reach",
-      description: "Serving businesses worldwide with scalable solutions for every need.",
-      icon: FiGlobe,
-      color: "from-purple-500 to-pink-500",
-    },
+  // Rotating values carousel
+  const rotatingValues = [
+    { icon: FiZap, title: "Innovation", desc: "Pushing boundaries in digital ID tech", color: "#8b5cf6" },
+    { icon: FiShield, title: "Security", desc: "Bank-grade encryption always", color: "#3b82f6" },
+    { icon: FiHeart, title: "Empathy", desc: "Designed for real people", color: "#10b981" },
+    { icon: FiGlobe, title: "Global", desc: "Serving 50+ countries", color: "#f59e0b" },
+    { icon: FiCpu, title: "AI-Powered", desc: "Smart templates that adapt", color: "#ec4899" },
+    { icon: FiCloud, title: "Cloud Native", desc: "99.99% uptime guaranteed", color: "#06b6d4" },
   ];
 
   const team = [
-    {
-      name: "Sarah Johnson",
-      role: "CEO & Founder",
-      bio: "Former tech executive with 15+ years in digital identity solutions.",
-      icon: FiStar,
-      color: "from-rose-400 to-amber-400",
-    },
-    {
-      name: "Michael Chen",
-      role: "CTO",
-      bio: "Security expert and open source contributor with a passion for innovation.",
-      icon: FiZap,
-      color: "from-blue-400 to-indigo-400",
-    },
-    {
-      name: "Emily Rodriguez",
-      role: "Head of Design",
-      bio: "Award-winning designer focused on creating intuitive user experiences.",
-      icon: FiHeart,
-      color: "from-emerald-400 to-teal-400",
-    },
-    {
-      name: "David Kim",
-      role: "Product Lead",
-      bio: "Product strategist dedicated to solving real-world business challenges.",
-      icon: FiTarget,
-      color: "from-purple-400 to-pink-400",
-    },
+    { name: "Sarah Johnson", role: "CEO & Founder", icon: "👩‍💼", gradient: "from-rose-400 to-pink-400", quote: "Empowering digital identities worldwide", expertise: "Leadership & Vision" },
+    { name: "Michael Chen", role: "CTO", icon: "👨‍💻", gradient: "from-blue-400 to-cyan-400", quote: "Building secure, scalable systems", expertise: "Security Architecture" },
+    { name: "Emily Rodriguez", role: "Creative Director", icon: "🎨", gradient: "from-purple-400 to-indigo-400", quote: "Design that inspires trust", expertise: "Visual Identity" },
+    { name: "David Kim", role: "Product Lead", icon: "📊", gradient: "from-emerald-400 to-teal-400", quote: "Making complexity simple", expertise: "Product Strategy" },
+    { name: "Lisa Wang", role: "AI Research", icon: "🤖", gradient: "from-orange-400 to-red-400", quote: "Intelligence at your fingertips", expertise: "Machine Learning" },
+    { name: "Marcus Brown", role: "Customer Success", icon: "🤝", gradient: "from-indigo-400 to-purple-400", quote: "Your success is our mission", expertise: "Client Relations" },
   ];
 
-  const journey = [
-    { year: "2020", title: "Founded", description: "CardStudio was born with a vision to simplify digital identification.", icon: FiStar },
-    { year: "2021", title: "Launch", description: "Released our first version to 100 beta companies.", icon: FiZap },
-    { year: "2022", title: "Growth", description: "Expanded to serve 10,000+ users globally.", icon: FiTrendingUp },
-    { year: "2023", title: "Innovation", description: "Launched AI-powered card generation features.", icon: FiShield },
-    { year: "2024", title: "Scale", description: "Reached 50,000+ active users worldwide.", icon: FiGlobe },
+  const milestones = [
+    { year: "2020", title: "Genesis", desc: "Born from a vision to revolutionize ID cards", icon: FiCompass, impact: "Started with 3 founders" },
+    { year: "2021", title: "Ascension", desc: "Reached 1,000+ businesses milestone", icon: FiTrendingUp, impact: "1000% growth" },
+    { year: "2022", title: "Evolution", desc: "Launched AI-powered template engine", icon: FiCpu, impact: "500k IDs created" },
+    { year: "2023", title: "Expansion", desc: "Global presence across 50+ countries", icon: FiGlobe, impact: "Enterprise ready" },
+    { year: "2024", title: "Innovation", desc: "Next-gen holographic AR technology", icon: FiAward, impact: "Industry first" },
   ];
 
-  const contactInfo = [
-    { icon: FiMapPin, title: "Visit us", details: ["123 Innovation Street", "San Francisco, CA 94105"], bgColor: "bg-rose-100 text-rose-500" },
-    { icon: FiMail, title: "Email us", details: ["hello@cardstudio.com", "support@cardstudio.com"], bgColor: "bg-amber-100 text-amber-500" },
-    { icon: FiClock, title: "Support hours", details: ["Monday - Friday: 9am - 6pm", "24/7 emergency support"], bgColor: "bg-orange-100 text-orange-500" },
+  const stats = [
+    { value: "50K+", label: "Active Businesses", icon: FiBriefcase, trend: "+120% YoY", color: "from-indigo-500 to-purple-500" },
+    { value: "2.5M+", label: "ID Cards Created", icon: FiLayers, trend: "+300% YoY", color: "from-blue-500 to-cyan-500" },
+    { value: "99.99%", label: "Uptime SLA", icon: FiCloud, trend: "Guaranteed", color: "from-emerald-500 to-teal-500" },
+    { value: "4.96", label: "Customer Rating", icon: FiStar, trend: "From 5,000+ reviews", color: "from-rose-500 to-orange-500" },
   ];
+
+  const [currentRotatingIndex, setCurrentRotatingIndex] = useState(0);
+  
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentRotatingIndex((prev) => (prev + 1) % ROTATING_VALUES_COUNT);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const currentValue = rotatingValues[currentRotatingIndex];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-rose-50 via-amber-50 to-orange-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 overflow-hidden">
       
-      {/* Hero Section */}
-      <Section className="relative overflow-hidden pt-20 lg:pt-28">
-        {/* Background decorative elements */}
-        <div className="absolute inset-0 bg-white/40"></div>
-        <div className="absolute top-20 right-10 w-96 h-96 bg-rose-200 rounded-full blur-3xl opacity-30"></div>
-        <div className="absolute bottom-20 left-10 w-96 h-96 bg-amber-200 rounded-full blur-3xl opacity-30"></div>
+      {/* Animated Grid Background - Light Theme */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Cpath fill=\'%238b5cf6\' fill-opacity=\'0.02\' d=\'M10 10 L90 10 L90 90 L10 90 Z\'/%3E%3C/svg%3E')] opacity-30" />
+        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-indigo-50/20 to-transparent" />
+      </div>
+
+      {/* Floating Particles - Light Theme */}
+      <div className="fixed inset-0 pointer-events-none">
+        {mounted && [...Array(30)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-1 h-1 bg-purple-300/30 rounded-full"
+            initial={{
+              x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1000),
+              y: Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 1000),
+            }}
+            animate={{
+              y: [null, -30, 30, -30],
+              x: [null, 20, -20, 20],
+              opacity: [0, 0.3, 0],
+            }}
+            transition={{
+              duration: Math.random() * 10 + 5,
+              repeat: Infinity,
+              delay: Math.random() * 5,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Hero Section - Split Screen Layout Light */}
+      <div ref={heroRef} className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        <motion.div 
+          style={{ opacity, y }}
+          className="absolute inset-0"
+        >
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-indigo-200/40 to-purple-200/40 rounded-full blur-3xl animate-pulse-slow" />
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-blue-200/40 to-cyan-200/40 rounded-full blur-3xl animate-pulse-slow delay-1000" />
+        </motion.div>
+
+        <Container>
+          <div className="relative z-10 grid lg:grid-cols-2 gap-12 items-center min-h-[80vh]">
+            {/* Left Column - Animated Text */}
+            <motion.div
+              initial={{ opacity: 0, x: -50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6 }}
+            >
+              <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm rounded-full px-4 py-2 mb-6 border border-purple-200 shadow-sm">
+                <div className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
+                <span className="text-purple-600 text-sm font-semibold tracking-wide">REIMAGINING IDENTITY</span>
+              </div>
+              
+              <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold text-slate-800 mb-6 leading-tight">
+                Creating better
+                <span className="block bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 bg-clip-text text-transparent animate-gradient bg-[length:200%_auto]">
+                  digital identities
+                </span>
+              </h1>
+              
+              <p className="text-slate-500 text-base sm:text-lg mb-8 leading-relaxed">
+                Simple, secure, and beautiful ID card solutions trusted by 50,000+ businesses worldwide.
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button
+                  href="/pricing"
+                  variant="primary"
+                  size="lg"
+                  icon={FiArrowRight}
+                  iconPosition="right"
+                  className="rounded-full shadow-lg hover:shadow-xl"
+                >
+                  Start Creating Now
+                </Button>
+                
+                <Button
+                  href="/contact"
+                  variant="secondary"
+                  size="lg"
+                  icon={FiPlay}
+                  className="rounded-full bg-white border-slate-200 hover:border-purple-300"
+                >
+                  See Demo
+                </Button>
+              </div>
+
+              {/* Rotating Value Badge - Light */}
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="mt-8 flex items-center gap-3"
+              >
+                <div className="flex items-center gap-2 text-slate-400">
+                  <span className="text-sm">Powered by</span>
+                </div>
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={currentRotatingIndex}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-full border border-purple-200 shadow-sm"
+                  >
+                    <currentValue.icon className="w-4 h-4" style={{ color: currentValue.color }} />
+                    <span className="text-sm text-slate-600">{currentValue.title}</span>
+                  </motion.div>
+                </AnimatePresence>
+              </motion.div>
+            </motion.div>
+
+            {/* Right Column - 3D Stats Card Light */}
+            <motion.div
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="relative"
+            >
+              <div className="relative bg-white rounded-2xl p-8 border border-slate-200 shadow-xl">
+                <div className="absolute -top-4 -right-4 w-20 h-20 bg-gradient-to-r from-purple-200 to-pink-200 rounded-full blur-2xl opacity-60" />
+                
+                <div className="grid grid-cols-2 gap-6">
+                  {stats.map((stat, idx) => (
+                    <motion.div
+                      key={idx}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: idx * 0.1 }}
+                      className="text-center p-4 rounded-xl bg-slate-50 hover:bg-slate-100 transition-all"
+                    >
+                      <div className={`w-10 h-10 mx-auto rounded-full bg-gradient-to-r ${stat.color} flex items-center justify-center mb-3 shadow-md`}>
+                        <stat.icon className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="text-2xl font-bold text-slate-800">{stat.value}</div>
+                      <div className="text-xs text-slate-500 mt-1">{stat.label}</div>
+                      <div className="text-[10px] text-emerald-600 mt-1">{stat.trend}</div>
+                    </motion.div>
+                  ))}
+                </div>
+
+                <div className="mt-6 pt-6 border-t border-slate-200 text-center">
+                  <div className="flex items-center justify-center gap-1 text-yellow-500 mb-2">
+                    {[...Array(5)].map((_, i) => (
+                      <FiStar key={i} className="w-4 h-4 fill-current" />
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-500">Trusted by 5,000+ companies worldwide</p>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </Container>
+      </div>
+
+      {/* Mission & Vision - Diagonal Split Light */}
+      <div className="relative py-24 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-purple-50/30 to-transparent" />
         
-        <Container className="relative">
-          <div className="max-w-4xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 bg-white/60 backdrop-blur-sm rounded-full px-5 py-2 mb-6 shadow-sm">
-              <FiHeart className="text-rose-500 w-4 h-4" />
-              <span className="text-rose-600 text-sm font-semibold tracking-wide">OUR STORY</span>
-            </div>
-            
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-gray-800 mb-6 tracking-tight leading-tight">
-              Revolutionizing
-              <span className="block bg-gradient-to-r from-rose-500 via-amber-500 to-orange-500 bg-clip-text text-transparent">
-                Digital Identity
-              </span>
-            </h1>
-            
-            <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
-              We're on a mission to make professional digital identification accessible, 
-              secure, and beautiful for businesses of all sizes.
-            </p>
-            
-            <div className="flex flex-wrap gap-4 justify-center">
-              <Link 
-                href="/contact" 
-                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-rose-500 to-amber-500 text-white rounded-full font-semibold hover:shadow-lg transition-all"
-              >
-                Get in touch
-                <FiArrowRight className="w-4 h-4" />
-              </Link>
-              <Link 
-                href="/pricing" 
-                className="inline-flex items-center gap-2 px-6 py-3 bg-white text-gray-700 rounded-full font-semibold border border-rose-200 hover:bg-rose-50 transition-all"
-              >
-                View pricing
-              </Link>
-            </div>
-          </div>
-        </Container>
-      </Section>
-
-      {/* Stats Section */}
-      <Section>
         <Container>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {stats.map((stat, index) => (
-              <StatCard key={index} {...stat} />
-            ))}
-          </div>
-        </Container>
-      </Section>
-
-      {/* Mission Section */}
-      <Section>
-        <Container>
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <div className="inline-flex items-center gap-2 bg-white/60 backdrop-blur-sm rounded-full px-4 py-1.5 mb-4">
-                <FiTarget className="text-rose-500 w-4 h-4" />
-                <span className="text-rose-600 text-xs font-semibold">OUR MISSION</span>
-              </div>
-              <h2 className="text-3xl lg:text-4xl font-bold text-gray-800 mb-4">
-                Empowering businesses with secure digital identity solutions
-              </h2>
-              <p className="text-gray-600 mb-6 leading-relaxed">
-                At CardStudio, we believe that every employee deserves a professional digital identity 
-                that's both secure and beautiful. Our platform combines cutting-edge technology with 
-                intuitive design to make ID card creation effortless.
-              </p>
-              <p className="text-gray-600 mb-8 leading-relaxed">
-                Since our founding in 2020, we've helped thousands of companies streamline their 
-                identification process, saving time and resources while enhancing security.
-              </p>
-              <div className="flex gap-4">
-                <div className="flex items-center gap-2">
-                  <FiEye className="text-rose-500 w-5 h-5" />
-                  <span className="text-sm text-gray-600">Trusted by 50K+ users</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <FiShield className="text-amber-500 w-5 h-5" />
-                  <span className="text-sm text-gray-600">Enterprise-grade security</span>
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-gradient-to-br from-rose-100 via-amber-100 to-orange-100 rounded-2xl p-8 shadow-lg">
-              <div className="bg-white/60 backdrop-blur-sm rounded-xl p-6">
+          <div className="grid md:grid-cols-2 gap-8 relative">
+            {/* Mission - Floating Card Light */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="relative group"
+            >
+              <div className="absolute -inset-1 bg-gradient-to-r from-purple-400 to-pink-400 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-500" />
+              <div className="relative bg-white rounded-2xl p-8 border border-slate-200 shadow-lg">
                 <div className="flex items-center gap-3 mb-4">
-                  <FiMessageCircle className="text-rose-500 w-6 h-6" />
-                  <h3 className="text-xl font-bold text-gray-800">What our users say</h3>
-                </div>
-                <p className="text-gray-600 italic mb-4">
-                  "CardStudio has transformed how we manage employee IDs. It's incredibly easy to use 
-                  and the results look professional."
-                </p>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-r from-rose-400 to-amber-400 flex items-center justify-center text-white font-bold">
-                    JD
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center shadow-md">
+                    <FiTarget className="w-6 h-6 text-white" />
                   </div>
-                  <div>
-                    <p className="font-semibold text-gray-800 text-sm">John Doe</p>
-                    <p className="text-xs text-gray-500">HR Manager, TechCorp</p>
+                  <h2 className="text-2xl font-bold text-slate-800">Our Mission</h2>
+                </div>
+                <p className="text-slate-600 text-base leading-relaxed pl-14">
+                  To revolutionize professional ID card creation by making it effortless, accessible, 
+                  and highly secure for businesses of all sizes. We believe everyone deserves a digital 
+                  identity they can be proud of.
+                </p>
+              </div>
+            </motion.div>
+
+            {/* Vision - Floating Card Light */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+              className="relative group"
+            >
+              <div className="absolute -inset-1 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-500" />
+              <div className="relative bg-white rounded-2xl p-8 border border-slate-200 shadow-lg">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center shadow-md">
+                    <FiGlobe className="w-6 h-6 text-white" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-slate-800">Our Vision</h2>
+                </div>
+                <p className="text-slate-600 text-base leading-relaxed pl-14">
+                  To become the global standard for digital identification, empowering millions of 
+                  organizations with smart, sustainable, and stunning ID solutions that evolve with 
+                  modern workplace needs.
+                </p>
+              </div>
+            </motion.div>
+          </div>
+        </Container>
+      </div>
+
+      {/* Values - Interactive Bento Grid Light */}
+      <Container className="py-20">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-center mb-12"
+        >
+          <h2 className="text-4xl sm:text-5xl font-bold text-slate-800 mb-4">What Makes Us Different</h2>
+          <p className="text-slate-500 text-lg">Our core values that drive innovation every day</p>
+        </motion.div>
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {rotatingValues.map((value, idx) => (
+            <motion.div
+              key={idx}
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: idx * 0.1 }}
+              whileHover={{ y: -5 }}
+              className="group relative"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-200/50 to-pink-200/50 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition duration-500" />
+              <div className="relative bg-white rounded-2xl p-6 border border-slate-200 hover:border-purple-300 transition-all shadow-md">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center border border-purple-200 group-hover:scale-110 transition-transform">
+                    <value.icon className="w-6 h-6" style={{ color: value.color }} />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-bold text-slate-800 mb-1">{value.title}</h3>
+                    <p className="text-slate-500 text-sm">{value.desc}</p>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </Container>
-      </Section>
+            </motion.div>
+          ))}
+        </div>
+      </Container>
 
-      {/* Values Section */}
-      <Section bg="bg-white/50">
+      {/* Timeline - Horizontal Scrolling Journey Light */}
+      <div className="relative py-20 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-purple-50/50 via-transparent to-pink-50/50" />
+        
         <Container>
-          <SectionHeader 
-            icon={FiStar}
-            label="OUR VALUES"
-            title="What drives us forward"
-            description="Our core values shape everything we do, from product development to customer support."
-          />
-          
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {values.map((value, index) => (
-              <ValueCard key={index} {...value} />
-            ))}
-          </div>
-        </Container>
-      </Section>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-4xl sm:text-5xl font-bold text-slate-800 mb-4">Our Journey</h2>
+            <p className="text-slate-500 text-lg">A timeline of innovation and growth</p>
+          </motion.div>
 
-      {/* Journey Section */}
-      <Section>
-        <Container>
-          <SectionHeader 
-            icon={FiTrendingUp}
-            label="OUR JOURNEY"
-            title="The road so far"
-            description="From humble beginnings to serving thousands of businesses worldwide."
-          />
-          
           <div className="relative">
-            <div className="absolute left-1/2 transform -translate-x-1/2 w-0.5 h-full bg-gradient-to-b from-rose-300 via-amber-300 to-orange-300 hidden md:block"></div>
+            <div className="absolute left-0 right-0 top-1/2 h-0.5 bg-gradient-to-r from-purple-300 via-pink-300 to-indigo-300 hidden md:block" />
             
-            <div className="space-y-8">
-              {journey.map((item, index) => (
-                <JourneyItem key={index} {...item} index={index} />
+            <div className="grid md:grid-cols-5 gap-6">
+              {milestones.map((milestone, idx) => (
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: idx * 0.1 }}
+                  className="relative"
+                >
+                  <div className="bg-white rounded-2xl p-6 border border-slate-200 hover:border-purple-300 transition-all h-full shadow-md">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center mb-4 shadow-md">
+                      <milestone.icon className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="text-purple-600 font-bold text-sm mb-2">{milestone.year}</div>
+                    <h3 className="text-slate-800 font-bold text-lg mb-2">{milestone.title}</h3>
+                    <p className="text-slate-500 text-sm mb-3">{milestone.desc}</p>
+                    <div className="text-xs text-emerald-600 font-medium">{milestone.impact}</div>
+                  </div>
+                </motion.div>
               ))}
             </div>
           </div>
         </Container>
-      </Section>
+      </div>
 
-      {/* Team Section */}
-      <Section bg="bg-white/50">
+      {/* Team - Card Carousel Style Light */}
+      <Container className="py-20">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-center mb-12"
+        >
+          <h2 className="text-4xl sm:text-5xl font-bold text-slate-800 mb-4">Meet the Visionaries</h2>
+          <p className="text-slate-500 text-lg">The passionate team behind CardStudio</p>
+        </motion.div>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {team.map((member, idx) => (
+            <motion.div
+              key={idx}
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: idx * 0.05 }}
+              whileHover={{ y: -5 }}
+              className="group relative"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-200/50 to-pink-200/50 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition duration-500" />
+              <div className="relative bg-white rounded-2xl p-6 border border-slate-200 hover:border-purple-300 transition-all text-center shadow-md">
+                <div className={`w-24 h-24 mx-auto rounded-full bg-gradient-to-r ${member.gradient} flex items-center justify-center text-4xl mb-4 shadow-md group-hover:scale-110 transition-transform`}>
+                  {member.icon}
+                </div>
+                <h3 className="text-xl font-bold text-slate-800 mb-1">{member.name}</h3>
+                <p className="text-purple-600 font-semibold text-sm mb-2">{member.role}</p>
+                <p className="text-slate-500 text-xs italic mb-3">"{member.quote}"</p>
+                <div className="inline-block px-3 py-1 bg-slate-100 rounded-full text-xs text-slate-600">
+                  {member.expertise}
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </Container>
+
+      {/* Testimonial - Full Screen Impact Light */}
+      <div className="relative py-24 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-purple-50/50 via-transparent to-pink-50/50" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-to-r from-purple-200/30 to-pink-200/30 rounded-full blur-3xl" />
+        
         <Container>
-          <SectionHeader 
-            icon={FiUsers}
-            label="MEET THE TEAM"
-            title="The people behind CardStudio"
-            description="Passionate individuals dedicated to making digital identification better for everyone."
-          />
-          
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {team.map((member, index) => (
-              <TeamCard key={index} {...member} />
-            ))}
+          <div className="max-w-4xl mx-auto text-center relative">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              className="relative bg-white rounded-2xl p-10 shadow-xl border border-slate-200"
+            >
+              <div className="text-7xl mb-6 text-purple-400">“</div>
+              <p className="text-slate-700 text-2xl sm:text-3xl md:text-4xl leading-tight mb-8 font-light">
+                CardStudio has completely transformed how we manage employee IDs. 
+                The AI-powered templates save us hours of design time, and our team 
+                loves the professional results.
+              </p>
+              <div className="flex items-center justify-center gap-1 mb-4">
+                {[...Array(5)].map((_, i) => (
+                  <FiStar key={i} className="w-5 h-5 text-yellow-500 fill-current" />
+                ))}
+              </div>
+              <div className="text-slate-800 font-bold text-lg">Sarah Chen</div>
+              <div className="text-purple-600">HR Director, TechCorp Global</div>
+            </motion.div>
           </div>
         </Container>
-      </Section>
+      </div>
 
-      {/* CTA Section */}
-      <Section>
-        <Container>
-          <div className="bg-gradient-to-r from-rose-500 via-amber-500 to-orange-500 rounded-3xl p-12 text-center shadow-xl">
-            <h2 className="text-3xl lg:text-4xl font-bold text-white mb-4">
-              Ready to get started?
+      {/* CTA - 3D Glass Morphism Light - NOW USING BUTTON COMPONENT */}
+      <Container className="py-20">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="relative group"
+        >
+          <div className="absolute -inset-1 bg-gradient-to-r from-purple-400 via-pink-400 to-indigo-400 rounded-3xl blur-xl opacity-50 group-hover:opacity-100 transition duration-500" />
+          <div className="relative bg-gradient-to-r from-purple-50 via-pink-50 to-indigo-50 rounded-3xl p-12 text-center border border-purple-200 shadow-xl">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-800 mb-4">
+              Ready to Transform Your ID System?
             </h2>
-            <p className="text-white/90 text-lg mb-8 max-w-2xl mx-auto">
-              Join thousands of businesses already using CardStudio to create professional digital IDs.
+            <p className="text-slate-600 text-lg mb-8 max-w-2xl mx-auto">
+              Join 50,000+ businesses already using CardStudio to create stunning employee IDs
             </p>
             <div className="flex flex-wrap gap-4 justify-center">
-              <Link 
-                href="/pricing" 
-                className="px-8 py-3 bg-white text-rose-600 rounded-full font-semibold hover:shadow-lg transition-all"
+              <Button
+                href="/pricing"
+                variant="primary"
+                size="lg"
+                icon={FiArrowRight}
+                iconPosition="right"
+                className="rounded-full shadow-lg hover:shadow-xl"
               >
-                Start free trial
-              </Link>
-              <Link 
-                href="/contact" 
-                className="px-8 py-3 bg-transparent border-2 border-white text-white rounded-full font-semibold hover:bg-white/10 transition-all"
+                Start Free Trial
+              </Button>
+              <Button
+                href="/contact"
+                variant="secondary"
+                size="lg"
+                className="rounded-full bg-white border-slate-200 hover:border-purple-300"
               >
-                Contact sales
-              </Link>
+                Talk to Sales
+              </Button>
+            </div>
+          </div>
+        </motion.div>
+      </Container>
+
+      {/* Footer Contact - Light */}
+      <div className="border-t border-slate-200 py-8 bg-white/50">
+        <Container>
+          <div className="flex flex-wrap justify-center gap-8 md:gap-12 text-center">
+            <div className="flex items-center gap-3 text-slate-500 hover:text-purple-600 transition-colors">
+              <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
+                <FiMapPin className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-slate-700">Visit Us</p>
+                <p className="text-xs">123 Innovation St, SF</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 text-slate-500 hover:text-purple-600 transition-colors">
+              <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
+                <FiMail className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-slate-700">Email Us</p>
+                <p className="text-xs">hello@cardstudio.com</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 text-slate-500 hover:text-purple-600 transition-colors">
+              <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
+                <FiClock className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-slate-700">24/7 Support</p>
+                <p className="text-xs">Always here to help</p>
+              </div>
             </div>
           </div>
         </Container>
-      </Section>
+      </div>
 
-      {/* Contact Info Footer */}
-      <Section className="border-t border-rose-100">
-        <Container>
-          <div className="grid md:grid-cols-3 gap-8 text-center">
-            {contactInfo.map((info, index) => (
-              <ContactInfo key={index} {...info} />
-            ))}
-          </div>
-        </Container>
-      </Section>
+      <style jsx>{`
+        @keyframes gradient {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        @keyframes pulse-slow {
+          0%, 100% { opacity: 0.3; transform: scale(1); }
+          50% { opacity: 0.6; transform: scale(1.05); }
+        }
+        .animate-gradient {
+          background-size: 200% auto;
+          animation: gradient 3s linear infinite;
+        }
+        .animate-pulse-slow {
+          animation: pulse-slow 6s ease-in-out infinite;
+        }
+        .delay-1000 {
+          animation-delay: 1s;
+        }
+        .blur-3xl {
+          filter: blur(64px);
+        }
+      `}</style>
     </div>
   );
 }

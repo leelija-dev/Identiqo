@@ -1,64 +1,152 @@
+// app/gallery/page.jsx
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import CardPreview from '@/components/Common/CardPreview';
-import { FiMenu, FiX, FiDownload, FiStar, FiTrash2, FiEdit2, FiChevronLeft } from 'react-icons/fi';
+import CardPreview, { CardGrid } from '@/components/Common/Card';
+import Button from '@/components/Common/Button';
+import Pagination from '@/components/Common/Pagination';
+import Modal from '@/components/Common/Modal';
+import { FiDownload, FiStar, FiTrash2, FiEdit2, FiTrash } from 'react-icons/fi';
+import { motion, AnimatePresence } from 'framer-motion';
+import { TemplateGridSkeleton } from '@/components/Common/Skeleton';
+
+function GallerySkeleton() {
+  return (
+    <div className="space-y-8">
+      <div>
+        <div className="mb-4">
+          <div className="h-7 bg-slate-200 rounded w-48 animate-pulse"></div>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-1.5 sm:gap-2 lg:gap-3 justify-items-center items-start">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="w-full max-w-[360px] mx-auto aspect-[550/348] max-h-[240px] animate-pulse rounded-xl bg-gradient-to-r from-slate-200/50 via-slate-100/50 to-slate-200/50" />
+          ))}
+        </div>
+      </div>
+      <div>
+        <div className="mb-4">
+          <div className="h-7 bg-slate-200 rounded w-48 animate-pulse"></div>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-1 sm:gap-1.5 lg:gap-2 justify-items-center items-start">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="w-full max-w-[240px] mx-auto aspect-[350/550] max-h-[400px] animate-pulse rounded-xl bg-gradient-to-r from-slate-200/50 via-slate-100/50 to-slate-200/50" />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function GalleryPage() {
   const router = useRouter();
   const [currentCategory, setCurrentCategory] = useState('wishlist');
   const [galleryItems, setGalleryItems] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
-  const [showModal, setShowModal] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState('success');
   const [totalItems, setTotalItems] = useState(0);
   const [isClient, setIsClient] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-  const modalCardRef = useRef(null);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Sliding pill state
+  const [pillStyle, setPillStyle] = useState({ left: '0px', width: '0px' });
+  const categoryBarRef = useRef(null);
+  const categoryRefs = useRef({
+    wishlist: null,
+    drafts: null,
+    downloads: null,
+  });
+  
+  // Pagination states
+  const [landscapePage, setLandscapePage] = useState(1);
+  const [portraitPage, setPortraitPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
+
+  // Direction for horizontal slide animation
+  const [categoryDirection, setCategoryDirection] = useState(0);
 
   useEffect(() => {
     setIsClient(true);
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // Reset pagination when category changes
   useEffect(() => {
-    if (isClient) {
-      loadCategoryData();
-      updateStorageInfo();
-    }
+    setLandscapePage(1);
+    setPortraitPage(1);
+  }, [currentCategory]);
+
+  // Update pill position when category changes
+  useEffect(() => {
+    if (!isClient) return;
+    const updatePill = () => {
+      const activeRef = categoryRefs.current[currentCategory];
+      if (activeRef && categoryBarRef.current) {
+        const parentRect = categoryBarRef.current.getBoundingClientRect();
+        const btnRect = activeRef.getBoundingClientRect();
+        setPillStyle({
+          left: `${btnRect.left - parentRect.left}px`,
+          width: `${btnRect.width}px`,
+        });
+      }
+    };
+    updatePill();
+    window.addEventListener('resize', updatePill);
+    return () => window.removeEventListener('resize', updatePill);
   }, [currentCategory, isClient]);
 
-  const handleModalCardFlip = (e) => {
-    e.stopPropagation();
-    const root = modalCardRef.current;
-    if (!root) return;
-
-    const clickedFlipCard = e.target.closest('.flip-card');
-    const flipCard = clickedFlipCard || root.querySelector('.flip-card') || root;
-    const flipInner = flipCard.querySelector?.('.flip-card-inner');
-
-    if (flipInner) {
-      const currentlyFlipped =
-        flipInner.dataset.flipped === 'true' ||
-        /rotateY\(180deg\)/.test(flipInner.style.transform || '') ||
-        flipCard.classList.contains('flipped');
-
-      flipInner.style.transform = currentlyFlipped ? 'rotateY(0deg)' : 'rotateY(180deg)';
-      flipInner.dataset.flipped = currentlyFlipped ? 'false' : 'true';
-      flipCard.classList.toggle('flipped', !currentlyFlipped);
+  // Detect orientation from HTML content
+  const getOrientationFromHTML = useCallback((html, itemOrientation) => {
+    if (itemOrientation === 'portrait' || itemOrientation === 'landscape') {
+      return itemOrientation;
     }
-  };
+    
+    if (!html) return 'landscape';
+    const htmlStr = String(html).toLowerCase();
+    
+    if (
+      htmlStr.includes('width: 350px') ||
+      htmlStr.includes('width:350px') ||
+      htmlStr.includes('350/550') ||
+      htmlStr.includes('aspect-ratio:350/550') ||
+      htmlStr.includes('height:550px') ||
+      htmlStr.includes('height:500px')
+    ) {
+      return 'portrait';
+    }
+    
+    if (
+      htmlStr.includes('width: 550px') ||
+      htmlStr.includes('width:550px') ||
+      htmlStr.includes('550/348') ||
+      htmlStr.includes('aspect-ratio:550/348') ||
+      htmlStr.includes('height:348px')
+    ) {
+      return 'landscape';
+    }
+    
+    if (htmlStr.includes('portrait')) {
+      return 'portrait';
+    }
+    
+    return 'landscape';
+  }, []);
 
   const getStorageKey = (category) => `cardstudio_${category}`;
 
-  const loadCategoryData = () => {
+  const safeJsonArrayLength = (raw) => {
+    if (!raw) return 0;
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed.length : 0;
+    } catch {
+      return 0;
+    }
+  };
+
+  const loadCategoryData = useCallback(() => {
     if (typeof window === 'undefined') return;
     const key = getStorageKey(currentCategory);
     const data = localStorage.getItem(key);
@@ -72,7 +160,24 @@ export default function GalleryPage() {
     } catch {
       setGalleryItems([]);
     }
-  };
+  }, [currentCategory]);
+
+  const updateStorageInfo = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    const wishlist = safeJsonArrayLength(localStorage.getItem('cardstudio_wishlist'));
+    const drafts = safeJsonArrayLength(localStorage.getItem('cardstudio_drafts'));
+    const downloads = safeJsonArrayLength(localStorage.getItem('cardstudio_downloads'));
+    setTotalItems(wishlist + drafts + downloads);
+  }, []);
+
+  useEffect(() => {
+    if (isClient) {
+      loadCategoryData();
+      updateStorageInfo();
+      const timer = setTimeout(() => setIsLoading(false), 800);
+      return () => clearTimeout(timer);
+    }
+  }, [currentCategory, isClient, loadCategoryData, updateStorageInfo]);
 
   const saveCategoryData = (items) => {
     if (typeof window === 'undefined') return;
@@ -82,23 +187,22 @@ export default function GalleryPage() {
     updateStorageInfo();
   };
 
-  const safeJsonArrayLength = (raw) => {
-    if (!raw) return 0;
-    try {
-      const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed.length : 0;
-    } catch {
-      return 0;
+  // Clear current category items
+  const clearCurrentCategory = useCallback(() => {
+    if (!confirm(`Are you sure you want to clear all items from ${currentCategory}? This action cannot be undone.`)) {
+      return;
     }
-  };
-
-  const updateStorageInfo = () => {
-    if (typeof window === 'undefined') return;
-    const wishlist = safeJsonArrayLength(localStorage.getItem('cardstudio_wishlist'));
-    const drafts = safeJsonArrayLength(localStorage.getItem('cardstudio_drafts'));
-    const downloads = safeJsonArrayLength(localStorage.getItem('cardstudio_downloads'));
-    setTotalItems(wishlist + drafts + downloads);
-  };
+    
+    const key = getStorageKey(currentCategory);
+    localStorage.setItem(key, JSON.stringify([]));
+    setGalleryItems([]);
+    updateStorageInfo();
+    showToastMessage(`Cleared all ${currentCategory} items`, 'warning');
+    
+    // Reset pagination
+    setLandscapePage(1);
+    setPortraitPage(1);
+  }, [currentCategory]);
 
   const showToastMessage = (msg, type = 'success') => {
     setToastMessage(msg);
@@ -107,27 +211,16 @@ export default function GalleryPage() {
     setTimeout(() => setShowToast(false), 3000);
   };
 
-  const getOrientationFromHTML = (html) => {
-    if (!html) return 'landscape';
-    if (html.includes('portrait') || html.includes('height:500px') || 
-        html.includes('aspect-ratio: 0.58') || html.includes('width: 290px')) {
-      return 'portrait';
-    }
-    return 'landscape';
-  };
-
   const openPreviewModal = (id) => {
     const item = galleryItems.find(i => i.id == id);
     if (!item) return;
     setSelectedItem({ ...item });
-    setShowModal(true);
-    document.body.style.overflow = 'hidden';
+    setIsModalOpen(true);
   };
 
   const closeModal = () => {
-    setShowModal(false);
+    setIsModalOpen(false);
     setSelectedItem(null);
-    document.body.style.overflow = 'unset';
   };
 
   const customizeItem = (id) => {
@@ -194,29 +287,13 @@ export default function GalleryPage() {
     openPreviewModal(item.id);
   };
 
-  const handleModalAction = (action) => {
-    if (typeof window === 'undefined') return;
-    if (action === 'customize' && selectedItem) {
-      localStorage.setItem('selectedTemplateForCustomize', JSON.stringify(selectedItem));
-      router.push('/customize');
-    } else if (action === 'delete' && selectedItem) {
-      removeItem(selectedItem.id);
-    } else if (action === 'wishlist') {
-      moveToWishlist();
-    } else if (action === 'download') {
-      downloadSelectedItem();
-    } else if (action === 'close') {
-      closeModal();
-    }
-  };
-
   const downloadSelectedItem = async () => {
     if (!selectedItem?.fullHTML) return;
 
     let stage = null;
     try {
       const html2canvas = (await import('html2canvas')).default;
-      const orientation = selectedItem.orientation || getOrientationFromHTML(selectedItem.fullHTML);
+      const orientation = getOrientationFromHTML(selectedItem.fullHTML, selectedItem.orientation);
       const isPortrait = orientation === 'portrait';
 
       stage = document.createElement('div');
@@ -308,125 +385,152 @@ export default function GalleryPage() {
     }
   };
 
-  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+  // Separate items by orientation
+  const landscapeItems = galleryItems.filter(item => 
+    getOrientationFromHTML(item.fullHTML, item.orientation) === 'landscape'
+  );
+  const portraitItems = galleryItems.filter(item => 
+    getOrientationFromHTML(item.fullHTML, item.orientation) === 'portrait'
+  );
 
-  const categoryTitles = {
-    wishlist: 'Wishlist',
-    drafts: 'Drafts',
-    downloads: 'Downloads'
+  // Paginated items
+  const paginatedLandscapeItems = landscapeItems.slice(
+    (landscapePage - 1) * ITEMS_PER_PAGE,
+    landscapePage * ITEMS_PER_PAGE
+  );
+  const paginatedPortraitItems = portraitItems.slice(
+    (portraitPage - 1) * ITEMS_PER_PAGE,
+    portraitPage * ITEMS_PER_PAGE
+  );
+
+  const landscapeTotalPages = Math.ceil(landscapeItems.length / ITEMS_PER_PAGE);
+  const portraitTotalPages = Math.ceil(portraitItems.length / ITEMS_PER_PAGE);
+
+  const handleLandscapePageChange = (page) => {
+    setLandscapePage(page);
+    setTimeout(() => {
+      const landscapeSection = document.getElementById('landscape-section');
+      if (landscapeSection) {
+        landscapeSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
   };
 
-  const categoryDescriptions = {
-    wishlist: 'Your favorite saved designs',
-    drafts: 'Work in progress designs',
-    downloads: 'Cards you have downloaded as PNG'
+  const handlePortraitPageChange = (page) => {
+    setPortraitPage(page);
+    setTimeout(() => {
+      const portraitSection = document.getElementById('portrait-section');
+      if (portraitSection) {
+        portraitSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
+  };
+
+  // Dynamic background gradient per category
+  const categoryBackgrounds = {
+    wishlist: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 50%, #fde68a 100%)',
+    drafts: 'linear-gradient(135deg, #f5f3ff 0%, #ede9fe 50%, #ddd6fe 100%)',
+    downloads: 'linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%)',
+  };
+
+  // Category order for slide direction
+  const categoryOrder = ['wishlist', 'drafts', 'downloads'];
+
+  const handleCategoryChange = (newCategory) => {
+    const oldIndex = categoryOrder.indexOf(currentCategory);
+    const newIndex = categoryOrder.indexOf(newCategory);
+    if (newIndex > oldIndex) setCategoryDirection(1);
+    else if (newIndex < oldIndex) setCategoryDirection(-1);
+    else setCategoryDirection(0);
+    setCurrentCategory(newCategory);
+  };
+
+  // Category items for the toggle
+  const categoryItems = [
+    { key: 'wishlist', icon: '⭐', label: 'Wishlist' },
+    { key: 'drafts', icon: '✏️', label: 'Drafts' },
+    { key: 'downloads', icon: '⬇️', label: 'Downloads' },
+  ];
+
+  // Get current category display name
+  const getCurrentCategoryName = () => {
+    const current = categoryItems.find(item => item.key === currentCategory);
+    return current ? current.label : '';
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 font-['Inter'] overflow-x-hidden">
-      {/* Mobile Header - Side se open karne ke liye button left side */}
-      <div className="md:hidden fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-md border-b border-slate-200 z-40 px-4 py-3 flex items-center shadow-sm">
-        <button 
-          onClick={toggleSidebar} 
-          className="p-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl shadow-lg active:scale-95 transition-transform"
-        >
-          <FiMenu size={20} />
-        </button>
-        <div className="flex-1 text-center">
-          <h2 className="font-bold text-lg text-slate-800">My Gallery</h2>
-        </div>
-        <div className="w-10" /> {/* Spacer for centering */}
-      </div>
-
-      <div className="flex min-h-screen md:min-h-[calc(100vh-72px)]">
-        {/* Sidebar - Left se slide hoga */}
-        <aside className={`fixed top-0 left-0 h-full w-[280px] max-w-[85vw] bg-white shadow-2xl flex flex-col flex-shrink-0 overflow-y-auto transition-transform duration-300 ease-in-out z-50 md:relative md:translate-x-0 md:shadow-md ${
-          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}>
-          {/* Sidebar Header */}
-          <div className="p-5 border-b border-slate-200 bg-gradient-to-r from-indigo-50 to-purple-50">
-            <div className="flex items-center justify-between">
+    <div
+      className="min-h-screen overflow-x-hidden font-['Inter']"
+      style={{
+        background: categoryBackgrounds[currentCategory],
+        transition: 'background 0.5s ease',
+      }}
+    >
+      <div className="min-h-screen overflow-y-auto p-4 sm:p-6 md:p-8">
+        <div className="max-w-[1400px] mx-auto">
+          <div className="flex flex-col gap-4 mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h2 className="font-bold text-xl bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                <h1 className="text-slate-800 text-xl sm:text-2xl font-bold">
                   My Gallery
-                </h2>
-                <p className="text-xs text-slate-500 mt-1">Manage your designs</p>
+                </h1>
+                <p className="text-slate-500 text-sm mt-1">
+                  Manage wishlist, drafts, and downloaded cards
+                </p>
               </div>
-              <button 
-                onClick={toggleSidebar} 
-                className="md:hidden p-2 bg-white rounded-full shadow-md hover:bg-slate-50 transition-colors"
-              >
-                <FiX size={18} />
-              </button>
+              
+              {/* Clear Button for current section */}
+              {galleryItems.length > 0 && (
+                <Button
+                  variant="danger"
+                  size="sm"
+                  icon={FiTrash}
+                  onClick={clearCurrentCategory}
+                  className="rounded-full shadow-sm"
+                >
+                  Clear {getCurrentCategoryName()}
+                </Button>
+              )}
+            </div>
+
+            {/* Category Toggle - Beautiful sliding pill style */}
+            <div className="relative inline-flex" ref={categoryBarRef}>
+              <div className="relative flex items-stretch gap-0 bg-slate-100 rounded-full p-1 border border-slate-200 shadow-inner">
+                {/* Sliding Pill Background */}
+                <div
+                  className="absolute top-1 bottom-1 bg-white rounded-full shadow-md transition-all duration-300 ease-out"
+                  style={{
+                    left: pillStyle.left,
+                    width: pillStyle.width,
+                  }}
+                />
+                
+                {categoryItems.map((item) => (
+                  <button
+                    key={item.key}
+                    ref={(el) => {
+                      categoryRefs.current[item.key] = el;
+                    }}
+                    onClick={() => handleCategoryChange(item.key)}
+                    className={`relative z-10 px-4 sm:px-6 py-1.5 sm:py-2 rounded-full font-semibold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap ${
+                      currentCategory === item.key
+                        ? 'text-indigo-600'
+                        : 'text-slate-500 hover:text-indigo-500'
+                    }`}
+                  >
+                    <span className="text-sm sm:text-base mr-1">{item.icon}</span>
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="text-xs text-slate-500">
+              Total items: {totalItems}
             </div>
           </div>
 
-          {/* Navigation */}
-          <nav className="flex-1 py-4 px-3 space-y-1.5">
-            {['wishlist', 'drafts', 'downloads'].map(key => (
-              <div
-                key={key}
-                onClick={() => {
-                  setCurrentCategory(key);
-                  if (isMobile) setIsSidebarOpen(false);
-                }}
-                className={`cursor-pointer transition-all rounded-xl py-3 px-4 flex items-center gap-3 group ${
-                  currentCategory === key 
-                    ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/30' 
-                    : 'hover:bg-slate-100 text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <span className="text-xl">
-                  {key === 'wishlist' ? '⭐' : key === 'drafts' ? '✏️' : '⬇️'}
-                </span>
-                <span className="font-medium flex-1">
-                  {key === 'wishlist' ? 'Wishlist' : key === 'drafts' ? 'Drafts' : 'Downloads'}
-                </span>
-                {currentCategory === key && (
-                  <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">
-                    {galleryItems.length}
-                  </span>
-                )}
-              </div>
-            ))}
-          </nav>
-
-          {/* Footer Stats */}
-          <div className="p-4 border-t border-slate-200 bg-slate-50/50">
-            <div className="text-xs text-slate-500 text-center">
-              <p>Total Items: {totalItems}</p>
-              <p className="text-[11px] text-slate-400 mt-1">Tap to select category</p>
-            </div>
-          </div>
-        </aside>
-
-        {/* Overlay for mobile - jab sidebar open ho */}
-        {isSidebarOpen && (
-          <div 
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden transition-opacity duration-300" 
-            onClick={toggleSidebar}
-          />
-        )}
-
-        {/* Main Content */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 pt-16 md:pt-8">
-          {/* Header Section - Desktop */}
-          <div className="hidden md:block mb-8">
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">
-              {categoryTitles[currentCategory]}
-            </h1>
-            <p className="text-slate-500 text-sm mt-2">{categoryDescriptions[currentCategory]}</p>
-          </div>
-
-          {/* Header Section - Mobile */}
-          <div className="md:hidden mb-6">
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">
-              {categoryTitles[currentCategory]}
-            </h1>
-            <p className="text-slate-500 text-xs mt-1">{categoryDescriptions[currentCategory]}</p>
-          </div>
-
-          {/* Content */}
+          {/* Content with directional slide animation */}
           {!isClient ? (
             <div className="flex items-center justify-center py-20">
               <div className="text-center">
@@ -434,172 +538,214 @@ export default function GalleryPage() {
                 <p className="text-slate-400 text-sm">Loading your gallery...</p>
               </div>
             </div>
+          ) : isLoading ? (
+            <GallerySkeleton />
           ) : galleryItems.length === 0 ? (
-            <div className="text-center py-16 md:py-24">
+            <div className="text-center py-16 md:py-24 animate-fade-in-up">
               <div className="text-6xl mb-4">✨</div>
-              <h3 className="text-base md:text-lg font-semibold text-slate-700 mb-2">No items yet</h3>
-              <p className="text-slate-400 text-sm">Your {currentCategory} will appear here</p>
+              <h3 className="text-sm font-semibold text-slate-700 mb-2">No items yet</h3>
+              <p className="text-slate-400 text-xs">Your {currentCategory} will appear here</p>
             </div>
           ) : (
-            <>
-              {/* Grid View */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
-                {galleryItems.map(item => {
-                  const orientation = item.orientation || getOrientationFromHTML(item.fullHTML);
-                  return (
-                    <div 
-                      key={item.id} 
-                      onClick={(e) => handleCardClick(e, item)} 
-                      className="group relative flex cursor-pointer flex-col items-center overflow-visible transition-all duration-300 hover:-translate-y-2"
-                    >
-                      {/* Action Buttons */}
-                      <div className="absolute -top-2 right-2 flex gap-2 z-10 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 opacity-100">
-                        <button 
-                          data-action="edit" 
-                          data-id={item.id} 
-                          className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-indigo-500 text-white flex items-center justify-center hover:bg-indigo-600 transition-all hover:scale-110 shadow-lg text-sm active:scale-95"
-                        >
-                          <FiEdit2 size={14} />
-                        </button>
-                        <button 
-                          data-action="delete" 
-                          data-id={item.id} 
-                          className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition-all hover:scale-110 shadow-lg text-sm active:scale-95"
-                        >
-                          <FiTrash2 size={14} />
-                        </button>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentCategory}
+                initial={{ opacity: 0, x: categoryDirection * 200 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: categoryDirection * -200 }}
+                transition={{ duration: 0.35, ease: 'easeInOut' }}
+              >
+                <div className="max-w-[1400px] mx-auto space-y-10">
+                  {/* Landscape Cards Section */}
+                  {landscapeItems.length > 0 && (
+                    <div id="landscape-section">
+                      <div className="mb-4 flex items-center justify-between flex-wrap gap-2">
+                        <h3 className="text-lg font-semibold text-slate-700 flex items-center gap-2">
+                          <span>🌄</span> Landscape Cards
+                          <span className="text-xs font-normal text-slate-400">
+                            ({landscapeItems.length} {landscapeItems.length === 1 ? 'card' : 'cards'})
+                          </span>
+                        </h3>
+                        {landscapeTotalPages > 1 && (
+                          <span className="text-xs text-indigo-500 bg-indigo-50 px-2 py-1 rounded-full">
+                            Page {landscapePage} of {landscapeTotalPages}
+                          </span>
+                        )}
                       </div>
-
-                      {/* Card Preview */}
-                      <CardPreview 
-                        html={item.fullHTML} 
-                        orientation={orientation} 
-                        className="w-full max-w-[260px] sm:max-w-none transition-all duration-300 group-hover:shadow-2xl group-hover:shadow-black/10" 
-                      />
                       
-                      {/* Card Title - Mobile only */}
-                      <p className="mt-3 text-sm font-medium text-slate-700 md:hidden truncate max-w-[200px]">
-                        {item.name || 'Untitled Card'}
-                      </p>
+                      <CardGrid orientation="landscape">
+                        {paginatedLandscapeItems.map(item => (
+                          <div 
+                            key={item.id} 
+                            onClick={(e) => handleCardClick(e, item)} 
+                            className="group relative flex cursor-pointer flex-col items-center overflow-visible transition-all duration-300 hover:-translate-y-2 w-full"
+                          >
+                            {/* Edit and Delete buttons */}
+                            <div className="absolute -top-2 right-2 flex gap-2 z-10 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 opacity-100">
+                              <Button
+                                variant="primary"
+                                size="xs"
+                                icon={FiEdit2}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  customizeItem(item.id);
+                                }}
+                                className="!w-8 !h-8 !p-0 rounded-full shadow-lg"
+                                ariaLabel="Edit card"
+                              />
+                              <Button
+                                variant="danger"
+                                size="xs"
+                                icon={FiTrash2}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  removeItem(item.id);
+                                }}
+                                className="!w-8 !h-8 !p-0 rounded-full shadow-lg"
+                                ariaLabel="Delete card"
+                              />
+                            </div>
+                            <CardPreview 
+                              html={item.fullHTML} 
+                              orientation="landscape" 
+                              className="w-full transition-all duration-300 group-hover:shadow-2xl group-hover:shadow-black/10" 
+                            />
+                            <p className="mt-3 text-xs font-medium text-slate-700 md:hidden truncate max-w-[200px]">
+                              {item.name || 'Untitled Card'}
+                            </p>
+                          </div>
+                        ))}
+                      </CardGrid>
+                      
+                      {landscapeTotalPages > 1 && (
+                        <Pagination
+                          currentPage={landscapePage}
+                          totalPages={landscapeTotalPages}
+                          onPageChange={handleLandscapePageChange}
+                          siblingCount={1}
+                          showFirstLast={true}
+                          className="mt-6"
+                        />
+                      )}
                     </div>
-                  );
-                })}
-              </div>
+                  )}
 
-              {/* Items Count */}
-              <div className="mt-8 text-center text-sm text-slate-400">
-                Showing {galleryItems.length} item{galleryItems.length !== 1 ? 's' : ''}
-              </div>
-            </>
+                  {/* Portrait Cards Section */}
+                  {portraitItems.length > 0 && (
+                    <div id="portrait-section">
+                      <div className="mb-4 flex items-center justify-between flex-wrap gap-2">
+                        <h3 className="text-lg font-semibold text-slate-700 flex items-center gap-2">
+                          <span>📱</span> Portrait Cards
+                          <span className="text-xs font-normal text-slate-400">
+                            ({portraitItems.length} {portraitItems.length === 1 ? 'card' : 'cards'})
+                          </span>
+                        </h3>
+                        {portraitTotalPages > 1 && (
+                          <span className="text-xs text-indigo-500 bg-indigo-50 px-2 py-1 rounded-full">
+                            Page {portraitPage} of {portraitTotalPages}
+                          </span>
+                        )}
+                      </div>
+                      
+                      <CardGrid orientation="portrait">
+                        {paginatedPortraitItems.map(item => (
+                          <div 
+                            key={item.id} 
+                            onClick={(e) => handleCardClick(e, item)} 
+                            className="group relative flex cursor-pointer flex-col items-center overflow-visible transition-all duration-300 hover:-translate-y-2 w-full"
+                          >
+                            {/* Edit and Delete buttons */}
+                            <div className="absolute -top-2 right-2 flex gap-2 z-10 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 opacity-100">
+                              <Button
+                                variant="primary"
+                                size="xs"
+                                icon={FiEdit2}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  customizeItem(item.id);
+                                }}
+                                className="!w-8 !h-8 !p-0 rounded-full shadow-lg"
+                                ariaLabel="Edit card"
+                              />
+                              <Button
+                                variant="danger"
+                                size="xs"
+                                icon={FiTrash2}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  removeItem(item.id);
+                                }}
+                                className="!w-8 !h-8 !p-0 rounded-full shadow-lg"
+                                ariaLabel="Delete card"
+                              />
+                            </div>
+                            <CardPreview 
+                              html={item.fullHTML} 
+                              orientation="portrait" 
+                              className="w-full transition-all duration-300 group-hover:shadow-2xl group-hover:shadow-black/10" 
+                            />
+                            <p className="mt-3 text-xs font-medium text-slate-700 md:hidden truncate max-w-[200px]">
+                              {item.name || 'Untitled Card'}
+                            </p>
+                          </div>
+                        ))}
+                      </CardGrid>
+                      
+                      {portraitTotalPages > 1 && (
+                        <Pagination
+                          currentPage={portraitPage}
+                          totalPages={portraitTotalPages}
+                          onPageChange={handlePortraitPageChange}
+                          siblingCount={1}
+                          showFirstLast={true}
+                          className="mt-6"
+                        />
+                      )}
+                    </div>
+                  )}
+
+                  <div className="text-center text-xs text-slate-400 pb-8">
+                    Showing {galleryItems.length} item{galleryItems.length !== 1 ? 's' : ''}
+                    {landscapeItems.length > 0 && portraitItems.length > 0 && (
+                      <span> ({landscapeItems.length} landscape, {portraitItems.length} portrait)</span>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            </AnimatePresence>
           )}
         </div>
       </div>
 
-      {/* Modal */}
-      {showModal && selectedItem && (
-        <div 
-          className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center z-[2000] p-3 sm:p-4 md:p-6" 
-          onClick={(e) => e.target === e.currentTarget && closeModal()}
-        >
-          <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 items-center justify-center w-full max-w-[95vw] sm:max-w-[90vw] lg:max-w-[85vw]">
-            {/* Card Container */}
-            <div
-              ref={modalCardRef}
-              onClick={handleModalCardFlip}
-              className={`rounded-2xl overflow-hidden shadow-2xl shadow-black/50 transition-all duration-300 ${
-                (selectedItem.orientation || getOrientationFromHTML(selectedItem.fullHTML)) === 'portrait' 
-                  ? 'w-full max-w-[300px] sm:max-w-[350px] aspect-[350/550]' 
-                  : 'w-full max-w-[450px] sm:max-w-[550px] aspect-[550/348]'
-              }`}
-            >
-              <div className="w-full h-full" dangerouslySetInnerHTML={{ __html: selectedItem.fullHTML || '' }} />
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex flex-row lg:flex-col gap-2 sm:gap-3 w-full lg:w-auto justify-center flex-wrap">
-              <button 
-                onClick={() => handleModalAction('customize')} 
-                className="px-4 py-2 sm:px-5 sm:py-2.5 md:px-6 md:py-3 rounded-full font-semibold bg-indigo-500 text-white hover:bg-indigo-600 transition-all hover:scale-105 active:scale-95 text-sm sm:text-base flex items-center gap-2 shadow-lg"
-              >
-                <FiEdit2 size={16} /> Customize
-              </button>
-              
-              {(currentCategory === 'drafts' || currentCategory === 'downloads') && (
-                <button 
-                  onClick={() => handleModalAction('wishlist')} 
-                  className="px-4 py-2 sm:px-5 sm:py-2.5 md:px-6 md:py-3 rounded-full font-semibold bg-amber-500 text-white hover:bg-amber-600 transition-all hover:scale-105 active:scale-95 text-sm sm:text-base flex items-center gap-2 shadow-lg"
-                >
-                  <FiStar size={16} /> Save
-                </button>
-              )}
-              
-              <button 
-                onClick={() => handleModalAction('download')} 
-                className="px-4 py-2 sm:px-5 sm:py-2.5 md:px-6 md:py-3 rounded-full font-semibold bg-emerald-500 text-white hover:bg-emerald-600 transition-all hover:scale-105 active:scale-95 text-sm sm:text-base flex items-center gap-2 shadow-lg"
-              >
-                <FiDownload size={16} /> Download
-              </button>
-              
-              <button 
-                onClick={() => handleModalAction('delete')} 
-                className="px-4 py-2 sm:px-5 sm:py-2.5 md:px-6 md:py-3 rounded-full font-semibold bg-red-500 text-white hover:bg-red-600 transition-all hover:scale-105 active:scale-95 text-sm sm:text-base flex items-center gap-2 shadow-lg"
-              >
-                <FiTrash2 size={16} /> Delete
-              </button>
-              
-              <button 
-                onClick={() => handleModalAction('close')} 
-                className="px-4 py-2 sm:px-5 sm:py-2.5 md:px-6 md:py-3 rounded-full font-semibold bg-slate-100 text-slate-800 border border-slate-200 hover:bg-slate-200 transition-all hover:scale-105 active:scale-95 text-sm sm:text-base flex items-center gap-2"
-              >
-                <FiChevronLeft size={16} /> Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Modal - Using reusable Modal component */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        htmlContent={selectedItem?.fullHTML}
+        orientation={getOrientationFromHTML(selectedItem?.fullHTML, selectedItem?.orientation)}
+        onWishlist={moveToWishlist}
+        onCustomize={() => {
+          if (selectedItem) {
+            localStorage.setItem('selectedTemplateForCustomize', JSON.stringify(selectedItem));
+            router.push('/customize');
+          }
+        }}
+        onDownload={downloadSelectedItem}
+        showWishlist={currentCategory !== 'wishlist'}
+        showCustomize={true}
+        showDownload={true}
+        title="Card Preview"
+      />
 
       {/* Toast Notification */}
-      <div className={`fixed bottom-4 sm:bottom-6 right-4 sm:right-6 px-4 py-2.5 sm:px-5 sm:py-3 rounded-xl text-sm font-medium transition-all duration-300 z-[1100] shadow-lg ${
+      <div className={`fixed bottom-4 sm:bottom-6 right-4 sm:right-6 px-4 py-2.5 sm:px-5 sm:py-3 rounded-xl text-xs font-medium transition-all duration-300 z-[1100] shadow-lg ${
         showToast ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-[100px]'
-      } ${toastType === 'warning' ? 'bg-amber-500' : 'bg-gradient-to-r from-green-500 to-emerald-500'} text-white`}>
+      } ${toastType === 'warning' ? 'bg-amber-500' : 'bg-gradient-to-r from-emerald-500 to-teal-500'} text-white`}>
         {toastMessage}
       </div>
 
+      {/* Global Styles */}
       <style jsx global>{`
-        /* Flip Card Styles */
-        .flip-card { 
-          width: 100%; 
-          height: 100%; 
-          perspective: 1800px; 
-          cursor: pointer; 
-        }
-        
-        .flip-card-inner { 
-          position: relative; 
-          width: 100%; 
-          height: 100%; 
-          transition: transform 0.65s cubic-bezier(0.4, 0, 0.2, 1); 
-          transform-style: preserve-3d; 
-        }
-        
-        .flip-card.flipped .flip-card-inner { 
-          transform: rotateY(180deg); 
-        }
-        
-        .card-front, .card-back { 
-          position: absolute; 
-          width: 100%; 
-          height: 100%; 
-          backface-visibility: hidden; 
-          border-radius: 20px; 
-          overflow: hidden; 
-        }
-        
-        .card-back { 
-          transform: rotateY(180deg); 
-        }
-        
-        /* Touch device optimizations */
         @media (hover: hover) {
           .group:hover .md\\:group-hover\\:opacity-100 {
             opacity: 1;
@@ -612,25 +758,10 @@ export default function GalleryPage() {
           }
         }
         
-        /* Responsive adjustments */
-        @media (max-width: 640px) {
-          .grid {
-            gap: 1rem;
-          }
-        }
-        
-        @media (min-width: 641px) and (max-width: 768px) {
-          .grid {
-            gap: 1.5rem;
-          }
-        }
-        
-        /* Smooth scrolling */
         .overflow-y-auto {
           scroll-behavior: smooth;
         }
         
-        /* Custom scrollbar */
         ::-webkit-scrollbar {
           width: 6px;
           height: 6px;
@@ -647,6 +778,43 @@ export default function GalleryPage() {
         
         ::-webkit-scrollbar-thumb:hover {
           background: #94a3b8;
+        }
+        
+        @keyframes fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        
+        .animate-fade-in {
+          animation: fade-in 0.3s ease-out forwards;
+        }
+        
+        @keyframes fade-in-up {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        .animate-fade-in-up {
+          animation: fade-in-up 0.4s ease-out forwards;
+        }
+        
+        @keyframes shimmer { 
+          0% { background-position: -200% 0; } 
+          100% { background-position: 200% 0; } 
+        }
+        
+        .animate-shimmer { 
+          animation: shimmer 1.5s ease-in-out infinite; 
+        }
+
+        html {
+          scroll-behavior: smooth;
         }
       `}</style>
     </div>
