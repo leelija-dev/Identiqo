@@ -1,8 +1,10 @@
 from django.urls import path
+from rest_framework_simplejwt.views import TokenRefreshView
+
 from . import views
 
 urlpatterns = [
-    # Subscription Plan URLs
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/register/', views.RegisterView.as_view(), name='register'),
     path('api/login/', views.LoginView.as_view(), name='login'),
     path('api/logout/', views.LogoutView.as_view(), name='logout'),
@@ -12,10 +14,7 @@ urlpatterns = [
     path('api/reset-password/', views.ResetPasswordView.as_view(), name='reset-password'),
     path('api/delete-account/', views.DeleteAccountView.as_view(), name='delete-account'),
 
+    # Public subscription plan list (read-only)
     path('api/subscription-plans/', views.SubscriptionPlanListView.as_view(), name='subscription-plan-list'),
-    path('api/subscription-plans/create/', views.SubscriptionPlanCreateView.as_view(), name='subscription-plan-create'),
-    path('api/subscription-plans/<int:id>/', views.SubscriptionPlanDetailView.as_view(), name='subscription-plan-detail'),
-    path('api/subscription-plans/bulk-create/', views.SubscriptionPlanBulkCreateView.as_view(), name='subscription-plan-bulk-create'),
     
-    # Add more URLs as needed...
 ]

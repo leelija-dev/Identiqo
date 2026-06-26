@@ -9,6 +9,9 @@ import {
 } from "react-icons/fi";
 import { FaGoogle, FaMicrosoft, FaStar } from "react-icons/fa";
 import Button from '@/components/Common/Button';
+import { authApi } from '@/lib/api';
+import { saveAuth } from '@/lib/auth';
+import { validatePassword } from '@/lib/validation';
 
 export default function SignIn() {
   const [email, setEmail] = useState("");
@@ -32,8 +35,6 @@ export default function SignIn() {
     
     if (!password) {
       newErrors.password = "Password is required";
-    } else if (password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
     }
     
     return newErrors;
@@ -48,10 +49,21 @@ export default function SignIn() {
     }
     
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
+    setErrors({});
+
+    try {
+      const data = await authApi.login({ email, password });
+      saveAuth({
+        access: data.access,
+        refresh: data.refresh,
+        user: data.user,
+      });
       router.push("/");
-    }, 1500);
+    } catch (err) {
+      setErrors({ form: err.message || "Sign in failed. Please try again." });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSocialLogin = (provider) => {
@@ -295,7 +307,13 @@ export default function SignIn() {
                 </Link>
               </div>
 
-              <Button type="submit" variant="primary" size="lg" className="w-full">
+              {errors.form && (
+                <p className="text-red-500 text-xs flex items-center gap-1">
+                  <FiAlertCircle className="w-3 h-3 shrink-0" /> {errors.form}
+                </p>
+              )}
+
+              <Button type="submit" variant="primary" size="lg" className="w-full" loading={isLoading}>
                 Sign in
               </Button>
             </form>

@@ -84,22 +84,29 @@ def _parse_json_field(value, field_name):
 class SubscriptionPlanForm(forms.ModelForm):
     features = forms.CharField(
         required=False,
-        widget=forms.Textarea(attrs={'class': 'form-input', 'rows': 4, 'placeholder': '{"bulk_csv": true}'}),
+        widget=forms.HiddenInput(),
+    )
+    monthly_price = forms.DecimalField(
+        required=True,
+        max_digits=10,
+        decimal_places=2,
+        widget=forms.NumberInput(attrs={'class': 'form-input', 'step': '0.01'}),
+    )
+    yearly_price = forms.DecimalField(
+        required=True,
+        max_digits=10,
+        decimal_places=2,
+        widget=forms.NumberInput(attrs={'class': 'form-input', 'step': '0.01'}),
     )
 
     class Meta:
         model = SubscriptionPlan
         fields = [
-            'name', 'code', 'price', 'currency', 'billing_cycle',
-            'duration_days', 'description', 'features', 'is_active',
+            'name', 'currency', 'description', 'features', 'is_active',
         ]
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-input'}),
-            'code': forms.TextInput(attrs={'class': 'form-input'}),
-            'price': forms.NumberInput(attrs={'class': 'form-input', 'step': '0.01'}),
             'currency': forms.TextInput(attrs={'class': 'form-input'}),
-            'billing_cycle': forms.Select(attrs={'class': 'form-input'}),
-            'duration_days': forms.NumberInput(attrs={'class': 'form-input'}),
             'description': forms.Textarea(attrs={'class': 'form-input', 'rows': 3}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-checkbox'}),
         }
@@ -107,7 +114,7 @@ class SubscriptionPlanForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.instance and self.instance.pk and self.instance.features:
-            self.fields['features'].initial = json.dumps(self.instance.features, indent=2)
+            self.fields['features'].initial = json.dumps(self.instance.features)
 
     def clean_features(self):
         return _parse_json_field(self.cleaned_data.get('features'), 'Features')

@@ -4,14 +4,16 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
-import { FiLogIn } from "react-icons/fi";
+import { FiLogIn, FiLogOut } from "react-icons/fi";
 import { HiBars3, HiXMark } from "react-icons/hi2";
 import Button from "@/components/Common/Button";
 import Container from "../Common/Container";
 import Image from "next/image";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function NavbarMinimal() {
   const pathname = usePathname();
+  const { user, isAuthenticated, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
@@ -123,17 +125,34 @@ export default function NavbarMinimal() {
               })}
             </div>
 
-            {/* Desktop Button - Attractive Sign In Button with Icon */}
+            {/* Desktop auth */}
             <div className="hidden lg:flex items-center gap-2 xl:gap-3">
-              <Button
-                href="/signin"
-                variant="primary"
-                size="md"
-                className="whitespace-nowrap"
-                icon={FiLogIn}
-              >
-                Sign In
-              </Button>
+              {isAuthenticated ? (
+                <>
+                  <span className="text-p-xs text-slate-600 max-w-[140px] truncate">
+                    Hi, {user?.name?.split(' ')[0] || 'there'}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="md"
+                    className="whitespace-nowrap"
+                    icon={FiLogOut}
+                    onClick={logout}
+                  >
+                    Logout
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  href="/signin"
+                  variant="primary"
+                  size="md"
+                  className="whitespace-nowrap"
+                  icon={FiLogIn}
+                >
+                  Sign In
+                </Button>
+              )}
             </div>
 
             {/* Tablet Menu Button - Shows on md to lg */}
@@ -232,17 +251,37 @@ export default function NavbarMinimal() {
               })}
             </div>
 
-            {/* Menu Footer - Attractive Sign In Button with Icon */}
-            <div className="border-t border-slate-100 p-4">
-              <Button
-                href="/signin"
-                variant="primary"
-                size="md"
-                className="w-full"
-                onClick={() => setIsOpen(false)}
-              >
-                Sign In
-              </Button>
+            {/* Menu Footer */}
+            <div className="border-t border-slate-100 p-4 space-y-3">
+              {isAuthenticated && (
+                <p className="text-p-sm text-slate-600 text-center">
+                  Signed in as <span className="font-semibold">{user?.name}</span>
+                </p>
+              )}
+              {isAuthenticated ? (
+                <Button
+                  variant="outline"
+                  size="md"
+                  className="w-full"
+                  icon={FiLogOut}
+                  onClick={() => {
+                    setIsOpen(false);
+                    logout();
+                  }}
+                >
+                  Logout
+                </Button>
+              ) : (
+                <Button
+                  href="/signin"
+                  variant="primary"
+                  size="md"
+                  className="w-full"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Sign In
+                </Button>
+              )}
             </div>
           </div>
         </div>

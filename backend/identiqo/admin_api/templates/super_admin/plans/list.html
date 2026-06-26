@@ -5,27 +5,102 @@
 
 {% block content %}
 <div class="card">
+  <div class="card-header">
+    <div class="billing-filter">
+      <button type="button" class="filter-btn active" data-cycle="all" onclick="filterPlans('all')">All</button>
+      <button type="button" class="filter-btn" data-cycle="monthly" onclick="filterPlans('monthly')">Monthly</button>
+      <button type="button" class="filter-btn" data-cycle="yearly" onclick="filterPlans('yearly')">Yearly</button>
+    </div>
+  </div>
   <div class="card-body table-wrap">
     <table class="data-table">
       <thead>
-        <tr><th>Code</th><th>Name</th><th>Price</th><th>Cycle</th><th>Days</th><th>Active</th><th></th></tr>
+        <tr>
+          <th>Code</th>
+          <th>Name</th>
+          <th>Price</th>
+          <th>Cycle</th>
+          <th>Days</th>
+          <th>Active</th>
+          <th>Actions</th>
+        </tr>
       </thead>
       <tbody>
         {% for p in plans %}
-        <tr>
+        <tr data-billing-cycle="{{ p.billing_cycle }}">
           <td><code>{{ p.code }}</code></td>
           <td>{{ p.name }}</td>
           <td>{{ p.currency }} {{ p.price }}</td>
           <td>{{ p.get_billing_cycle_display }}</td>
           <td>{{ p.duration_days }}</td>
-          <td>{% if p.is_active %}<span class="badge badge-success">Yes</span>{% else %}<span class="badge badge-muted">No</span>{% endif %}</td>
-          <td><a href="{% url 'super_admin:plan_edit' p.pk %}" class="btn btn-secondary btn-sm">Edit</a></td>
+          <td>{% if p.is_active %}<span class="badge badge-success">Yes</span>{% else %}<span
+              class="badge badge-muted">No</span>{% endif %}</td>
+          <td>
+            <a href="{% url 'super_admin:plan_edit' p.pk %}" class="btn btn-secondary btn-sm">Edit</a>
+            <a href="{% url 'super_admin:plan_delete' p.pk %}" class="btn btn-danger btn-sm">Delete</a>
+          </td>
         </tr>
         {% empty %}
-        <tr><td colspan="7">No plans. Run <code>python manage.py seed_super_admin</code>.</td></tr>
+        <tr>
+          <td colspan="7">No plans yet. <a href="{% url 'super_admin:plan_create' %}">Add a plan</a>.</td>
+        </tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
 </div>
+
+<style>
+  .billing-filter {
+    display: flex;
+    gap: 0.5rem;
+    background: #f1f5f9;
+    padding: 0.25rem;
+    border-radius: 0.5rem;
+    width: fit-content;
+  }
+
+  .filter-btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    background: transparent;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+    color: #64748b;
+  }
+
+  .filter-btn.active {
+    background: white;
+    color: #2563eb;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+
+  .filter-btn:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.5);
+  }
+</style>
+
+<script>
+  function filterPlans(cycle) {
+    const buttons = document.querySelectorAll('.filter-btn');
+    buttons.forEach(btn => {
+      btn.classList.remove('active');
+      if (btn.dataset.cycle === cycle) {
+        btn.classList.add('active');
+      }
+    });
+
+    const rows = document.querySelectorAll('tbody tr[data-billing-cycle]');
+    rows.forEach(row => {
+      if (cycle === 'all' || row.getAttribute('data-billing-cycle') === cycle) {
+        row.style.display = '';
+      } else {
+        row.style.display = 'none';
+      }
+    });
+  }
+</script>
 {% endblock %}

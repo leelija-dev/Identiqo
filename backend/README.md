@@ -14,24 +14,13 @@ copy .env.example .env
 # Edit .env — SQLite is default; set USE_POSTGRES=true for PostgreSQL
 
 python manage.py migrate
-python manage.py seed_super_admin
+python manage.py createsuperuser
 python manage.py runserver
 ```
 
 Open **Super Admin Dashboard:** [http://127.0.0.1:8000/super-admin/login/](http://127.0.0.1:8000/super-admin/login/)
 
-Default credentials (after seed):
-
-| Field | Value |
-|-------|--------|
-| Email | `admin@identiqo.com` |
-| Password | `Admin@12345` |
-
-Custom admin:
-
-```bash
-python manage.py seed_super_admin --email you@company.com --password YourSecurePass
-```
+Create your first dashboard admin at [http://127.0.0.1:8000/admin/admin_api/adminuser/add/](http://127.0.0.1:8000/admin/admin_api/adminuser/add/) (requires Django `createsuperuser` for `/admin/` access). Use a Django-hashed password (e.g. from `django.contrib.auth.hashers.make_password` in `manage.py shell`).
 
 ## URLs
 

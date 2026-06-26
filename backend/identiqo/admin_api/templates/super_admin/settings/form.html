@@ -1,1 +1,117 @@
 {% extends 'super_admin/partials/form_page.html' %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <h2>{{ title }}</h2>
+    <div class="card-hint">
+      ⚙️ Configure platform settings
+    </div>
+  </div>
+  <div class="card-body">
+    {% if form.non_field_errors %}
+    <div class="alert-error">
+      {% for error in form.non_field_errors %}
+      {{ error }}
+      {% endfor %}
+    </div>
+    {% endif %}
+    
+    <form method="post" class="form-grid">
+      {% csrf_token %}
+      
+      <div class="form-section">
+        <h3>Setting Details</h3>
+        <div class="form-group">
+          <label for="{{ form.key.id_for_label }}">
+            {{ form.key.label }}
+            {% if form.key.field.required %}<span class="required">*</span>{% endif %}
+          </label>
+          {{ form.key }}
+          {% if form.key.help_text %}<p class="help-text">{{ form.key.help_text }}</p>{% endif %}
+          {% if form.key.errors %}
+          <div class="errorlist">
+            {% for error in form.key.errors %}{{ error }}{% endfor %}
+          </div>
+          {% endif %}
+        </div>
+        
+        <div class="form-group">
+          <label for="{{ form.description.id_for_label }}">
+            {{ form.description.label }}
+          </label>
+          {{ form.description }}
+          {% if form.description.help_text %}<p class="help-text">{{ form.description.help_text }}</p>{% endif %}
+          {% if form.description.errors %}
+          <div class="errorlist">
+            {% for error in form.description.errors %}{{ error }}{% endfor %}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      
+      <div class="form-section">
+        <h3>Configuration Value</h3>
+        <div class="form-group">
+          <label for="{{ form.value.id_for_label }}">
+            {{ form.value.label }}
+            {% if form.value.field.required %}<span class="required">*</span>{% endif %}
+          </label>
+          {{ form.value }}
+          {% if form.value.help_text %}<p class="help-text">{{ form.value.help_text }}</p>{% endif %}
+          {% if form.value.errors %}
+          <div class="errorlist">
+            {% for error in form.value.errors %}{{ error }}{% endfor %}
+          </div>
+          {% endif %}
+          <p class="help-text">Enter valid JSON format (e.g., {"enabled": true, "limit": 100})</p>
+        </div>
+      </div>
+      
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">
+          <span>💾</span> Save Setting
+        </button>
+        <a href="javascript:history.back()" class="btn btn-secondary">
+          <span>✕</span> Cancel
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+.card-body {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.form-grid {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.form-section {
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.form-section h3 {
+  margin: 0 0 1rem 0;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--indigo);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.card-hint {
+  font-size: 0.75rem;
+  color: var(--muted);
+  font-weight: 500;
+}
+</style>
+{% endblock %}

@@ -1,1 +1,277 @@
 {% extends 'super_admin/partials/form_page.html' %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <h2>{{ title }}</h2>
+    <div class="card-hint">
+      🎴 Design and configure ID card templates
+    </div>
+  </div>
+  <div class="card-body">
+    {% if form.non_field_errors %}
+    <div class="alert-error">
+      {% for error in form.non_field_errors %}
+      {{ error }}
+      {% endfor %}
+    </div>
+    {% endif %}
+    
+    <form method="post" class="form-grid">
+      {% csrf_token %}
+      
+      <div class="form-section">
+        <h3>Basic Information</h3>
+        <div class="form-row">
+          <div class="form-group half">
+            <label for="{{ form.external_id.id_for_label }}">
+              {{ form.external_id.label }}
+              {% if form.external_id.field.required %}<span class="required">*</span>{% endif %}
+            </label>
+            {{ form.external_id }}
+            {% if form.external_id.help_text %}<p class="help-text">{{ form.external_id.help_text }}</p>{% endif %}
+            {% if form.external_id.errors %}
+            <div class="errorlist">
+              {% for error in form.external_id.errors %}{{ error }}{% endfor %}
+            </div>
+            {% endif %}
+          </div>
+          
+          <div class="form-group half">
+            <label for="{{ form.name.id_for_label }}">
+              {{ form.name.label }}
+              {% if form.name.field.required %}<span class="required">*</span>{% endif %}
+            </label>
+            {{ form.name }}
+            {% if form.name.help_text %}<p class="help-text">{{ form.name.help_text }}</p>{% endif %}
+            {% if form.name.errors %}
+            <div class="errorlist">
+              {% for error in form.name.errors %}{{ error }}{% endfor %}
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group half">
+            <label for="{{ form.icon.id_for_label }}">
+              {{ form.icon.label }}
+            </label>
+            {{ form.icon }}
+            {% if form.icon.help_text %}<p class="help-text">{{ form.icon.help_text }}</p>{% endif %}
+            {% if form.icon.errors %}
+            <div class="errorlist">
+              {% for error in form.icon.errors %}{{ error }}{% endfor %}
+            </div>
+            {% endif %}
+          </div>
+          
+          <div class="form-group half">
+            <label for="{{ form.sort_order.id_for_label }}">
+              {{ form.sort_order.label }}
+            </label>
+            {{ form.sort_order }}
+            {% if form.sort_order.help_text %}<p class="help-text">{{ form.sort_order.help_text }}</p>{% endif %}
+            {% if form.sort_order.errors %}
+            <div class="errorlist">
+              {% for error in form.sort_order.errors %}{{ error }}{% endfor %}
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      
+      <div class="form-section">
+        <h3>Classification</h3>
+        <div class="form-row">
+          <div class="form-group half">
+            <label for="{{ form.category.id_for_label }}">
+              {{ form.category.label }}
+              {% if form.category.field.required %}<span class="required">*</span>{% endif %}
+            </label>
+            {{ form.category }}
+            {% if form.category.help_text %}<p class="help-text">{{ form.category.help_text }}</p>{% endif %}
+            {% if form.category.errors %}
+            <div class="errorlist">
+              {% for error in form.category.errors %}{{ error }}{% endfor %}
+            </div>
+            {% endif %}
+          </div>
+          
+          <div class="form-group half">
+            <label for="{{ form.industry.id_for_label }}">
+              {{ form.industry.label }}
+            </label>
+            {{ form.industry }}
+            {% if form.industry.help_text %}<p class="help-text">{{ form.industry.help_text }}</p>{% endif %}
+            {% if form.industry.errors %}
+            <div class="errorlist">
+              {% for error in form.industry.errors %}{{ error }}{% endfor %}
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="{{ form.orientation.id_for_label }}">
+            {{ form.orientation.label }}
+            {% if form.orientation.field.required %}<span class="required">*</span>{% endif %}
+          </label>
+          {{ form.orientation }}
+          {% if form.orientation.help_text %}<p class="help-text">{{ form.orientation.help_text }}</p>{% endif %}
+          {% if form.orientation.errors %}
+          <div class="errorlist">
+            {% for error in form.orientation.errors %}{{ error }}{% endfor %}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      
+      <div class="form-section">
+        <h3>Card Design</h3>
+        <div class="form-group">
+          <label for="{{ form.html_content.id_for_label }}">
+            {{ form.html_content.label }}
+            {% if form.html_content.field.required %}<span class="required">*</span>{% endif %}
+          </label>
+          {{ form.html_content }}
+          {% if form.html_content.help_text %}<p class="help-text">{{ form.html_content.help_text }}</p>{% endif %}
+          {% if form.html_content.errors %}
+          <div class="errorlist">
+            {% for error in form.html_content.errors %}{{ error }}{% endfor %}
+          </div>
+          {% endif %}
+        </div>
+        
+        <div class="form-group">
+          <label for="{{ form.theme_defaults.id_for_label }}">
+            {{ form.theme_defaults.label }}
+          </label>
+          {{ form.theme_defaults }}
+          {% if form.theme_defaults.help_text %}<p class="help-text">{{ form.theme_defaults.help_text }}</p>{% endif %}
+          {% if form.theme_defaults.errors %}
+          <div class="errorlist">
+            {% for error in form.theme_defaults.errors %}{{ error }}{% endfor %}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      
+      <div class="form-section">
+        <h3>Publishing</h3>
+        <div class="form-row">
+          <div class="form-group half">
+            <label for="{{ form.is_premium.id_for_label }}">
+              {{ form.is_premium.label }}
+            </label>
+            <div class="checkbox-wrapper">
+              {{ form.is_premium }}
+              <span class="checkbox-label">Mark as premium template</span>
+            </div>
+            {% if form.is_premium.help_text %}<p class="help-text">{{ form.is_premium.help_text }}</p>{% endif %}
+            {% if form.is_premium.errors %}
+            <div class="errorlist">
+              {% for error in form.is_premium.errors %}{{ error }}{% endfor %}
+            </div>
+            {% endif %}
+          </div>
+          
+          <div class="form-group half">
+            <label for="{{ form.is_published.id_for_label }}">
+              {{ form.is_published.label }}
+            </label>
+            <div class="checkbox-wrapper">
+              {{ form.is_published }}
+              <span class="checkbox-label">Make available to users</span>
+            </div>
+            {% if form.is_published.help_text %}<p class="help-text">{{ form.is_published.help_text }}</p>{% endif %}
+            {% if form.is_published.errors %}
+            <div class="errorlist">
+              {% for error in form.is_published.errors %}{{ error }}{% endfor %}
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">
+          <span>💾</span> Save Template
+        </button>
+        <a href="javascript:history.back()" class="btn btn-secondary">
+          <span>✕</span> Cancel
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+.card-body {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.form-grid {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.form-section {
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.form-section h3 {
+  margin: 0 0 1rem 0;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--indigo);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.form-group.half {
+  margin-bottom: 0;
+}
+
+.card-hint {
+  font-size: 0.75rem;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.checkbox-wrapper input[type="checkbox"] {
+  width: 1.25rem;
+  height: 1.25rem;
+  cursor: pointer;
+}
+
+.checkbox-label {
+  font-size: 0.875rem;
+  color: var(--text);
+}
+
+@media (max-width: 768px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+{% endblock %}

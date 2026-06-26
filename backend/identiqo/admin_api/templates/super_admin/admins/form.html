@@ -1,1 +1,169 @@
 {% extends 'super_admin/partials/form_page.html' %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <h2>{{ title }}</h2>
+    <div class="card-hint">
+      🛡️ Manage admin access and permissions
+    </div>
+  </div>
+  <div class="card-body">
+    {% if form.non_field_errors %}
+    <div class="alert-error">
+      {% for error in form.non_field_errors %}
+      {{ error }}
+      {% endfor %}
+    </div>
+    {% endif %}
+    
+    <form method="post" class="form-grid">
+      {% csrf_token %}
+      
+      <div class="form-section">
+        <h3>Account Information</h3>
+        <div class="form-group">
+          <label for="{{ form.email.id_for_label }}">
+            {{ form.email.label }}
+            {% if form.email.field.required %}<span class="required">*</span>{% endif %}
+          </label>
+          {{ form.email }}
+          {% if form.email.help_text %}<p class="help-text">{{ form.email.help_text }}</p>{% endif %}
+          {% if form.email.errors %}
+          <div class="errorlist">
+            {% for error in form.email.errors %}{{ error }}{% endfor %}
+          </div>
+          {% endif %}
+        </div>
+        
+        <div class="form-group">
+          <label for="{{ form.full_name.id_for_label }}">
+            {{ form.full_name.label }}
+            {% if form.full_name.field.required %}<span class="required">*</span>{% endif %}
+          </label>
+          {{ form.full_name }}
+          {% if form.full_name.help_text %}<p class="help-text">{{ form.full_name.help_text }}</p>{% endif %}
+          {% if form.full_name.errors %}
+          <div class="errorlist">
+            {% for error in form.full_name.errors %}{{ error }}{% endfor %}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      
+      <div class="form-section">
+        <h3>Contact Details</h3>
+        <div class="form-group">
+          <label for="{{ form.phone.id_for_label }}">
+            {{ form.phone.label }}
+          </label>
+          {{ form.phone }}
+          {% if form.phone.help_text %}<p class="help-text">{{ form.phone.help_text }}</p>{% endif %}
+          {% if form.phone.errors %}
+          <div class="errorlist">
+            {% for error in form.phone.errors %}{{ error }}{% endfor %}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      
+      <div class="form-section">
+        <h3>Security</h3>
+        <div class="form-group">
+          <label for="{{ form.password.id_for_label }}">
+            {{ form.password.label }}
+            {% if not form.instance.pk %}<span class="required">*</span>{% endif %}
+          </label>
+          {{ form.password }}
+          {% if form.password.help_text %}<p class="help-text">{{ form.password.help_text }}</p>{% endif %}
+          {% if form.password.errors %}
+          <div class="errorlist">
+            {% for error in form.password.errors %}{{ error }}{% endfor %}
+          </div>
+          {% endif %}
+          {% if form.instance.pk %}
+          <p class="help-text">Leave blank to keep current password</p>
+          {% endif %}
+        </div>
+        
+        <div class="form-group">
+          <label for="{{ form.status.id_for_label }}">
+            {{ form.status.label }}
+          </label>
+          <div class="checkbox-wrapper">
+            {{ form.status }}
+            <span class="checkbox-label">Enable this admin account</span>
+          </div>
+          {% if form.status.help_text %}<p class="help-text">{{ form.status.help_text }}</p>{% endif %}
+          {% if form.status.errors %}
+          <div class="errorlist">
+            {% for error in form.status.errors %}{{ error }}{% endfor %}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">
+          <span>💾</span> Save Admin
+        </button>
+        <a href="javascript:history.back()" class="btn btn-secondary">
+          <span>✕</span> Cancel
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+.card-body {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.form-grid {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.form-section {
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.form-section h3 {
+  margin: 0 0 1rem 0;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--indigo);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.card-hint {
+  font-size: 0.75rem;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.checkbox-wrapper input[type="checkbox"] {
+  width: 1.25rem;
+  height: 1.25rem;
+  cursor: pointer;
+}
+
+.checkbox-label {
+  font-size: 0.875rem;
+  color: var(--text);
+}
+</style>
+{% endblock %}

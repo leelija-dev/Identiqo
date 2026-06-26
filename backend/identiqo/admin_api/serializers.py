@@ -43,13 +43,6 @@ class AdminLoginSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True)
 
 
-# class SubscriptionPlanSerializer(serializers.ModelSerializer):
-
-#     class Meta:
-#         model = SubscriptionPlan
-#         fields = '__all__'
-
-
 class SubscriptionPlanSerializer(serializers.ModelSerializer):
     class Meta:
         model = SubscriptionPlan
