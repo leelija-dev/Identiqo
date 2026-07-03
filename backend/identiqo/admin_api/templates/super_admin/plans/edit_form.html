@@ -6,22 +6,6 @@
     <h2>{{ title }}</h2>
   </div>
   <div class="card-body">
-    {% if related_plans %}
-    <div class="related-plans-section">
-      <h4>Related Plans ({{ current_plan.code|upper }})</h4>
-      <div class="related-plans-list">
-        {% for related in related_plans %}
-        <div class="related-plan-item">
-          <span class="plan-badge">{{ related.get_billing_cycle_display }}</span>
-          <span class="plan-name">{{ related.name }}</span>
-          <span class="plan-price">{{ related.currency }} {{ related.price }}</span>
-          <a href="{% url 'super_admin:plan_edit' related.pk %}" class="btn btn-secondary btn-sm">Edit</a>
-        </div>
-        {% endfor %}
-      </div>
-    </div>
-    {% endif %}
-    
     <div class="form-primary-block">
       {% if form.non_field_errors %}
       <div class="alert-error">
@@ -30,10 +14,10 @@
         {% endfor %}
       </div>
       {% endif %}
-      
+
       <form method="post" class="form-grid">
         {% csrf_token %}
-        
+
         <div class="form-row">
           <div class="form-group half">
             <label for="{{ form.name.id_for_label }}">
@@ -61,8 +45,21 @@
             {% endif %}
           </div>
         </div>
-        
+
         <div class="form-row">
+          <div class="form-group half">
+            <label for="{{ form.plan_type.id_for_label }}">
+              Plan Type
+              <span class="required">*</span>
+            </label>
+            {{ form.plan_type }}
+            {% if form.plan_type.errors %}
+            <div class="errorlist">
+              {% for error in form.plan_type.errors %}{{ error }}{% endfor %}
+            </div>
+            {% endif %}
+          </div>
+
           <div class="form-group half">
             <label for="{{ form.price.id_for_label }}">
               Price
@@ -75,7 +72,9 @@
             </div>
             {% endif %}
           </div>
+        </div>
 
+        <div class="form-row">
           <div class="form-group half">
             <label for="{{ form.currency.id_for_label }}">
               Currency
@@ -88,22 +87,7 @@
             </div>
             {% endif %}
           </div>
-        </div>
 
-        <div class="form-row">
-          <div class="form-group half">
-            <label for="{{ form.billing_cycle.id_for_label }}">
-              Billing Cycle
-              <span class="required">*</span>
-            </label>
-            {{ form.billing_cycle }}
-            {% if form.billing_cycle.errors %}
-            <div class="errorlist">
-              {% for error in form.billing_cycle.errors %}{{ error }}{% endfor %}
-            </div>
-            {% endif %}
-          </div>
-          
           <div class="form-group half">
             <label for="{{ form.duration_days.id_for_label }}">
               Duration (Days)

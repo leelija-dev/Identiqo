@@ -15,7 +15,7 @@ import {
 
 export default function PricingPage() {
   const router = useRouter();
-  const [isYearly, setIsYearly] = useState(false);
+  const [planType, setPlanType] = useState('personal');
   const [mounted, setMounted] = useState(false);
   const [hasScrolled, setHasScrolled] = useState(false);
   const [plansLoading, setPlansLoading] = useState(true);
@@ -47,7 +47,7 @@ export default function PricingPage() {
     };
   }, []);
 
-  const plans = useMemo(() => buildPlansForDisplay(apiPlans, isYearly ? 'yearly' : 'monthly'), [apiPlans, isYearly]);
+  const plans = useMemo(() => buildPlansForDisplay(apiPlans, planType), [apiPlans, planType]);
   const availableTiers = useMemo(() => getAvailableTiers(plans), [plans]);
 
   useEffect(() => {
@@ -70,8 +70,8 @@ export default function PricingPage() {
     return () => observer.disconnect();
   }, [mounted]);
 
-  const handleYearlyToggle = () => {
-    setIsYearly((prev) => !prev);
+  const handlePlanTypeToggle = () => {
+    setPlanType(planType === 'personal' ? 'business' : 'personal');
   };
 
   const handleCTAClick = (tier) => {
@@ -79,7 +79,15 @@ export default function PricingPage() {
       router.push("/contact");
       return;
     }
-    router.push("/signup");
+    // Check if user is authenticated
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      // User is logged in, redirect to upgrade flow
+      router.push(`/dashboard/upgrade?plan=${tier}&plan_type=${planType}`);
+    } else {
+      // User is not logged in, redirect to signup with plan
+      router.push(`/signup?plan=${tier}&plan_type=${planType}`);
+    }
   };
 
   const hasPlans = availableTiers.length > 0;
@@ -157,27 +165,24 @@ export default function PricingPage() {
             Start for free and upgrade when you need more.
           </p>
 
-          {/* Billing Toggle */}
+          {/* Plan Type Toggle */}
           <div className="flex items-center justify-center gap-2 sm:gap-4 mt-6 sm:mt-8 animate-fade-in-up">
-            <span className={`text-[11px] sm:text-p-xs font-medium transition-all duration-300 ${!isYearly ? 'text-slate-800 scale-105' : 'text-slate-500'}`}>
-              Monthly
+            <span className={`text-[11px] sm:text-p-xs font-medium transition-all duration-300 ${planType === 'personal' ? 'text-slate-800 scale-105' : 'text-slate-500'}`}>
+              Personal
             </span>
             <button
-              onClick={handleYearlyToggle}
+              onClick={handlePlanTypeToggle}
               className="relative w-14 sm:w-16 h-7 sm:h-8 rounded-full transition-all duration-300 shadow-md hover:shadow-lg group"
-              style={{ backgroundColor: isYearly ? '#2563eb' : '#cbdff2' }}
+              style={{ backgroundColor: planType === 'business' ? '#2563eb' : '#cbdff2' }}
             >
               <span
                 className={`absolute top-1 w-5 sm:w-6 h-5 sm:h-6 bg-white rounded-full transition-all duration-300 shadow-md ${
-                  isYearly ? 'left-[calc(100%-1.5rem)] sm:left-[calc(100%-1.75rem)]' : 'left-1'
+                  planType === 'business' ? 'left-[calc(100%-1.5rem)] sm:left-[calc(100%-1.75rem)]' : 'left-1'
                 } group-hover:scale-105`}
               />
             </button>
-            <span className={`text-[11px] sm:text-p-xs font-medium transition-all duration-300 flex items-center gap-1 sm:gap-1.5 ${isYearly ? 'text-slate-800 scale-105' : 'text-slate-500'}`}>
-              Yearly
-              <span className="text-[9px] sm:text-[11px] text-emerald-700 font-semibold bg-emerald-100 px-1.5 sm:px-2 py-0.5 rounded-full shadow-sm whitespace-nowrap">
-                Save 20%
-              </span>
+            <span className={`text-[11px] sm:text-p-xs font-medium transition-all duration-300 flex items-center gap-1 sm:gap-1.5 ${planType === 'business' ? 'text-slate-800 scale-105' : 'text-slate-500'}`}>
+              Business
             </span>
           </div>
         </div>
@@ -213,7 +218,7 @@ export default function PricingPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
               {availableTiers.map((tier) => {
                 const currentPlan = plans[tier];
-                const display = getDisplayPlan(currentPlan, isYearly);
+                const display = getDisplayPlan(currentPlan, planType);
                 const displayPrice = display?.price ?? '';
                 const displayNote = display?.note ?? '';
                 const periodText = display?.periodText ?? '';
@@ -273,7 +278,7 @@ export default function PricingPage() {
                         size="lg"
                         className="w-full text-sm sm:text-base py-2.5 sm:py-3"
                       >
-                        {tier === "enterprise" ? "Contact Sales →" : "Launch ID Suite →"}
+                        {tier === "enterprise" ? "Contact Sales →" : localStorage.getItem('access_token') ? 'Upgrade' : 'Get Started'}
                       </Button>
 
                       {tier === "professional" && (

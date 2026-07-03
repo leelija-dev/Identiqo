@@ -31,44 +31,74 @@
           </div>
           {% endif %}
         </div>
-        
+
         <div class="form-row">
           <div class="form-group half">
-            <label for="{{ form.monthly_price.id_for_label }}">
-              Monthly Price
+            <label for="{{ form.code.id_for_label }}">
+              Plan Code
               <span class="required">*</span>
             </label>
-            {{ form.monthly_price }}
-            {% if form.monthly_price.errors %}
+            {{ form.code }}
+            <p class="help-text">Unique identifier for the plan (e.g., "basic_personal")</p>
+            {% if form.code.errors %}
             <div class="errorlist">
-              {% for error in form.monthly_price.errors %}{{ error }}{% endfor %}
+              {% for error in form.code.errors %}{{ error }}{% endfor %}
             </div>
             {% endif %}
           </div>
 
           <div class="form-group half">
-            <label for="{{ form.yearly_price.id_for_label }}">
-              Yearly Price
+            <label for="{{ form.plan_type.id_for_label }}">
+              Plan Type
               <span class="required">*</span>
             </label>
-            {{ form.yearly_price }}
-            {% if form.yearly_price.errors %}
+            {{ form.plan_type }}
+            {% if form.plan_type.errors %}
             <div class="errorlist">
-              {% for error in form.yearly_price.errors %}{{ error }}{% endfor %}
+              {% for error in form.plan_type.errors %}{{ error }}{% endfor %}
+            </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group half">
+            <label for="{{ form.price.id_for_label }}">
+              Price
+              <span class="required">*</span>
+            </label>
+            {{ form.price }}
+            {% if form.price.errors %}
+            <div class="errorlist">
+              {% for error in form.price.errors %}{{ error }}{% endfor %}
+            </div>
+            {% endif %}
+          </div>
+
+          <div class="form-group half">
+            <label for="{{ form.currency.id_for_label }}">
+              Currency
+              <span class="required">*</span>
+            </label>
+            {{ form.currency }}
+            {% if form.currency.errors %}
+            <div class="errorlist">
+              {% for error in form.currency.errors %}{{ error }}{% endfor %}
             </div>
             {% endif %}
           </div>
         </div>
 
         <div class="form-group">
-          <label for="{{ form.currency.id_for_label }}">
-            Currency
+          <label for="{{ form.duration_days.id_for_label }}">
+            Duration (Days)
             <span class="required">*</span>
           </label>
-          {{ form.currency }}
-          {% if form.currency.errors %}
+          {{ form.duration_days }}
+          <p class="help-text">How long this plan is valid (e.g., 30 for monthly, 365 for yearly)</p>
+          {% if form.duration_days.errors %}
           <div class="errorlist">
-            {% for error in form.currency.errors %}{{ error }}{% endfor %}
+            {% for error in form.duration_days.errors %}{{ error }}{% endfor %}
           </div>
           {% endif %}
         </div>
@@ -278,6 +308,14 @@ function removeFeature(button) {
   }
 }
 
+function generateCodeFromName(name) {
+  return name.toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '_')
+    .replace(/-+/g, '_')
+    .trim();
+}
+
 document.addEventListener('DOMContentLoaded', function() {
   const form = document.querySelector('form');
   form.addEventListener('submit', function(e) {
@@ -297,6 +335,31 @@ document.addEventListener('DOMContentLoaded', function() {
 
     featuresInput.value = JSON.stringify(featuresData);
   });
+
+  // Auto-generate plan code from name
+  const nameInput = document.querySelector('input[name="name"]');
+  const codeInput = document.querySelector('input[name="code"]');
+  const planTypeInput = document.querySelector('select[name="plan_type"]');
+
+  if (nameInput && codeInput) {
+    nameInput.addEventListener('input', function() {
+      const baseCode = generateCodeFromName(this.value);
+      if (planTypeInput) {
+        const planType = planTypeInput.value;
+        codeInput.value = planType ? `${baseCode}_${planType}` : baseCode;
+      } else {
+        codeInput.value = baseCode;
+      }
+    });
+
+    // Also update code when plan type changes
+    if (planTypeInput) {
+      planTypeInput.addEventListener('change', function() {
+        const baseCode = generateCodeFromName(nameInput.value);
+        codeInput.value = this.value ? `${baseCode}_${this.value}` : baseCode;
+      });
+    }
+  }
 });
 </script>
 {% endblock %}

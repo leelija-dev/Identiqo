@@ -6,10 +6,10 @@
 {% block content %}
 <div class="card">
   <div class="card-header">
-    <div class="billing-filter">
-      <button type="button" class="filter-btn active" data-cycle="all" onclick="filterPlans('all')">All</button>
-      <button type="button" class="filter-btn" data-cycle="monthly" onclick="filterPlans('monthly')">Monthly</button>
-      <button type="button" class="filter-btn" data-cycle="yearly" onclick="filterPlans('yearly')">Yearly</button>
+    <div class="plan-filter">
+      <button type="button" class="filter-btn active" data-type="all" onclick="filterPlans('all')">All</button>
+      <button type="button" class="filter-btn" data-type="personal" onclick="filterPlans('personal')">Personal</button>
+      <button type="button" class="filter-btn" data-type="business" onclick="filterPlans('business')">Business</button>
     </div>
   </div>
   <div class="card-body table-wrap">
@@ -19,7 +19,7 @@
           <th>Code</th>
           <th>Name</th>
           <th>Price</th>
-          <th>Cycle</th>
+          <th>Type</th>
           <th>Days</th>
           <th>Active</th>
           <th>Actions</th>
@@ -27,11 +27,11 @@
       </thead>
       <tbody>
         {% for p in plans %}
-        <tr data-billing-cycle="{{ p.billing_cycle }}">
+        <tr data-plan-type="{{ p.plan_type }}">
           <td><code>{{ p.code }}</code></td>
           <td>{{ p.name }}</td>
           <td>{{ p.currency }} {{ p.price }}</td>
-          <td>{{ p.get_billing_cycle_display }}</td>
+          <td>{{ p.get_plan_type_display }}</td>
           <td>{{ p.duration_days }}</td>
           <td>{% if p.is_active %}<span class="badge badge-success">Yes</span>{% else %}<span
               class="badge badge-muted">No</span>{% endif %}</td>
@@ -51,7 +51,7 @@
 </div>
 
 <style>
-  .billing-filter {
+  .plan-filter {
     display: flex;
     gap: 0.5rem;
     background: #f1f5f9;
@@ -84,18 +84,18 @@
 </style>
 
 <script>
-  function filterPlans(cycle) {
+  function filterPlans(type) {
     const buttons = document.querySelectorAll('.filter-btn');
     buttons.forEach(btn => {
       btn.classList.remove('active');
-      if (btn.dataset.cycle === cycle) {
+      if (btn.dataset.type === type) {
         btn.classList.add('active');
       }
     });
 
-    const rows = document.querySelectorAll('tbody tr[data-billing-cycle]');
+    const rows = document.querySelectorAll('tbody tr[data-plan-type]');
     rows.forEach(row => {
-      if (cycle === 'all' || row.getAttribute('data-billing-cycle') === cycle) {
+      if (type === 'all' || row.getAttribute('data-plan-type') === type) {
         row.style.display = '';
       } else {
         row.style.display = 'none';

@@ -1,8 +1,9 @@
 import re
+import uuid
 
 from rest_framework import serializers
 
-from admin_api.models import SubscriptionPlan
+from admin_api.models import SubscriptionPlan, Organization
 from .models import Users
 
 
@@ -28,12 +29,16 @@ def validate_password_strength(value):
 class UserRegisterSerializer(serializers.ModelSerializer):
     confirm_password = serializers.CharField(write_only=True)
     password = serializers.CharField(write_only=True)
+    organization_name = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    organization_slug = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    plan_code = serializers.CharField(write_only=True, required=False, allow_blank=True)
 
     class Meta:
         model = Users
         fields = [
-            'id', 'name', 'email', 'phone', 'address',
-            'password', 'confirm_password', 'created_at', 'updated_at',
+            'id', 'user_type', 'name', 'email', 'phone', 'address',
+            'password', 'confirm_password', 'organization_name', 'organization_slug',
+            'plan_code', 'created_at', 'updated_at',
         ]
         extra_kwargs = {
             'created_at': {'read_only': True},
@@ -41,6 +46,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
             'address': {'required': False, 'allow_blank': True},
             'phone': {'required': False, 'allow_blank': True},
             'name': {'required': True},
+            'user_type': {'required': True},
         }
 
     def validate_email(self, value):
@@ -58,12 +64,87 @@ class UserRegisterSerializer(serializers.ModelSerializer):
     def validate(self, data):
         if data['password'] != data['confirm_password']:
             raise serializers.ValidationError({'confirm_password': 'Passwords do not match.'})
+
+        # Validate plan_code if provided
+        plan_code = data.get('plan_code')
+        if plan_code:
+            # Validate that the plan exists and is active
+            try:
+                plan = SubscriptionPlan.objects.get(code=plan_code, is_active=True)
+            except SubscriptionPlan.DoesNotExist:
+                raise serializers.ValidationError({'plan_code': 'Invalid plan selected.'})
+
+        # If user type is organization, validate organization fields
+        if data.get('user_type') == 'organization':
+            if not data.get('organization_name'):
+                raise serializers.ValidationError({'organization_name': 'Organization name is required for organization accounts.'})
+            if not data.get('organization_slug'):
+                raise serializers.ValidationError({'organization_slug': 'Organization slug is required for organization accounts.'})
+
+            # Check if organization slug already exists
+            if Organization.objects.filter(slug=data['organization_slug']).exists():
+                raise serializers.ValidationError({'organization_slug': 'Organization with this slug already exists.'})
+
         return data
 
     def create(self, validated_data):
         validated_data.pop('confirm_password')
         password = validated_data.pop('password')
-        return Users.objects.create_user(password=password, **validated_data)
+        organization_name = validated_data.pop('organization_name', None)
+        organization_slug = validated_data.pop('organization_slug', None)
+        plan_code = validated_data.pop('plan_code', None)
+
+        # Create user
+        user = Users.objects.create_user(password=password, **validated_data)
+
+        organization = None
+        # If organization user, create organization
+        if user.user_type == 'organization' and organization_name and organization_slug:
+            organization = Organization.objects.create(
+                name=organization_name,
+                slug=organization_slug,
+                owner=user,
+                plan_tier='free',
+                employee_id_limit=60,
+            )
+
+        # Create subscription
+        from datetime import datetime, timedelta
+        from admin_api.models import Subscription
+
+        # If no plan_code provided, assign free plan
+        if not plan_code:
+            try:
+                plan = SubscriptionPlan.objects.get(code='free', is_active=True)
+            except SubscriptionPlan.DoesNotExist:
+                # Fallback: create a free plan if it doesn't exist
+                plan = SubscriptionPlan.objects.create(
+                    name='Free',
+                    code='free',
+                    plan_type='personal',
+                    price=0,
+                    currency='USD',
+                    duration_days=3650,  # 10 years (effectively forever)
+                    description='Free plan with basic features',
+                    features={'items': ['Basic ID cards', 'Limited templates']},
+                    is_active=True,
+                )
+        else:
+            plan = SubscriptionPlan.objects.get(code=plan_code, is_active=True)
+
+        start_date = datetime.now()
+        end_date = start_date + timedelta(days=plan.duration_days)
+
+        subscription = Subscription.objects.create(
+            user=user,
+            organization=organization,
+            plan=plan,
+            status='active',
+            start_date=start_date,
+            end_date=end_date,
+        )
+
+        return user
 
 
 class UserLoginSerializer(serializers.Serializer):
@@ -85,6 +166,16 @@ class UserLoginSerializer(serializers.Serializer):
         if not user.check_password(password):
             raise serializers.ValidationError('Invalid email or password.')
 
+        # Check if user has an active subscription
+        from admin_api.models import Subscription
+        active_subscription = Subscription.objects.filter(
+            user=user,
+            status='active'
+        ).first()
+        
+        if not active_subscription:
+            raise serializers.ValidationError('No active subscription found. Please select a plan to continue.')
+
         data['user'] = user
         return data
 
@@ -92,8 +183,8 @@ class UserLoginSerializer(serializers.Serializer):
 class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Users
-        fields = ['id', 'name', 'email', 'phone', 'address', 'created_at', 'updated_at']
-        read_only_fields = ['id', 'email', 'created_at', 'updated_at']
+        fields = ['id', 'user_type', 'name', 'email', 'phone', 'address', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'email', 'user_type', 'created_at', 'updated_at']
 
     def update(self, instance, validated_data):
         instance.name = validated_data.get('name', instance.name)
@@ -101,6 +192,13 @@ class UserProfileSerializer(serializers.ModelSerializer):
         instance.address = validated_data.get('address', instance.address)
         instance.save()
         return instance
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Users
+        fields = ['id', 'user_type', 'name', 'email', 'phone', 'address', 'is_active', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'email', 'created_at', 'updated_at']
 
 
 class ChangePasswordSerializer(serializers.Serializer):

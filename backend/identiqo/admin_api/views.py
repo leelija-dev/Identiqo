@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from web_api.models import Users
+from web_api.serializers import UserSerializer
 
 from .models import (
     AdminUser,
@@ -141,21 +142,21 @@ class SubscriptionPlanDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
 class UserListAPIView(generics.ListAPIView):
     """GET /api/admin/users/"""
     queryset = Users.objects.all().order_by('-created_at')
-    serializer_class = None  # Add UserSerializer if needed
+    serializer_class = UserSerializer
     permission_classes = [AllowAny]
 
 
 class UserCreateAPIView(generics.CreateAPIView):
     """POST /api/admin/users/create/"""
     queryset = Users.objects.all()
-    serializer_class = None  # Add UserSerializer if needed
+    serializer_class = UserSerializer
     permission_classes = [AllowAny]
 
 
 class UserDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     """GET, PUT, PATCH, DELETE /api/admin/users/<id>/"""
     queryset = Users.objects.all()
-    serializer_class = None  # Add UserSerializer if needed
+    serializer_class = UserSerializer
     permission_classes = [AllowAny]
     lookup_field = 'id'
 

@@ -6,8 +6,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   FiUsers, FiDollarSign, FiTrendingUp, FiActivity,
   FiBell, FiSearch, FiMenu, FiSun, FiMoon,
-  FiChevronLeft, FiHome, FiPieChart, FiUser, FiSettings, FiHelpCircle
+  FiChevronLeft, FiHome, FiPieChart, FiUser, FiSettings, FiHelpCircle, FiBuilding
 } from 'react-icons/fi';
+import { getStoredUser } from '@/lib/auth';
 
 // ---------- Theme Context ----------
 const ThemeContext = createContext();
@@ -377,6 +378,7 @@ export default function DashboardPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const user = getStoredUser();
 
   // Fix hydration issues
   useEffect(() => {
@@ -420,7 +422,21 @@ export default function DashboardPage() {
           <header className="flex items-center justify-between px-4 lg:px-6 py-4 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border-b border-slate-200/60 dark:border-slate-700/60">
             <div className="flex items-center gap-3">
               <MobileMenuButton onClick={() => setMobileSidebarOpen(true)} />
-              <h1 className="text-xl font-semibold text-slate-800 dark:text-white">Dashboard</h1>
+              <div>
+                <h1 className="text-xl font-semibold text-slate-800 dark:text-white">Dashboard</h1>
+                {user && (
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    {user.user_type === 'organization' ? (
+                      <span className="flex items-center gap-1">
+                        <FiBuilding className="w-3 h-3" />
+                        Organization Account
+                      </span>
+                    ) : (
+                      'Individual Account'
+                    )}
+                  </p>
+                )}
+              </div>
             </div>
             <div className="flex items-center gap-3">
               <SearchBar />

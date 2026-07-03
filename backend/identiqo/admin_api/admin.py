@@ -29,7 +29,7 @@ class OrganizationAdmin(admin.ModelAdmin):
 
 @admin.register(SubscriptionPlan)
 class SubscriptionPlanAdmin(admin.ModelAdmin):
-    list_display = ('code', 'name', 'price', 'billing_cycle', 'is_active')
+    list_display = ('code', 'name', 'price', 'plan_type', 'is_active')
 
 
 @admin.register(Subscription)

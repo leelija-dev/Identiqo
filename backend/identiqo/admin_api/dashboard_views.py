@@ -406,41 +406,8 @@ class PlanCreateView(FormView):
         return context
 
     def form_valid(self, form):
-        monthly_price = form.cleaned_data['monthly_price']
-        yearly_price = form.cleaned_data['yearly_price']
-        
-        name = form.cleaned_data['name']
-        base_code = name.lower().replace(' ', '_').replace('-', '_')
-        
-        monthly_plan = SubscriptionPlan.objects.create(
-            name=name,
-            code=f"{base_code}_monthly",
-            price=monthly_price,
-            currency=form.cleaned_data['currency'],
-            billing_cycle='monthly',
-            duration_days=30,
-            description=form.cleaned_data['description'],
-            features=form.cleaned_data['features'],
-            is_active=form.cleaned_data['is_active'],
-        )
-        
-        yearly_plan = SubscriptionPlan.objects.create(
-            name=name,
-            code=f"{base_code}_yearly",
-            price=yearly_price,
-            currency=form.cleaned_data['currency'],
-            billing_cycle='yearly',
-            duration_days=365,
-            description=form.cleaned_data['description'],
-            features=form.cleaned_data['features'],
-            is_active=form.cleaned_data['is_active'],
-        )
-        
-        log_admin_action(self.request, 'create', 'SubscriptionPlan', monthly_plan.id, {
-            'monthly_id': monthly_plan.id,
-            'yearly_id': yearly_plan.id,
-        })
-        
+        plan = form.save()
+        log_admin_action(self.request, 'create', 'SubscriptionPlan', plan.id)
         return super().form_valid(form)
 
 
@@ -456,41 +423,37 @@ class PlanUpdateView(UpdateView):
 
     def get_form_class(self):
         from django import forms
-        
+
         class EditPlanForm(forms.ModelForm):
             class Meta:
                 model = SubscriptionPlan
-                fields = ['name', 'code', 'price', 'currency', 'billing_cycle', 'duration_days', 'description', 'features', 'is_active']
+                fields = ['name', 'code', 'plan_type', 'price', 'currency', 'duration_days', 'description', 'features', 'is_active']
                 widgets = {
                     'name': forms.TextInput(attrs={'class': 'form-input'}),
                     'code': forms.TextInput(attrs={'class': 'form-input'}),
+                    'plan_type': forms.Select(attrs={'class': 'form-input'}),
                     'price': forms.NumberInput(attrs={'class': 'form-input', 'step': '0.01'}),
                     'currency': forms.TextInput(attrs={'class': 'form-input'}),
-                    'billing_cycle': forms.Select(attrs={'class': 'form-input'}),
                     'duration_days': forms.NumberInput(attrs={'class': 'form-input'}),
                     'description': forms.Textarea(attrs={'class': 'form-input', 'rows': 3}),
                     'is_active': forms.CheckboxInput(attrs={'class': 'form-checkbox'}),
                 }
-            
+
             features = forms.CharField(required=False, widget=forms.HiddenInput())
-            
+
             def __init__(self, *args, **kwargs):
                 super().__init__(*args, **kwargs)
                 if self.instance and self.instance.pk and self.instance.features:
                     self.fields['features'].initial = json.dumps(self.instance.features)
-            
+
             def clean_features(self):
                 return _parse_json_field(self.cleaned_data.get('features'), 'Features')
-        
+
         return EditPlanForm
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['title'] = f'Edit {self.object.name}'
-        context['related_plans'] = SubscriptionPlan.objects.filter(
-            code=self.object.code
-        ).exclude(pk=self.object.pk)
-        context['current_plan'] = self.object
         return context
 
     def form_valid(self, form):

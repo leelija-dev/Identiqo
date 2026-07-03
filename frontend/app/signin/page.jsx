@@ -308,9 +308,20 @@ export default function SignIn() {
               </div>
 
               {errors.form && (
-                <p className="text-red-500 text-xs flex items-center gap-1">
-                  <FiAlertCircle className="w-3 h-3 shrink-0" /> {errors.form}
-                </p>
+                <div className="text-red-500 text-xs flex items-start gap-1">
+                  <FiAlertCircle className="w-3 h-3 shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p>{errors.form}</p>
+                    {errors.form.includes('No active subscription') && (
+                      <Link
+                        href="/pricing"
+                        className="inline-block mt-2 text-indigo-600 hover:text-indigo-700 font-medium underline"
+                      >
+                        Select a plan →
+                      </Link>
+                    )}
+                  </div>
+                </div>
               )}
 
               <Button type="submit" variant="primary" size="lg" className="w-full" loading={isLoading}>

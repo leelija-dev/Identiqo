@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { 
   FiMail, FiLock, FiEye, FiEyeOff, FiUser, FiUserPlus,
   FiTrendingUp, FiUsers, FiShield, FiAlertCircle
@@ -18,18 +18,49 @@ export default function SignUp() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [userType, setUserType] = useState("individual");
+  const [organizationName, setOrganizationName] = useState("");
+  const [organizationSlug, setOrganizationSlug] = useState("");
+  const [selectedPlan, setSelectedPlan] = useState(null);
+  const [selectedPlanType, setSelectedPlanType] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [isSlidingIn, setIsSlidingIn] = useState(false);
   const [isSlidingOut, setIsSlidingOut] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   // Animation on page load - slide in from right
   useEffect(() => {
     // Small delay to trigger animation
     setTimeout(() => setIsSlidingIn(true), 10);
   }, []);
+
+  // Get plan and plan_type from URL params (for upgrade flow)
+  useEffect(() => {
+    const plan = searchParams.get('plan');
+    const planTypeParam = searchParams.get('plan_type');
+    if (plan) setSelectedPlan(plan);
+    if (planTypeParam) {
+      setSelectedPlanType(planTypeParam);
+      // Auto-set user_type based on plan_type
+      setUserType(planTypeParam === 'business' ? 'organization' : 'individual');
+    }
+  }, [searchParams]);
+
+  // Auto-generate organization slug from organization name
+  useEffect(() => {
+    if (userType === 'organization' && organizationName) {
+      const slug = organizationName
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .trim();
+      setOrganizationSlug(slug);
+    }
+  }, [organizationName, userType]);
 
   const validateForm = () => {
     const newErrors = {};
@@ -53,6 +84,11 @@ export default function SignUp() {
     } else if (password !== confirmPassword) {
       newErrors.confirmPassword = "Passwords do not match";
     }
+
+    if (userType === "organization") {
+      if (!organizationName) newErrors.organizationName = "Organization name is required";
+      if (!organizationSlug) newErrors.organizationSlug = "Organization slug is required";
+    }
     
     return newErrors;
   };
@@ -69,12 +105,25 @@ export default function SignUp() {
     setErrors({});
 
     try {
-      const data = await authApi.register({
+      const registerData = {
         name,
         email,
         password,
         confirm_password: confirmPassword,
-      });
+        user_type: userType,
+      };
+
+      // Only include plan_code if a plan was selected (upgrade flow)
+      if (selectedPlan) {
+        registerData.plan_code = selectedPlan;
+      }
+
+      if (userType === "organization") {
+        registerData.organization_name = organizationName;
+        registerData.organization_slug = organizationSlug;
+      }
+
+      const data = await authApi.register(registerData);
       saveAuth({
         access: data.access,
         refresh: data.refresh,
@@ -207,6 +256,18 @@ export default function SignUp() {
               </div>
               <h2 className="text-2xl font-bold text-slate-800">Create Account</h2>
               <p className="text-slate-500 text-p-xs mt-1">Join us and start creating ID cards</p>
+              {selectedPlan && (
+                <div className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 rounded-full">
+                  <span className="text-xs font-semibold text-indigo-700">
+                    Upgrading to: {selectedPlan.charAt(0).toUpperCase() + selectedPlan.slice(1)}
+                  </span>
+                  {selectedPlanType && (
+                    <span className="text-xs text-indigo-600">
+                      ({selectedPlanType.charAt(0).toUpperCase() + selectedPlanType.slice(1)})
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Social Signup Buttons */}
@@ -242,6 +303,130 @@ export default function SignUp() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Account Type Selection */}
+              <div>
+                <label className="block text-p-xs font-semibold text-slate-700 mb-3">
+                  Account Type
+                  {selectedPlanType && (
+                    <span className="ml-2 text-xs font-normal text-indigo-600">
+                      (Locked to {selectedPlanType === 'business' ? 'Organization' : 'Individual'} based on your plan)
+                    </span>
+                  )}
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    disabled={!!selectedPlanType}
+                    onClick={() => {
+                      setUserType("individual");
+                      if (errors.userType) setErrors({...errors, userType: ""});
+                    }}
+                    className={`p-4 rounded-xl border-2 transition-all text-left ${
+                      userType === "individual"
+                        ? "border-indigo-500 bg-indigo-50"
+                        : "border-slate-200 hover:border-slate-300"
+                    } ${selectedPlanType ? "opacity-50 cursor-not-allowed" : ""}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                        userType === "individual" ? "border-indigo-500" : "border-slate-300"
+                      }`}>
+                        {userType === "individual" && <div className="w-3 h-3 rounded-full bg-indigo-500" />}
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-slate-800">Individual</p>
+                        <p className="text-xs text-slate-500">For personal use</p>
+                      </div>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!!selectedPlanType}
+                    onClick={() => {
+                      setUserType("organization");
+                      if (errors.userType) setErrors({...errors, userType: ""});
+                    }}
+                    className={`p-4 rounded-xl border-2 transition-all text-left ${
+                      userType === "organization"
+                        ? "border-indigo-500 bg-indigo-50"
+                        : "border-slate-200 hover:border-slate-300"
+                    } ${selectedPlanType ? "opacity-50 cursor-not-allowed" : ""}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                        userType === "organization" ? "border-indigo-500" : "border-slate-300"
+                      }`}>
+                        {userType === "organization" && <div className="w-3 h-3 rounded-full bg-indigo-500" />}
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-slate-800">Organization</p>
+                        <p className="text-xs text-slate-500">For teams & companies</p>
+                      </div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Organization Fields - Only show when organization is selected */}
+              {userType === "organization" && (
+                <>
+                  <div>
+                    <label className="block text-p-xs font-semibold text-slate-700 mb-2">
+                      Organization Name
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={organizationName}
+                        onChange={(e) => {
+                          setOrganizationName(e.target.value);
+                          if (errors.organizationName) setErrors({...errors, organizationName: ""});
+                        }}
+                        placeholder="Acme Corporation"
+                        className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-4 transition-all text-p-xs ${
+                          errors.organizationName 
+                            ? "border-red-300 focus:border-red-400 focus:ring-red-100" 
+                            : "border-slate-200 focus:border-indigo-400 focus:ring-indigo-100"
+                        }`}
+                      />
+                    </div>
+                    {errors.organizationName && (
+                      <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                        <FiAlertCircle className="w-3 h-3" /> {errors.organizationName}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-p-xs font-semibold text-slate-700 mb-2">
+                      Organization Slug
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={organizationSlug}
+                        onChange={(e) => {
+                          setOrganizationSlug(e.target.value.toLowerCase().replace(/\s+/g, '-'));
+                          if (errors.organizationSlug) setErrors({...errors, organizationSlug: ""});
+                        }}
+                        placeholder="acme-corp"
+                        className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-4 transition-all text-p-xs ${
+                          errors.organizationSlug 
+                            ? "border-red-300 focus:border-red-400 focus:ring-red-100" 
+                            : "border-slate-200 focus:border-indigo-400 focus:ring-indigo-100"
+                        }`}
+                      />
+                    </div>
+                    {errors.organizationSlug && (
+                      <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                        <FiAlertCircle className="w-3 h-3" /> {errors.organizationSlug}
+                      </p>
+                    )}
+                    <p className="text-slate-400 text-xs mt-1">This will be used in your organization URL</p>
+                  </div>
+                </>
+              )}
+
               <div>
                 <label className="block text-p-xs font-semibold text-slate-700 mb-2">
                   Full Name

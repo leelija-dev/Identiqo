@@ -62,13 +62,13 @@ function normalizeApiPlan(plan) {
   const code = (plan.code || '').toLowerCase();
   const theme = PLAN_THEMES[code] || PLAN_THEMES.essential;
   const price = Number(plan.price);
-  const billingCycle = plan.billing_cycle || 'monthly';
+  const planType = plan.plan_type || 'personal';
   const featuresJson = plan.features;
 
   return {
     code,
     name: plan.name,
-    billingCycle,
+    planType,
     price: price,
     currency: plan.currency || 'USD',
     description: plan.description || '',
@@ -103,7 +103,7 @@ export function groupApiPlans(apiPlans) {
 }
 
 /** Build UI plan map from API rows only (no static fallback). */
-export function buildPlansForDisplay(apiPlans, billingCycle = 'monthly') {
+export function buildPlansForDisplay(apiPlans, planType = 'personal') {
   if (!apiPlans?.length) return {};
 
   const plans = {};
@@ -112,14 +112,13 @@ export function buildPlansForDisplay(apiPlans, billingCycle = 'monthly') {
     const normalized = normalizeApiPlan(raw);
     if (!normalized.code) continue;
 
-    // Only include plans that match the billing cycle
-    if (normalized.billingCycle !== billingCycle) continue;
+    // Only include plans that match the plan type
+    if (normalized.planType !== planType) continue;
 
     plans[normalized.code] = {
       name: normalized.name,
       code: normalized.code,
-      monthlyPrice: normalized.billingCycle === 'monthly' ? normalized.price : null,
-      yearlyPrice: normalized.billingCycle === 'yearly' ? normalized.price : null,
+      price: normalized.price,
       currency: normalized.currency || 'USD',
       note: normalized.description || '',
       noteYearly: normalized.noteYearly || '',
@@ -134,16 +133,16 @@ export function buildPlansForDisplay(apiPlans, billingCycle = 'monthly') {
   return plans;
 }
 
-export function getDisplayPlan(plan, isYearly) {
+export function getDisplayPlan(plan, planType) {
   if (!plan) return null;
 
-  const amount = isYearly ? plan.yearlyPrice : plan.monthlyPrice;
-  const hasYearly = plan.yearlyPrice != null && plan.yearlyPrice > 0;
+  const amount = plan.price;
+  const periodText = plan.duration_days >= 365 ? ' / year' : ' / month';
 
   return {
     price: formatCurrency(amount, plan.currency),
     note: plan.note || '',
-    periodText: ` / ${isYearly ? 'year' : 'month'}`,
+    periodText,
   };
 }
 

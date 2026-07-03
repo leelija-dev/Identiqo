@@ -50,17 +50,16 @@ class Organization(models.Model):
 
 
 class SubscriptionPlan(models.Model):
-    BILLING_CHOICES = (
-        ('monthly', 'Monthly'),
-        ('yearly', 'Yearly'),
-        ('lifetime', 'Lifetime'),
+    PLAN_TYPE_CHOICES = (
+        ('personal', 'Personal'),
+        ('business', 'Business'),
     )
 
     name = models.CharField(max_length=100)
     code = models.CharField(max_length=50, unique=True)
+    plan_type = models.CharField(max_length=20, choices=PLAN_TYPE_CHOICES, default='personal')
     price = models.DecimalField(max_digits=10, decimal_places=2)
     currency = models.CharField(max_length=10, default='INR')
-    billing_cycle = models.CharField(max_length=20, choices=BILLING_CHOICES)
     duration_days = models.PositiveIntegerField()
     description = models.TextField(blank=True, null=True)
     features = models.JSONField(default=dict, blank=True)

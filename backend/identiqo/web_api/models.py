@@ -12,6 +12,12 @@ class UserManager(BaseUserManager):
         return user
 
 class Users(AbstractBaseUser, PermissionsMixin):
+    USER_TYPE_CHOICES = (
+        ('individual', 'Individual'),
+        ('organization', 'Organization'),
+    )
+    
+    user_type = models.CharField(max_length=20, choices=USER_TYPE_CHOICES, default='individual')
     name = models.CharField(max_length=255)
     email = models.EmailField(unique=True)
     phone = models.CharField(max_length=20, blank=True, null=True)
