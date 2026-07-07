@@ -18,6 +18,8 @@ urlpatterns = [
     path('api/subscription-plans/', views.SubscriptionPlanListView.as_view(), name='subscription-plan-list'),
     
     # Employee 
+    path("api/all-employees/<int:user_id>/", views.EmployeeListView.as_view(), name="all-employees"),
     path('api/create-employee/', views.EmployeeCreateView.as_view(), name='employee-create'),  
+    path('api/employee/<int:id>/', views.EmployeeDetailView.as_view(), name='employee-detail'),
     
 ]

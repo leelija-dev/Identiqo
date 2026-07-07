@@ -11,11 +11,11 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
-
+from django.shortcuts import get_object_or_404
 from admin_api.models import AdminUser, SubscriptionPlan
 from admin_api.serializers import SubscriptionPlanSerializer
 
-from .models import Users
+from .models import Users, Employee
 from .serializers import (
     ChangePasswordSerializer,
     ForgotPasswordSerializer,
@@ -23,7 +23,7 @@ from .serializers import (
     UserLoginSerializer,
     UserProfileSerializer,
     UserRegisterSerializer,
-    EmployeeSerializer
+    EmployeeSerializer,
 )
 
 
@@ -305,3 +305,23 @@ class EmployeeCreateView(APIView):
             },
             status=status.HTTP_400_BAD_REQUEST
         )
+
+class EmployeeListView(generics.ListAPIView):       # list of employees
+    serializer_class = EmployeeSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        user_id = self.kwargs.get("user_id")
+        return Employee.objects.filter(user_id=user_id)
+
+class EmployeeDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, id):
+        employee = get_object_or_404(Employee, id=id)
+        serializer = EmployeeSerializer(employee)
+
+        return Response({
+            "status": True,
+            "data": serializer.data
+        })
