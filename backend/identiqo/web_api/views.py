@@ -1,7 +1,7 @@
 import logging
 import random
 import string
-
+import cloudinary.uploader
 from django.conf import settings
 from django.core.cache import cache
 from django.core.mail import send_mail
@@ -23,7 +23,9 @@ from .serializers import (
     UserLoginSerializer,
     UserProfileSerializer,
     UserRegisterSerializer,
+    EmployeeSerializer
 )
+
 
 logger = logging.getLogger(__name__)
 
@@ -251,3 +253,55 @@ class SubscriptionPlanListView(generics.ListAPIView):
             queryset = queryset.filter(code=plan_code)
 
         return queryset
+
+# Employee Api 
+class EmployeeCreateView(APIView):
+
+    def post(self, request):
+
+        data = request.data.copy()
+
+        # Get image from request
+        image = request.FILES.get("profile_picture")
+
+        if image:
+            try:
+                upload_result = cloudinary.uploader.upload(
+                    image,
+                    folder="employees/profile_pictures",
+                )
+
+                data["profile_picture"] = upload_result["secure_url"]
+                data["profile_picture_public_id"] = upload_result["public_id"]
+
+            except Exception as e:
+                return Response(
+                    {
+                        "status": False,
+                        "message": "Image upload failed.",
+                        "error": str(e)
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        serializer = EmployeeSerializer(data=data)
+
+        if serializer.is_valid():
+            serializer.save()
+
+            return Response(
+                {
+                    "status": True,
+                    "message": "Employee created successfully.",
+                    "data": serializer.data
+                },
+                status=status.HTTP_201_CREATED
+            )
+
+        return Response(
+            {
+                "status": False,
+                "errors": serializer.errors
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )

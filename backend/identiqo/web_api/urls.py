@@ -17,4 +17,7 @@ urlpatterns = [
     # Public subscription plan list (read-only)
     path('api/subscription-plans/', views.SubscriptionPlanListView.as_view(), name='subscription-plan-list'),
     
+    # Employee 
+    path('api/create-employee/', views.EmployeeCreateView.as_view(), name='employee-create'),  
+    
 ]

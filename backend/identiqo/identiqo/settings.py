@@ -11,10 +11,10 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 import os
+import cloudinary
 from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
-
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -214,3 +214,10 @@ SIMPLE_JWT = {
     'USER_ID_FIELD': 'id',
     'USER_ID_CLAIM': 'user_id',
 }
+
+cloudinary.config(
+    cloud_name="ljix8j2w",
+    api_key="977637499575512",
+    api_secret="zsxnsRyao_zr3jPiW_ZbVCwQxy4",
+    secure=True,
+)

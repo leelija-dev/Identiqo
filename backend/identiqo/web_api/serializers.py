@@ -288,3 +288,17 @@ class SubscriptionPlanSerializer(serializers.ModelSerializer):
         if value <= 0:
             raise serializers.ValidationError('Duration days must be greater than zero.')
         return value
+from rest_framework import serializers
+from .models import Employee
+
+
+class EmployeeSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Employee
+        fields = "__all__"
+        read_only_fields = (
+            "employee_id",
+            "created_at",
+            "updated_at",
+        )
