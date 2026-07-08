@@ -15,6 +15,9 @@ from django.shortcuts import get_object_or_404
 from admin_api.models import AdminUser, SubscriptionPlan
 from admin_api.serializers import SubscriptionPlanSerializer
 
+from rest_framework.pagination import PageNumberPagination
+from django.db.models import Q
+
 from .models import Users, Employee
 from .serializers import (
     ChangePasswordSerializer,
@@ -306,14 +309,44 @@ class EmployeeCreateView(APIView):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-class EmployeeListView(generics.ListAPIView):       # list of employees
+# class EmployeeListView(generics.ListAPIView):       # list of employees
+#     serializer_class = EmployeeSerializer
+#     permission_classes = [IsAuthenticated]
+    
+#     def get_queryset(self):
+#         user_id = self.kwargs.get("user_id")
+#         return Employee.objects.filter(user_id=user_id)
+class EmployeePagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = "page_size"
+    max_page_size = 100
+
+
+class EmployeeListView(generics.ListAPIView):
     serializer_class = EmployeeSerializer
     permission_classes = [IsAuthenticated]
-    
+    pagination_class = EmployeePagination
+
     def get_queryset(self):
         user_id = self.kwargs.get("user_id")
-        return Employee.objects.filter(user_id=user_id)
+        search = self.request.GET.get("search", "").strip()
 
+        queryset = Employee.objects.filter(
+            user_id=user_id
+        ).order_by("-id")  # Descending Order
+
+        if search:
+            queryset = queryset.filter(
+                Q(employee_id__icontains=search) |
+                Q(first_name__icontains=search) |
+                Q(last_name__icontains=search) |
+                Q(email__icontains=search) |
+                Q(phone__icontains=search) |
+                Q(designation__icontains=search) |
+                Q(department__icontains=search)
+            )
+
+        return queryset
 class EmployeeDetailView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -325,3 +358,137 @@ class EmployeeDetailView(APIView):
             "status": True,
             "data": serializer.data
         })
+class EmployeeUpdateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, id):
+        # employee = get_object_or_404(Employee, id=id)
+        employee = Employee.objects.filter(id=id).first()
+        if not employee:
+            return Response(
+                {
+                    'status': False,
+                    'message': "Employee not found."
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+        data = request.data.copy()
+
+        # Check if new image uploaded
+        image = request.FILES.get("profile_picture")
+
+        if image:
+            try:
+                # Delete old image from Cloudinary
+                if employee.profile_picture_public_id:
+                    try:
+                        cloudinary.uploader.destroy(
+                            employee.profile_picture_public_id
+                        )
+                    except Exception:
+                        pass
+
+                # Upload new image
+                upload_result = cloudinary.uploader.upload(
+                    image,
+                    folder="employees/profile_pictures"
+                )
+
+                data["profile_picture"] = upload_result["secure_url"]
+                data["profile_picture_public_id"] = upload_result["public_id"]
+
+            except Exception as e:
+                return Response(
+                    {
+                        "status": False,
+                        "message": "Image upload failed.",
+                        "error": str(e)
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        else:
+            # Keep existing image if no new image uploaded
+            data["profile_picture"] = employee.profile_picture
+            data["profile_picture_public_id"] = employee.profile_picture_public_id
+
+        serializer = EmployeeSerializer(
+            employee,
+            data=data,
+            partial=True
+        )
+
+        if serializer.is_valid():
+            serializer.save()
+
+            return Response(
+                {
+                    "status": True,
+                    "message": "Employee updated successfully.",
+                    "data": serializer.data
+                },
+                status=status.HTTP_200_OK
+            )
+
+        return Response(
+            {
+                "status": False,
+                "errors": serializer.errors
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+        
+class EmployeeDeleteView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, id):
+        try:
+            # Check if employee exists
+            employee = Employee.objects.filter(id=id).first()
+
+            if not employee:
+                return Response(
+                    {
+                        "status": False,
+                        "message": "Employee not found."
+                    },
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            # Store user_id before deleting
+            user_id = employee.user_id
+
+            # Delete image from Cloudinary
+            if employee.profile_picture_public_id:
+                try:
+                    cloudinary.uploader.destroy(
+                        employee.profile_picture_public_id
+                    )
+                except Exception:
+                    # Ignore Cloudinary deletion failure
+                    pass
+
+            # Delete employee
+            employee.delete()
+
+            # Clear Redis cache
+            # cache.delete(f"employee_{id}")
+            # cache.delete(f"employee_list_{user_id}")
+
+            return Response(
+                {
+                    "status": True,
+                    "message": "Employee deleted successfully."
+                },
+                status=status.HTTP_200_OK
+            )
+
+        except Exception as e:
+            return Response(
+                {
+                    "status": False,
+                    "message": "Something went wrong while deleting the employee.",
+                    "error": str(e)
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

@@ -18,8 +18,11 @@ urlpatterns = [
     path('api/subscription-plans/', views.SubscriptionPlanListView.as_view(), name='subscription-plan-list'),
     
     # Employee 
-    path("api/all-employees/<int:user_id>/", views.EmployeeListView.as_view(), name="all-employees"),
-    path('api/create-employee/', views.EmployeeCreateView.as_view(), name='employee-create'),  
-    path('api/employee/<int:id>/', views.EmployeeDetailView.as_view(), name='employee-detail'),
+    path("api/all-employees/<int:user_id>/", views.EmployeeListView.as_view(), name="all-employees"),  # list of employees
+    path('api/create-employee/', views.EmployeeCreateView.as_view(), name='employee-create'),          # create employee
+    path('api/employee/<int:id>/', views.EmployeeDetailView.as_view(), name='employee-detail'),         # employee detail
+    path('api/update-employee/<int:id>/',views.EmployeeUpdateView.as_view(),name='employee-update'),    # employee update
+    path('api/delete-employee/<int:id>/',views.EmployeeDeleteView.as_view(),name='employee-delete'),    # employee delete
+    # path
     
 ]
