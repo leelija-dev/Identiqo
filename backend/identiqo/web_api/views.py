@@ -257,6 +257,8 @@ class SubscriptionPlanListView(generics.ListAPIView):
 
         return queryset
 
+# class SubscriptionPurchase(A):
+
 # Employee Api 
 class EmployeeCreateView(APIView):
 

@@ -60,10 +60,13 @@ class SubscriptionPlan(models.Model):
     plan_type = models.CharField(max_length=20, choices=PLAN_TYPE_CHOICES, default='personal')
     price = models.DecimalField(max_digits=10, decimal_places=2)
     currency = models.CharField(max_length=10, default='INR')
+    discount = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
+    gst = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
     duration_days = models.PositiveIntegerField()
     description = models.TextField(blank=True, null=True)
     features = models.JSONField(default=dict, blank=True)
     is_active = models.BooleanField(default=True)
+    is_popular = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -123,7 +126,11 @@ class SubscriptionPayment(models.Model):
         on_delete=models.CASCADE,
         related_name='payments',
     )
+    user = models.ForeignKey(Users,on_delete=models.SET_NULL,null=True,blank=True,related_name="subscription_payments")
+    orginal_price = models.DecimalField(max_digits=12, decimal_places=2,default=0.00)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
+    gst = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
+    discount = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
     currency = models.CharField(max_length=10, default='USD')
     payment_gateway = models.CharField(max_length=50, blank=True, null=True)
     payment_method = models.CharField(max_length=50, blank=True, null=True)
