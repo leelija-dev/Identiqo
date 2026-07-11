@@ -427,15 +427,18 @@ class PlanUpdateView(UpdateView):
         class EditPlanForm(forms.ModelForm):
             class Meta:
                 model = SubscriptionPlan
-                fields = ['name', 'code', 'plan_type', 'price', 'currency', 'duration_days', 'description', 'features', 'is_active']
+                fields = ['name', 'code', 'plan_type', 'price', 'currency','gst','discount', 'duration_days', 'description', 'features','is_popular', 'is_active']
                 widgets = {
                     'name': forms.TextInput(attrs={'class': 'form-input'}),
                     'code': forms.TextInput(attrs={'class': 'form-input'}),
                     'plan_type': forms.Select(attrs={'class': 'form-input'}),
                     'price': forms.NumberInput(attrs={'class': 'form-input', 'step': '0.01'}),
                     'currency': forms.TextInput(attrs={'class': 'form-input'}),
+                    'gst': forms.NumberInput(attrs={'class': 'form-input', 'step': '0.01'}),
+                    'discount': forms.NumberInput(attrs={'class': 'form-input', 'step': '0.01'}),
                     'duration_days': forms.NumberInput(attrs={'class': 'form-input'}),
                     'description': forms.Textarea(attrs={'class': 'form-input', 'rows': 3}),
+                    'is_popular': forms.CheckboxInput(attrs={'class': 'form-checkbox'}),
                     'is_active': forms.CheckboxInput(attrs={'class': 'form-checkbox'}),
                 }
 

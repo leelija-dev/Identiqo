@@ -73,6 +73,33 @@
             {% endif %}
           </div>
         </div>
+          <div class="form-row">
+          <div class="form-group half">
+            <label for="{{ form.gst.id_for_label }}">
+              GST
+              <span class="required">*</span>
+            </label>
+            {{ form.gst }}
+            {% if form.gst.errors %}
+            <div class="errorlist">
+              {% for error in form.price.errors %}{{ error }}{% endfor %}
+            </div>
+            {% endif %}
+          </div>
+
+          <div class="form-group half">
+            <label for="{{ form.discount.id_for_label }}">
+              Discount
+              <span class="required">*</span>
+            </label>
+            {{ form.discount }}
+            {% if form.discount.errors %}
+            <div class="errorlist">
+              {% for error in form.discount.errors %}{{ error }}{% endfor %}
+            </div>
+            {% endif %}
+          </div>
+        </div>
 
         <div class="form-row">
           <div class="form-group half">
@@ -119,15 +146,29 @@
           <div id="features-container">
           </div>
           <button type="button" class="btn btn-secondary btn-sm add-feature-btn" onclick="addFeature()">+ Add Feature</button>
-          {{ form.features }}
+          {{ form.features.value }}
           {% if form.features.errors %}
           <div class="errorlist">
             {% for error in form.features.errors %}{{ error }}{% endfor %}
           </div>
           {% endif %}
         </div>
-        
         <div class="form-group">
+          <lable>Is Popular</lable>
+          <div class="checkbox-wrapper">
+            {{ form.is_popular }}
+            <label for="{{ form.is_popular.id_for_label }}" class="checkbox-label">
+               <span class="checkbox-text">Mark this plan as popular</span>
+            </label>
+          </div>
+          {% if form.is_popular.errors %}
+          <div class="errorlist">
+            {% for error in form.is_popular.errors %}{{ error }}{% endfor %}
+          </div>
+          {% endif %}
+        </div>
+        <div class="form-group">
+          <lable>Status</lable>
           <div class="checkbox-wrapper">
             {{ form.is_active }}
             <label for="{{ form.is_active.id_for_label }}" class="checkbox-label">
