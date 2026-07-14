@@ -12,7 +12,7 @@ import {
 const menuItems = [
   { id: 1, label: "Dashboard", href: "/admin/dashboard", icon: FiHome },
   { id: 2, label: "Employee", href: "/admin/employee", icon: FiUsers },
-  { id: 3, label: "Templates", href: "#", icon: FiFileText },
+  { id: 3, label: "Templates", href: "/admin/templates", icon: FiFileText },
   { id: 4, label: "Settings", href: "#", icon: FiSettings },
  
 ];
@@ -31,7 +31,7 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="fixed left-0 top-0 w-64 h-screen bg-slate-900 text-white shadow-lg">
+    <aside className="fixed left-0 top-0 w-64 h-screen bg-slate-700 text-white shadow-lg">
       <div className="p-6 text-2xl font-bold border-b border-slate-700">
         Identiqo
       </div>
@@ -49,7 +49,7 @@ export default function Sidebar() {
                 flex items-center gap-3 px-6 py-3 transition
                 ${active 
                   ? 'bg-blue-600 text-white hover:bg-blue-600' 
-                  : 'hover:bg-slate-100 text-slate-100 hover:text-white'
+                  : 'hover:bg-slate-100 text-slate-100 hover:text-indigo-600 hover:bg-indigo-50/30'
                 }
               `}
             >

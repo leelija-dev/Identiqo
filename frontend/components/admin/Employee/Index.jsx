@@ -33,7 +33,7 @@ import {
     FiAlertCircle,
 } from 'react-icons/fi';
 
-const API_BASE_URL = 'http://localhost:8000/web-api/api';
+const API_BASE_URL = process.env.BACKEND_API_BASE_URL || 'http://localhost:8000/web-api/api'
 
 export default function EmployeesPage() {
     const [employees, setEmployees] = useState([]);
@@ -85,9 +85,24 @@ export default function EmployeesPage() {
     const fetchEmployees = async (page = 1, status = 'all') => {
         try {
             setLoading(true);
-            const url = `${API_BASE_URL}/all-employees/${page}${status !== 'all' ? `?status=${status}` : ''}`;
+            
+            // const url = `${API_BASE_URL}/all-employees/${page}${status !== 'all' ? `?status=${status}` : ''}`;
+            const loggedInUser = JSON.parse(localStorage.getItem("identiqo_user"));
+            const userId = loggedInUser.id;
+            const params = new URLSearchParams({
+                page: currentPage,
+                search: searchTerm,
+            });
+
+            if (selectedStatus !== "all") {
+                params.append("status", selectedStatus);
+            }
+
+            // const url = `${API_BASE_URL}/all-employees/${userId}/?${params.toString()}`;
+            const url = `${API_BASE_URL}/all-employees/${userId}/?page=${page}&search=${searchTerm}`;
 
             const token = getAccessToken();
+            
             const response = await fetch(url, {
                 method: "GET",
                 headers: {
