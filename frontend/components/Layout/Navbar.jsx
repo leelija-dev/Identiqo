@@ -129,7 +129,7 @@ export default function NavbarMinimal() {
               {isAuthenticated ? (
                 <>
                   <Link
-                    href="#"
+                    href="/admin/dashboard"
                     className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium transition"
                   >
                     Dashboard
@@ -276,7 +276,7 @@ export default function NavbarMinimal() {
               {/* Dashboard Link */}
               {isAuthenticated && (
                 <Link
-                  href="#"
+                  href="/admin/dashboard"
                   className="flex items-center justify-center w-full px-4 py-2.5 rounded-lg bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-medium transition-colors duration-200 shadow-sm hover:shadow"
                 >
                   <span>Dashboard</span>
