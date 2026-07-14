@@ -3,7 +3,7 @@ import uuid
 
 from rest_framework import serializers
 
-from admin_api.models import SubscriptionPlan, Organization
+from admin_api.models import SubscriptionPlan, Organization,CardTemplate
 from .models import Users
 
 
@@ -302,3 +302,7 @@ class EmployeeSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         )
+class CardTemplateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CardTemplate
+        fields = "__all__"

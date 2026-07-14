@@ -26,5 +26,8 @@ urlpatterns = [
     path('api/update-employee/<int:id>/',views.EmployeeUpdateView.as_view(),name='employee-update'),    # employee update
     path('api/delete-employee/<int:id>/',views.EmployeeDeleteView.as_view(),name='employee-delete'),    # employee delete
     
-    
+    # Card Templetes 
+    path('api/card-templetes/',views.CardTemplateListView.as_view(),name="all-templetes"), # list of templetes
+    # 
+    # path('api/card-templetes/',views.CardTempletesListView.as_view(),name='all-templetes')
 ]

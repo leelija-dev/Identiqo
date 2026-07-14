@@ -3,7 +3,6 @@ from .models import AdminUser
 from django.contrib.auth.hashers import make_password, check_password
 from .models import SubscriptionPlan
 
-
 class AdminUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = AdminUser
@@ -65,3 +64,9 @@ class SubscriptionPlanSerializer(serializers.ModelSerializer):
         if value <= 0:
             raise serializers.ValidationError("Duration days must be greater than zero.")
         return value
+
+
+# class CardTemplateSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = CardTemplate
+#         fields = "__all__"

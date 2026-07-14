@@ -12,9 +12,9 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.shortcuts import get_object_or_404
-from admin_api.models import AdminUser, SubscriptionPlan
+from admin_api.models import AdminUser, SubscriptionPlan,CardTemplate
 from admin_api.serializers import SubscriptionPlanSerializer
-
+# from admin_api.models import CardTemplate
 from rest_framework.pagination import PageNumberPagination
 from django.db.models import Q
 
@@ -27,6 +27,7 @@ from .serializers import (
     UserProfileSerializer,
     UserRegisterSerializer,
     EmployeeSerializer,
+    CardTemplateSerializer
 )
 
 
@@ -505,3 +506,23 @@ class EmployeeDeleteView(APIView):
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+class CardTemplateListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            templates = CardTemplate.objects.all().order_by("-id")
+            serializer = CardTemplateSerializer(templates, many=True)
+
+            return Response({
+                "status": True,
+                "message": "Templates fetched successfully.",
+                "count": templates.count(),
+                "data": serializer.data,
+            })
+
+        except Exception as e:
+            return Response({
+                "status": False,
+                "message": str(e),
+            }, status=500)
